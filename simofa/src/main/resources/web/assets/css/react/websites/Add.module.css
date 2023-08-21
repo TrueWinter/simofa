@@ -1,0 +1,42 @@
+.skeletons {
+	display: flex;
+	flex-direction: column;
+	gap: 16px;
+}
+
+.skeletons > * {
+	flex: 1;
+}
+
+.template-link {
+	margin-bottom: 16px;
+	cursor: pointer;
+	color: var(--link-color);
+	border-bottom: 1px solid grey;
+}
+
+.overlay {
+	z-index: 10;
+	width: 100%;
+	height: 100%;
+	position: fixed;
+	top: 0;
+	left: 0;
+	backdrop-filter: blur(3px);
+}
+
+.popup {
+	background-color: var(--main-bg-color);
+	padding: 16px;
+	position: fixed;
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%, -50%);
+	min-width: 50%;
+	min-height: 30%;
+	max-height: 60%;
+	overflow-y: auto;
+	z-index: 20;
+	border-radius: 10px;
+	border: 1px solid grey;
+}

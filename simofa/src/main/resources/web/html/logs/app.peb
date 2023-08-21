@@ -1,0 +1,7 @@
+{% extends web_root + "fragments/template.peb" %}
+    {% block title %}Logs{% endblock %}
+{% block content %}
+    <h1>Logs (Website: {{ website.id }})</h1>
+    <div id="data" data-website="{{ jsons(website) }}"></div>
+    <div id="app">Loading...</div>
+{% endblock %}

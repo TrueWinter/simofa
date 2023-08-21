@@ -1,0 +1,8 @@
+build
+node_modules
+target
+/.idea
+/config.yml
+/deploy-config.yml
+/migrator.yml
+/src/main/resources/web/assets/build
