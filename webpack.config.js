@@ -210,32 +210,6 @@ const jsFiles = {
 	]
 };
 
-const imgFiles = {
-	mode: 'production',
-	entry: {
-		images: fs.readdirSync(imgBase, 'utf-8').map(e => path.join(imgBase, e))
-	},
-	output: {
-		path: path.join(outBase, 'img'),
-		filename: 'webpack-generated.ignore',
-		clean: true,
-	},
-	module: {
-		rules: [
-			{
-				test: /\.(png|jpg)$/,
-				type: 'asset/resource',
-				generator: {
-					filename: '[name].[contenthash:8][ext]'
-				}
-			}
-		]
-	},
-	plugins: [
-		new IgnoreEmitPlugin(/\.ignore$/),
-	]
-};
-
 const cssFiles = {
 	mode: 'production',
 	entry: getDirFiles(cssBase)
@@ -302,7 +276,6 @@ const cssFiles = {
 
 const webFiles = [
 	jsFiles,
-	//imgFiles,
 	cssFiles
 ];
 

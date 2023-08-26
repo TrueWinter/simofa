@@ -106,6 +106,7 @@ The example below shows the recommended way to allow a client (with website ID `
 ## Known Issues
 
 - Stopping the Simofa Deploy server doesn't always roll back the running deployments. This is due to Java instantly killing sub-processes if Simofa Deploy is stopped instead of waiting for them to finish. This also prevents the logs and status from being submitted.
+- If the `admin` account is deleted, it will be recreated when Simofa restarts. If you don't want to use the default admin account, change it's password to a long random one.
 
 ## Development
 
