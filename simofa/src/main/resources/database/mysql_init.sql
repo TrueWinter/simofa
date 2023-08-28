@@ -30,15 +30,15 @@ CREATE TABLE IF NOT EXISTS `websites` (
     `git_branch` varchar(40) NOT NULL,
     `git_credential` int,
     -- The command run to build the site
-    `build_command` varchar(255) NOT NULL,
+    `build_command` varchar(512) NOT NULL,
     -- The command run on the deployment server.
     -- Use this to unzip the site, delete the old one,
     -- and move the new one to the web server directory.
-    `deployment_command` varchar(255) NOT NULL,
+    `deployment_command` varchar(512) NOT NULL,
     -- The command run on the deployment server if
     -- the deployment command fails. Use this to clean
     -- up files and move the original site back into place.
-    `deployment_failed_command` varchar(255) NOT NULL,
+    `deployment_failed_command` varchar(512) NOT NULL,
     `deployment_server` int NOT NULL,
     `deploy_token` VARCHAR(36) NOT NULL,
     FOREIGN KEY (`deployment_server`) REFERENCES `deployment_servers` (`id`),
