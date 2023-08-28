@@ -204,13 +204,13 @@ function App() {
 						<FormInput label="Build Command" styles={{
 							marginTop: '16px'
 						}}>
-							<textarea name="build_command" ref={refs.buildCommand} defaultValue={getInitValue('build_command') || DEFAULT_SCRIPT} required={true} maxLength={255}></textarea>
+							<textarea name="build_command" ref={refs.buildCommand} defaultValue={getInitValue('build_command') || DEFAULT_SCRIPT} required={true} maxLength={512} rows={8}></textarea>
 						</FormInput>
 						<FormInput label="Deployment Command">
-							<textarea name="deployment_command" ref={refs.deploymentCommand} defaultValue={getInitValue('deployment_command')  || DEFAULT_SCRIPT} required={true} maxLength={255}></textarea>
+							<textarea name="deployment_command" ref={refs.deploymentCommand} defaultValue={getInitValue('deployment_command')  || DEFAULT_SCRIPT} required={true} maxLength={512} rows={8}></textarea>
 						</FormInput>
 						<FormInput label="Deployment Failed Command">
-							<textarea name="deployment_failed_command" ref={refs.deploymentFailedCommand} defaultValue={getInitValue('deployment_failed_command')  || DEFAULT_SCRIPT} required={true} maxLength={255}></textarea>
+							<textarea name="deployment_failed_command" ref={refs.deploymentFailedCommand} defaultValue={getInitValue('deployment_failed_command')  || DEFAULT_SCRIPT} required={true} maxLength={512} rows={8}></textarea>
 						</FormInput>
 						<FormInput label="Deployment Server">
 							<select name="deployment_server" required={true}>

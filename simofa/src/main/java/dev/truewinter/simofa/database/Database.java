@@ -71,13 +71,10 @@ public class Database {
                 connection.createStatement().execute(statement);
             }
 
-            try (PreparedStatement preparedStatement = connection.prepareStatement("SELECT id FROM `users` WHERE username = 'admin';");
-                ResultSet rs = preparedStatement.executeQuery()) {
-                if (!rs.next()) {
-                    Simofa.getLogger().info("Default admin account does not exist, creating it...");
-                    accountDatabase.addAccount("admin", "simofa");
-                    Simofa.getLogger().info("Default admin account created with username `admin` and password `simofa`. Please change it to something more secure.");
-                }
+            if (accountDatabase.getAccountCount() == 0) {
+                Simofa.getLogger().info("Default admin account does not exist, creating it...");
+                accountDatabase.addAccount("admin", "simofa");
+                Simofa.getLogger().info("Default admin account created with username `admin` and password `simofa`. Please change it to something more secure.");
             }
         } catch (SQLException e) {
             Simofa.getLogger().warn("Failed to initialize database", e);

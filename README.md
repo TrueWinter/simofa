@@ -62,12 +62,14 @@ Work is to be done in the `/simofa` directory (`/tmp/simofa-{build_id}` on deplo
 
 Build scripts must start with `#!/bin/bash` and it is recommended that `set -e` is put right below. This ensures that the script will exit immediately with a non-zero exit code if any of the commands fail, thereby failing the build.
 
-Scripts configured in the Simofa dashboard are limited to 255 characters. If you have a longer build script, include it in the git repository and run that from the script configured in the dashboard. Keep the Docker container's file structure in mind when doing this.
+Scripts configured in the Simofa dashboard are limited to 512 characters. If you have a longer build script, include it in the git repository and run that from the script configured in the dashboard. Keep the Docker container's file structure in mind when doing this.
 
 There are multiple scripts that need to be configured:
-- Build: Run in the Docker container to build the site and output it to `/simofa/out/site.zip`
+- Build: Run on the Docker container to build the site and output it to `/simofa/out/site.zip`
 - Deployment: Run on the deployment server. It should not only handle unzipping and copying the site to the correct location, but also making a backup of the original site.
 - Deployment failed: Run on the deployment server. It should restore the backup made by the deployment script. When writing this script, keep in mind that the deployment can fail at any point in the deployment script so your code should check for the existance of files before attempting to delete/move them. Appending `|| :` to an unimportant command will also prevent an error in that command from forcing the script to exit with a non-zero error code.
+
+To save time, a website's configuration can be saved as a template which can be loaded when creating another website. However, websites created from the same template will not have their configurations be kept in sync.
 
 ### Building and Deploying
 
@@ -84,7 +86,7 @@ JWT authentication is intended for cases where you'd like to give someone access
 Sign the token with the secret defined in the config file and pass it as the `jwt` query parameter. Wherever possible, links and forms will include this query parameter to allow accessing different parts of the dashboard without receiving authentication errors.
 
 **Important information:**
-- The navbar will be hidden when using JWT authentication
+- The navbar will be hidden (and replaced with a warning not to bookmark the page) when using JWT authentication.
 - Nothing else in the dashboard will be hidden when using JWT authentication. Attempting to access a page that isn't allowed by the token will result in an error.
 - API responses will remain unchanged, meaning that information which is not viewable on the dashboard may still be viewable by users checking the API responses. While keys may be present in API responses, passwords are never returned by the API (except in cases where there are no alternative solutions).
 
@@ -105,8 +107,7 @@ The example below shows the recommended way to allow a client (with website ID `
 	
 ## Known Issues
 
-- Stopping the Simofa Deploy server doesn't always roll back the running deployments. This is due to Java instantly killing sub-processes if Simofa Deploy is stopped instead of waiting for them to finish. This also prevents the logs and status from being submitted.
-- If the `admin` account is deleted, it will be recreated when Simofa restarts. If you don't want to use the default admin account, change it's password to a long random one.
+- Stopping the Simofa Deploy server doesn't always roll back the running deployments. This is due to Java instantly killing sub-processes if Simofa Deploy is stopped instead of waiting for them to finish. This also prevents the logs and status from being submitted before shutting down.
 
 ## Development
 

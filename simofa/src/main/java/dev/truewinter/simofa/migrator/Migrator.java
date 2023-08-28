@@ -80,6 +80,11 @@ public class Migrator {
             if (!migrationName.contains("_")) {
                 throw new Exception("Migration name `" + migrationName + "` invalid, skipping");
             }
+            
+            // Sub-classes in same file
+            if (migrationName.contains("$")) {
+                continue;
+            }
 
             if (Long.parseLong(migrationName.split("_")[1]) <= lastMigrationTime) {
                 continue;

@@ -20,7 +20,7 @@ function reload() {
 	axios.get(`http://localhost:${config.port}/_dev/reload`).then((response) => {
 		console.log('Reloaded asset manifest. Response:', response.data);
 	}).catch((err) => {
-		if (err.code === 'ECONNREFUSED') {
+		if (err.code && err.code.startsWith('ECONN')) {
 			return console.error('Failed to reload asset manifest. Is Simofa online?');
 		}
 

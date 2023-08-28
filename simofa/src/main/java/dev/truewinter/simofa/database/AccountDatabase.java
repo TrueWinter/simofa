@@ -89,6 +89,19 @@ public class AccountDatabase {
         return accounts;
     }
 
+    public int getAccountCount() throws SQLException {
+        try (Connection connection = ds.getConnection()) {
+            PreparedStatement statement = connection.prepareStatement("SELECT COUNT(*) FROM `users`;");
+            ResultSet rs = statement.executeQuery();
+
+            if (rs.next()) {
+                return rs.getInt(1);
+            } else {
+                return 0;
+            }
+        }
+    }
+
     public void deleteAccount(int id) throws SQLException {
         try (Connection connection = ds.getConnection()) {
             PreparedStatement statement = connection.prepareStatement("DELETE FROM `users` WHERE id = ?;");

@@ -48,5 +48,5 @@ CREATE TABLE IF NOT EXISTS `websites` (
 CREATE TABLE IF NOT EXISTS `templates` (
     `id` int NOT NULL AUTO_INCREMENT PRIMARY KEY,
     `name` varchar(40) NOT NULL,
-    `template` varchar(2000) NOT NULL
+    `template` varchar(4000) NOT NULL
 ) CHARACTER SET utf8 COLLATE utf8_unicode_ci;

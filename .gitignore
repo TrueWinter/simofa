@@ -5,4 +5,5 @@ target
 /config.yml
 /deploy-config.yml
 /migrator.yml
-/src/main/resources/web/assets/build
+simofa/src/main/resources/web/assets/build
+simofa/src/main/resources/web/assets/css/**/*.d.ts

@@ -7,12 +7,12 @@
     <parent>
         <groupId>dev.truewinter.simofa</groupId>
         <artifactId>SimofaProject</artifactId>
-        <version>1.0-SNAPSHOT</version>
+        <version>0.0.2</version>
     </parent>
 
     <groupId>dev.truewinter.simofa.common</groupId>
     <artifactId>common</artifactId>
-    <version>1.0-SNAPSHOT</version>
+    <version>1.5-SNAPSHOT</version>
 
     <dependencies>
         <dependency>
