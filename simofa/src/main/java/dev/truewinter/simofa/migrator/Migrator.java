@@ -7,7 +7,10 @@ import dev.truewinter.simofa.database.Database;
 import java.io.*;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
+import java.util.jar.JarFile;
 
 public class Migrator {
     private final long lastMigrationTime;
@@ -51,8 +54,8 @@ public class Migrator {
             if (migrations.size() > 0) {
                 String migrationTimestamp = migrations.get(migrations.size() - 1).getSimpleName().split("_")[1];
                 MigratorConfig.migrationSuccess(Long.parseLong(migrationTimestamp));
+                Simofa.getLogger().info("Successfully migrated");
             }
-            Simofa.getLogger().info("Successfully migrated");
         } catch (Exception e) {
             Simofa.getLogger().warn("Failed to run migrations", e);
         }
@@ -70,18 +73,42 @@ public class Migrator {
 
     private List<Class<? extends  Migration>> getMigrations() throws Exception {
         final String MIGRATION_LOCATION = "dev.truewinter.simofa.migrator.migrations";
+        final String MIGRATION_LOCATION_FS = MIGRATION_LOCATION.replace(".", "/");
         List<Class<? extends Migration>> migrations = new ArrayList<>();
-        URL pkg = getClass().getClassLoader().getResource(MIGRATION_LOCATION.replace(".", "/"));
+        URL pkg = getClass().getClassLoader().getResource(MIGRATION_LOCATION_FS);
         BufferedReader bufferedReader = new BufferedReader(new InputStreamReader((InputStream) Objects.requireNonNull(pkg).getContent()));
 
-        String className;
-        while ((className = bufferedReader.readLine()) != null) {
+        List<String> migrationClasses = new ArrayList<>();
+        if (pkg.getProtocol().equals("jar")) {
+            String jarFileName = URLDecoder.decode(pkg.getFile(), StandardCharsets.UTF_8);
+            jarFileName = jarFileName.substring(5,jarFileName.indexOf("!"));
+
+            try (JarFile jarFile = new JarFile(jarFileName)) {
+                jarFile.entries().asIterator().forEachRemaining(j -> {
+                    if (j.getName().startsWith(MIGRATION_LOCATION_FS)) {
+                        String c = j.getName()
+                                .replace(MIGRATION_LOCATION_FS, "")
+                                .replaceFirst("^/", "");
+                        if (!c.isBlank()) {
+                            migrationClasses.add(c);
+                        }
+                    }
+                });
+            }
+        } else {
+            String className;
+            while ((className = bufferedReader.readLine()) != null) {
+                migrationClasses.add(className);
+            }
+        }
+
+        for (String className : migrationClasses) {
             String migrationName = className.replaceFirst("\\.class$", "");
             if (!migrationName.contains("_")) {
                 throw new Exception("Migration name `" + migrationName + "` invalid, skipping");
             }
             
-            // Sub-classes in same file
+            // Sub-classes in the same file
             if (migrationName.contains("$")) {
                 continue;
             }
