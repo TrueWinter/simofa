@@ -40,6 +40,8 @@ public class LogSubmitter extends Submitter<List<SimofaLog>> {
             if (responseCode != 200) {
                 SimofaDeploy.getLogger().warn(String.format("Received non-200 response for log submission: %d", responseCode));
             }
+
+            connection.disconnect();
         } catch (Exception e) {
             SimofaDeploy.getLogger().error("An error occurred while submitting logs", e);
             post(json, attempt + 1);

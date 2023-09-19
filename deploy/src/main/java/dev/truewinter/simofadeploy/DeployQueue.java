@@ -23,11 +23,6 @@ public class DeployQueue {
         return deployQueue;
     }
 
-    public synchronized ArrayList<WebsiteDeployment> getDeployingList() {
-        //return deployingList;
-        return null;
-    }
-
     public synchronized void queue(WebsiteDeployment websiteDeployment) {
         SimofaDeploy.getLogger().info(String.format("Build %s queued for deployment", websiteDeployment.getBuildId()));
         queue.add(websiteDeployment);

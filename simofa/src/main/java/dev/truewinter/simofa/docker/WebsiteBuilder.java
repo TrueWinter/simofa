@@ -12,6 +12,7 @@ import dev.truewinter.simofa.common.SimofaLog;
 import dev.truewinter.simofa.common.Util;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
 import org.apache.hc.client5.http.classic.methods.HttpPost;
 import org.apache.hc.client5.http.entity.mime.MultipartEntityBuilder;
 import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
@@ -22,6 +23,7 @@ import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
 
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 
 public class WebsiteBuilder extends Thread {
@@ -140,6 +142,17 @@ public class WebsiteBuilder extends Thread {
                             try (CloseableHttpClient client = HttpClientBuilder.create().build()) {
                                 File finalTempDir = tempDir;
                                 client.execute(request, response -> {
+                                    int statusCode = response.getCode();
+                                    if (statusCode != 200) {
+                                        String httpResponse = IOUtils.toString(response.getEntity().getContent(), StandardCharsets.UTF_8);
+                                        Simofa.getLogger().error(String.format("Received non-200 response from deploy server: %d %s", statusCode, httpResponse));
+                                        build.addLog(new SimofaLog(
+                                                LogType.ERROR,
+                                                String.format("Received non-200 response from deploy server: %d %s", statusCode, httpResponse)
+                                        ));
+                                        build.setStatus(BuildStatus.ERROR);
+                                    }
+
                                     try {
                                         FileUtils.deleteDirectory(finalTempDir);
                                     } catch (IOException e) {

@@ -121,7 +121,7 @@ public class WebServer extends Thread {
                 try (FileWriter deployFailedCmdWriter = new FileWriter(deployFailedCmdFile)) {
                     deployFailedCmdWriter.write(deployFailedCmd2);
                     if (!deployFailedCmdFile.setExecutable(true)) {
-                        throw new Exception("Failed to set deploy script executable bit");
+                        throw new Exception("Failed to set deployment failed script executable bit");
                     }
                 }
 

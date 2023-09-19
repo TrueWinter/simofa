@@ -7,7 +7,7 @@
     <parent>
         <groupId>dev.truewinter.simofa</groupId>
         <artifactId>SimofaProject</artifactId>
-        <version>0.0.3</version>
+        <version>0.0.4</version>
     </parent>
 
     <groupId>dev.truewinter</groupId>
@@ -93,7 +93,7 @@
         <dependency>
             <groupId>org.eclipse.jgit</groupId>
             <artifactId>org.eclipse.jgit</artifactId>
-            <version>6.6.0.202305301015-r</version>
+            <version>6.6.1.202309021850-r</version>
         </dependency>
         <dependency>
             <groupId>commons-io</groupId>

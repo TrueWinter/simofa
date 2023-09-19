@@ -38,6 +38,8 @@ public class StatusSubmitter extends Submitter<BuildStatus> {
             if (responseCode != 200) {
                 SimofaDeploy.getLogger().warn(String.format("Received non-200 response for status submission: %d", responseCode));
             }
+
+            connection.disconnect();
         } catch (Exception e) {
             SimofaDeploy.getLogger().error("An error occurred while submitting status", e);
             post(status, attempt + 1);
