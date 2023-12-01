@@ -65,6 +65,10 @@ public class Config {
         "url", ""
     );
 
+    @YamlComment("Directory where website cache data will be stored, must be absolute and exclusively usable by Simofa")
+    @YamlKey("cache_directory")
+    private String cacheDir;
+
     @YamlComment("Do not touch this if you're not a developer")
     @YamlKey("simofa_internals")
     private Map<String, Object> simofaInternals = Map.of(
@@ -137,6 +141,14 @@ public class Config {
 
     public String getDockerUrl() {
         return dockerRegistry.get("url");
+    }
+
+    public String getCacheDir() {
+        return cacheDir;
+    }
+
+    public void disableCache() {
+        cacheDir = null;
     }
 
     public boolean isDevMode() {

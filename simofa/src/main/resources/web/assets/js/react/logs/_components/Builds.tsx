@@ -21,6 +21,19 @@ interface TableRow {
 	data: TableRowFunction
 }
 
+export function parseTime(ms: number): string {
+	let seconds = Math.floor(ms / 1000);
+
+	if (seconds < 60) {
+		return `${seconds.toString()}s`;
+	}
+
+	let buildMinutes = Math.floor(seconds / 60);
+	let buildSeconds = seconds - (buildMinutes * 60);
+
+	return `${buildMinutes.toString()}m ${buildSeconds.toString()}s`;
+}
+
 export default function Builds({
 	website
 }: BuildsProps) {
@@ -65,24 +78,13 @@ export default function Builds({
 	}, {
 		name: 'Duration',
 		pages: ['docker', 'website'],
-		data: b => {
-			function parseTime(ms: number): string {
-				let seconds = Math.floor(ms / 1000);
-
-				if (seconds < 60) {
-					return `${seconds.toString()}s`;
-				}
-
-				let buildMinutes = Math.floor(seconds / 60);
-				let buildSeconds = seconds - (buildMinutes * 60);
-
-				return `${buildMinutes.toString()}m ${buildSeconds.toString()}s`;
-			}
-
-			return (<td>
+		data: b => (
+			<>
+				<td>
 				{parseTime(b.runTime)}
-			</td>)
-		}
+				</td>
+			</>
+		)
 	}, {
 		name: 'Logs',
 		pages: ['docker', 'website'],

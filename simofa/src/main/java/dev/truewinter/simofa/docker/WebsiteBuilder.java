@@ -62,6 +62,19 @@ public class WebsiteBuilder extends Thread {
             fileOutputStream.close();
             git.close();
 
+            File tmpCacheDir = new File(tmpDir, "cache");
+            File websiteCacheDir = new File(build.getCacheDir(), "website-" + build.getWebsite().getId());
+            File websiteCache = new File(websiteCacheDir, "cache.zip");
+            if (websiteCache.exists()) {
+                FileInputStream fileInputStream = new FileInputStream(websiteCache);
+                FileOutputStream cacheFileOutputStream = new FileOutputStream(new File(tmpCacheDir, "cache.zip"));
+                IOUtils.copy(fileInputStream, cacheFileOutputStream);
+                fileInputStream.close();
+                cacheFileOutputStream.close();
+
+                build.addLog(new SimofaLog(LogType.INFO, "Using build cache"));
+            }
+
             DockerCallback dockerCallback = new DockerCallback() {
                 @Override
                 public void created(String containerId) {
@@ -105,6 +118,20 @@ public class WebsiteBuilder extends Thread {
                             tempDir = Util.createTempDir(build.getId() + "-dist");
                             Simofa.getDockerManager().copySiteZip(build, tempDir);
 
+                            try {
+                                String cacheDir = build.getCacheDir();
+                                File outputDir = new File(cacheDir, "website-" + build.getWebsite().getId());
+
+                                if (!Util.isBlank(cacheDir) && !outputDir.exists() && !outputDir.mkdir()) {
+                                    throw new IOException("Failed to create output directory for cache");
+                                }
+
+                                Simofa.getDockerManager().copyCacheZip(build, outputDir);
+                            } catch (Exception e) {
+                                // Caching failing shouldn't fail the whole build, so try-catch here
+                                build.addLog(new SimofaLog(LogType.WARN, e.getMessage()));
+                            }
+
                             Optional<DeploymentServer> deploymentServer = BuildQueueManager.getDatabase()
                                     .getDeploymentServerDatabase().getDeploymentServer(
                                             build.getWebsite().getDeploymentServer()
@@ -113,7 +140,6 @@ public class WebsiteBuilder extends Thread {
                             if (deploymentServer.isEmpty()) {
                                 throw new Exception("Deployment server not found");
                             }
-
 
                             String siteHash = "";
                             try (InputStream siteFileReadBack = new FileInputStream(new File(tempDir, "site.zip"))) {

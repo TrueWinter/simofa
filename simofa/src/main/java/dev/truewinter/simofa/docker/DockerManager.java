@@ -2,6 +2,7 @@ package dev.truewinter.simofa.docker;
 
 import com.github.dockerjava.api.DockerClient;
 import com.github.dockerjava.api.command.*;
+import com.github.dockerjava.api.exception.NotFoundException;
 import com.github.dockerjava.api.model.*;
 import com.github.dockerjava.core.DefaultDockerClientConfig;
 import com.github.dockerjava.core.DockerClientConfig;
@@ -192,6 +193,24 @@ public class DockerManager {
         ).exec())) {
                 unTar(inputStream, new File(destinationDir, "site.zip"));
         }
+    }
+
+    public void copyCacheZip(WebsiteBuild websiteBuild, File destinationDir) throws Exception {
+        if (websiteBuild.getContainerId() == null) {
+            throw new Exception("Container does not exist");
+        }
+
+        File outputFile = new File(destinationDir, "cache.zip");
+        if (outputFile.exists() && !outputFile.delete()) {
+            throw new IOException("Failed to delete cache file");
+        }
+
+        try (TarArchiveInputStream inputStream = new TarArchiveInputStream(dockerClient.copyArchiveFromContainerCmd(
+                websiteBuild.getContainerId(),
+                "/simofa/cache/cache.zip"
+        ).exec())) {
+            unTar(inputStream, new File(destinationDir, "cache.zip"));
+        } catch (FileNotFoundException ignored) {} // Cache is optional
     }
 
     // https://github.com/docker-java/docker-java/issues/991

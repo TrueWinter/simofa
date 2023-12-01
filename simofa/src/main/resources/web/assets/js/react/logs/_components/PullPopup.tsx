@@ -48,6 +48,13 @@ export default function PullPopup({
 					<input type="text" name="branch" defaultValue={getInitValue('git_branch')} maxLength={40} required={true} />
 				</FormInput>
 				<FormInput>
+					<>
+						<input type="checkbox" name="noCache" style={{
+							width: 'unset'
+						}} /> No cache
+					</>
+				</FormInput>
+				<FormInput>
 					<button type="submit" disabled={!!pullUrlError || pullFormHasError}>Pull</button>
 				</FormInput>
 			</Form>

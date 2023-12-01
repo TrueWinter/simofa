@@ -3,6 +3,7 @@ import render from '../_common/_render'
 import BuildLog from '../_common/BuildLog'
 import Skeleton from '../_common/Skeleton'
 import addJwtParam from '../_common/_auth'
+import { parseTime } from '../logs/_components/Builds'
 
 export default function LogsApp() {
 	const [logs, setLogs] = useState([] as BuildLog[])
@@ -10,10 +11,12 @@ export default function LogsApp() {
 	const [loading, setLoading] = useState(true)
 	const [updating, setUpdating] = useState(false)
 	const [status, setStatus] = useState('<unknown>')
+	const [duration, setDuration] = useState(0);
 	const interval = useRef(null)
 	const logRef = useRef(null as HTMLDivElement)
 	const fetchingLogs = useRef(false)
 	const lastFetch = useRef(0)
+	const shouldScrollDown = useRef(true)
 
 	function stopUpdating(id: number) {
 		clearInterval(id)
@@ -49,6 +52,7 @@ export default function LogsApp() {
 				}
 
 				setStatus(d.status);
+				setDuration(d.duration);
 
 				if (d.logs.length > 0) {
 					lastFetch.current = d.logs[d.logs.length - 1].timestamp
@@ -56,7 +60,9 @@ export default function LogsApp() {
 
 				// wait until next tick
 				setTimeout(() => {
-					logRef.current?.scrollTo(0, logRef.current.scrollHeight)
+					if (shouldScrollDown.current) {
+						logRef.current?.scrollTo(0, logRef.current.scrollHeight)
+					}
 				}, 0);
 			})
 			.catch(err => {
@@ -72,6 +78,10 @@ export default function LogsApp() {
 			})
 	}
 
+	function handleScroll() {	
+		shouldScrollDown.current = logRef.current.scrollHeight === logRef.current.scrollTop + logRef.current.clientHeight
+	}
+
 	useEffect(() => {
 		const websiteId = document.getElementById('website-id').dataset.id;
 		const buildId = document.getElementById('build-id').dataset.id;
@@ -85,9 +95,12 @@ export default function LogsApp() {
 		interval.current = setInterval(() => {
 			loadLogs(websiteId, buildId)
 		}, 5 * 1000)
+
+		logRef.current.addEventListener('scroll', handleScroll)
 		
 		return () => {
 			stopUpdating(interval.current)
+			logRef.current.removeEventListener('scroll', handleScroll)
 		}
 	}, [])
 
@@ -98,25 +111,28 @@ export default function LogsApp() {
 				justifyContent: 'space-around'
 			}}>
 				<span>Status: {status}</span>
+				<span>Duration: {duration === 0 ? '0s' : parseTime(duration)}</span>
 				{updating && <span>Updating every 5 seconds</span>}
 			</div>
 			<hr/>
 	
 			{error ? <div className="error">{error}</div> :
-				(loading ? new Array(10).fill(0).map(() => <Skeleton />) :
-					<div ref={logRef} style={{
-						maxHeight: '60vh',
-						height: '60vh',
-						overflow: 'auto'
-					}}>
+				<div ref={logRef} style={{
+					maxHeight: '60vh',
+					height: '60vh',
+					overflow: 'auto'
+				}}>
+					{loading ? new Array(10).fill(0).map(() => <Skeleton />) :
+						<>
 						{logs.map(e => <div style={{
 							color: e.type === 'info' ? 'white' : 'orangered'
 						}} key={e.uuid}><span style={{
 							color: '#888',
 							fontSize: 'small'
 						}}>{getDate(e.timestamp)}</span> [{e.type}] {e.log}</div>)}
-					</div>
-				)
+						</>
+					}
+				</div>
 			}
 		</>
 	)

@@ -23,13 +23,16 @@ public class WebsiteBuild {
     private long startTime;
     @JsonIgnore
     private long endTime;
+    @JsonIgnore
+    private final String cacheDir;
 
-    protected WebsiteBuild(Website website, String commit) {
+    protected WebsiteBuild(Website website, String commit, String cacheDir) {
         this.id = UUID.randomUUID().toString();
         this.website = website;
         this.commit = commit;
         this.status = BuildStatus.QUEUED;
         this.logs = new ArrayList<>();
+        this.cacheDir = cacheDir;
     }
 
     public String getId() {
@@ -102,4 +105,12 @@ public class WebsiteBuild {
         return endOrCurrent - startTime;
     }
 
+    @Nullable
+    public String getCacheDir() {
+        if (commit.toLowerCase().contains("[no cache]")) {
+            return null;
+        }
+
+        return cacheDir;
+    }
 }

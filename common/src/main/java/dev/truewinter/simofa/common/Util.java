@@ -84,8 +84,9 @@ public class Util {
         File tmpInDir = new File(tempDir, "in");
         File tmpOutDir = new File(tempDir, "out");
         File tmpScriptsDir = new File(tempDir, "scripts");
+        File tmpCacheDir = new File(tempDir, "cache");
 
-        if (!(tmpInDir.mkdir() && tmpOutDir.mkdir() && tmpScriptsDir.mkdir())) {
+        if (!(tmpInDir.mkdir() && tmpOutDir.mkdir() && tmpScriptsDir.mkdir() && tmpCacheDir.mkdir())) {
             throw new Exception("Failed to create temporary directory " + tempDir);
         }
 

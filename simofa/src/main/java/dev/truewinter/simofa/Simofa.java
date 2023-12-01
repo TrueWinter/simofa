@@ -12,6 +12,7 @@ import net.william278.annotaml.Annotaml;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
@@ -83,6 +84,16 @@ public class Simofa {
 
         if (config.getConcurrentBuilds() == 0) {
             logger.warn("Concurrent builds is set to 0. No builds will run.");
+        }
+
+        if (Util.isBlank(config.getCacheDir())) {
+            logger.warn("Cache directory not set. Build caching will be skipped.");
+        } else {
+            File cacheDir = new File(config.getCacheDir());
+            if (!cacheDir.exists() && !cacheDir.mkdir()) {
+                logger.warn("Failed to create cache directory, disabling build caching.");
+                config.disableCache();
+            }
         }
 
         logger.info("Initializing build queue manager");

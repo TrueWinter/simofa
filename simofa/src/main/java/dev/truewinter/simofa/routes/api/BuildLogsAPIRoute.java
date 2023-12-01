@@ -53,6 +53,7 @@ public class BuildLogsAPIRoute extends Route {
         }
 
         resp.put("status", build.get().getStatus());
+        resp.put("duration", build.get().getRunTime());
         resp.put("logs", logs);
         ctx.json(resp);
     }

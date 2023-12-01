@@ -7,9 +7,6 @@ import java.util.ArrayList;
 
 public class DeployQueue {
     private final ArrayDeque<WebsiteDeployment> queue = new ArrayDeque<>();
-    // Possibly support multiple simultaneous deployments
-    // for different websites in the future
-    //private final ArrayList<WebsiteDeployment> deployingList = new ArrayList<>();
     private final ArrayList<WebsiteDeployer> deployerList = new ArrayList<>();
     private static DeployQueue deployQueue;
 
@@ -29,7 +26,6 @@ public class DeployQueue {
     }
 
     public synchronized void done(WebsiteDeployment websiteDeployment) {
-        //deployingList.removeIf(w -> w.equals(websiteDeployment));
         deployerList.removeIf(w -> w.getWebsiteDeployment().getBuildId().equals(websiteDeployment.getBuildId()));
     }
 
@@ -41,8 +37,6 @@ public class DeployQueue {
         }
 
         SimofaDeploy.getLogger().info(String.format("Deploying build %s", websiteDeployment.getBuildId()));
-        //deployingList.add(websiteDeployment);
-        //deployerList.add(websiteDeployment);
         return websiteDeployment;
     }
 

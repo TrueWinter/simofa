@@ -42,7 +42,7 @@ public class BuildQueue {
 
     public synchronized void queue(Website website, String commit) {
         remove(website);
-        WebsiteBuild websiteBuild = new WebsiteBuild(website, commit);
+        WebsiteBuild websiteBuild = new WebsiteBuild(website, commit, config.getCacheDir());
         websiteBuildQueue.add(websiteBuild);
 
         if (!websiteBuildList.containsKey(websiteBuild.getWebsite().getId())) {
