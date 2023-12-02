@@ -57,6 +57,7 @@ Work is to be done in the `/simofa` directory (`/tmp/simofa-{build_id}` on deplo
 - in: The git repository (or `site.zip`, on the deployment server) is copied to this directory. It is also the default working directory.
 - scripts: The build script is copied to `build.sh`. On the deployment server, the deployment and deployment failed scripts are copied to `deploy.sh` and `undeploy.sh`. You do not need to run any of these scripts, Simofa will automatically run the appropriate script.
 - out: Your build script should output a compressed folder called `site.zip` here containing the built site. Using this directory is optional on the deployment server, but it is recommended to unzip the site here.
+- cache: Used for build caching. Save a `cache.zip` file in this directory and it will be copied to the same location in future builds. Add `[no cache]` to a commit message to skip the build cache.
 
 ### Website Configuration
 
