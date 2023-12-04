@@ -18,6 +18,6 @@ public class DeleteDockerContainerRoute extends Route {
 
         Simofa.getDockerManager().deleteContainer(id);
         Simofa.getBuildQueueManager().getBuildQueue().remove(container.get());
-        redirect(ctx,"/docker/containers");
+        redirect(ctx,"/builds/containers");
     }
 }

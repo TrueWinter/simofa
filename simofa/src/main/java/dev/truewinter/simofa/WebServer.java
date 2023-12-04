@@ -17,12 +17,10 @@ import io.javalin.http.Header;
 import io.javalin.http.staticfiles.Location;
 import io.javalin.rendering.template.JavalinPebble;
 import io.javalin.util.JavalinLogger;
-import io.javalin.websocket.WsConnectContext;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 
 public class WebServer extends Thread {
     private final Config config;
@@ -213,16 +211,16 @@ public class WebServer extends Thread {
            new DeleteAccountRoute().verifyLogin(ctx).verifyCSRF(ctx, "error").post(ctx);
         });
 
-        server.post("/docker/containers/{id}/delete", ctx -> {
+        server.post("/builds/containers/{id}/delete", ctx -> {
             new DeleteDockerContainerRoute().verifyLogin(ctx).verifyCSRF(ctx, "error").post(ctx);
         });
 
-        server.get("/docker/*", ctx -> {
-            new DockerRoute().verifyLogin(ctx).get(ctx);
+        server.get("/builds/*", ctx -> {
+            new BuildsRoute().verifyLogin(ctx).get(ctx);
         });
 
-        server.get("/docker", ctx -> {
-            Route.redirect(ctx, "/docker/");
+        server.get("/builds", ctx -> {
+            Route.redirect(ctx, "/builds/");
         });
 
         server.get("/git", ctx -> {
@@ -277,11 +275,11 @@ public class WebServer extends Thread {
             new AccountsAPIRoute().verifyLogin(ctx).get(ctx);
         });
 
-        server.get("/api/docker/images", ctx -> {
+        server.get("/api/builds/images", ctx -> {
             new DockerImagesAPIRoute().verifyLogin(ctx).get(ctx);
         });
 
-        server.get("/api/docker/containers", ctx -> {
+        server.get("/api/builds/containers", ctx -> {
             new DockerContainersAPIRoute().verifyLogin(ctx).get(ctx);
         });
 

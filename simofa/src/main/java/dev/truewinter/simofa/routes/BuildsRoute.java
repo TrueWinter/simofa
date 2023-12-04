@@ -2,9 +2,9 @@ package dev.truewinter.simofa.routes;
 
 import io.javalin.http.Context;
 
-public class DockerRoute extends Route {
+public class BuildsRoute extends Route {
     @Override
     public void get(Context ctx) {
-        render(ctx, "docker/app");
+        render(ctx, "builds/app");
     }
 }

@@ -4,11 +4,13 @@ import Skeleton from '../_common/Skeleton'
 import DeploymentServer from '../_common/DeploymentServer'
 import Form, { FormInput } from '../_common/Form'
 import addJwtParam from '../_common/_auth'
+import Modal from '../_common/Modal'
 
 function App() {
 	const [servers, setServers] = useState([] as DeploymentServer[]);
 	const [error, setError] = useState('');
 	const [loading, setLoading] = useState(true);
+	const [deleteModalData, setDeleteModalData] = useState(0);
 
 	useEffect(() => {
 		fetch(addJwtParam('/api/deployment-servers')).then(d => {
@@ -55,11 +57,9 @@ function App() {
 											<td>{e.url}</td>
 											<td><a href={addJwtParam(`/deployment-servers/${e.id}/edit`)}>Edit</a></td>
 											<td>
-												<Form action={`/deployment-servers/${e.id}/delete`}>
-													<FormInput>
-														<button type="submit" style={{ float: 'unset' }}>Delete</button>
-													</FormInput>
-												</Form>
+												<FormInput>
+													<button style={{ float: 'unset' }} onClick={() =>  setDeleteModalData(e.id)}>Delete</button>
+												</FormInput>
 											</td>
 										</tr>
 									)
@@ -68,6 +68,16 @@ function App() {
 						}
 					</tbody>
 				</table>
+			}
+
+			{!!deleteModalData && <Modal title="Delete Deployment Server" close={() => setDeleteModalData(0)}>
+					<p>Are you sure you want to delete deployment server with ID {deleteModalData}?</p>
+					<Form action={`/deployment-servers/${deleteModalData}/delete`}>
+						<FormInput>
+							<button type="submit">Delete</button>
+						</FormInput>
+					</Form>
+				</Modal>
 			}
 		</>
 	)

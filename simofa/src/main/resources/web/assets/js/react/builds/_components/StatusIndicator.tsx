@@ -1,4 +1,4 @@
-import css from '../../../../css/react/docker/StatusIndicator.module.css'
+import css from '../../../../css/react/builds/StatusIndicator.module.css'
 
 interface StatusIndicatorProps {
 	state: string

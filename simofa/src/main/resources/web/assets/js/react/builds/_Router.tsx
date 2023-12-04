@@ -41,7 +41,7 @@ const router = createBrowserRouter([
 		]
 	}
 ], {
-	basename: '/docker/'
+	basename: '/builds/'
 })
 
 render(<RouterProvider router={router} />)

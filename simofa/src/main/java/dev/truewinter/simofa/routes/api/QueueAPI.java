@@ -10,7 +10,7 @@ import io.javalin.http.Context;
 import java.util.*;
 
 public class QueueAPI extends Route {
-    // Shared between `/websites/{id}/logs` and `/docker/queue`
+    // Shared between `/websites/{id}/logs` and `/builds/queue`
     @Override
     public void get(Context ctx) {
         HashMap<String, Object> map = new HashMap<>();

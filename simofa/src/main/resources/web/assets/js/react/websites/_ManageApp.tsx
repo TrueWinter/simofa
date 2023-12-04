@@ -63,7 +63,7 @@ function App() {
 	useEffect(() => {
 		Promise.all([
 			fetch(addJwtParam('/api/deployment-servers')),
-			fetch(addJwtParam('/api/docker/images')),
+			fetch(addJwtParam('/api/builds/images')),
 			fetch(addJwtParam('/api/git'))
 		]).then(data => {
 		

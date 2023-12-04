@@ -4,15 +4,17 @@ import DockerContainer from '../../_common/DockerContainer';
 import Form, { FormInput } from '../../_common/Form';
 import StatusIndicator from '../_components/StatusIndicator';
 import addJwtParam from '../../_common/_auth';
+import Modal from '../../_common/Modal';
 
 export default function Containers() {
 	const [containers, setContainers] = useState([] as DockerContainer[])
 	const [error, setError] = useState('')
 	const [loading, setLoading] = useState(true)
 	const interval = useRef(null)
+	const [deleteModalData, setDeleteModalData] = useState('')
 
 	function load() {
-		fetch(addJwtParam('/api/docker/containers'))
+		fetch(addJwtParam('/api/builds/containers'))
 			.then(d => d.json())
 			.then(setContainers)
 			.catch(e => {
@@ -66,17 +68,28 @@ export default function Containers() {
 								<td>{e.name}</td>
 								<td>{e.status}</td>
 								<td>
-									<Form action={`/docker/containers/${e.id}/delete`}>
-										<FormInput>
-											<button type="submit" style={{
-												float: 'unset'
-											}}>Delete</button>
-										</FormInput>
-									</Form>
+									<FormInput>
+										<button style={{
+											float: 'unset'
+										}} onClick={() => setDeleteModalData(e.id)}>Delete</button>
+									</FormInput>
 								</td>
 							</tr>)}
 						</tbody>
 					</table>
+				}
+
+
+				{deleteModalData && <Modal title="Delete Container" close={() => setDeleteModalData(null)}>
+						<p style={{
+							wordBreak: 'break-word'
+						}}>Are you sure you want to delete container with ID {deleteModalData}?</p>
+						<Form action={`/builds/containers/${deleteModalData}/delete`}>
+							<FormInput>
+								<button type="submit">Delete</button>
+							</FormInput>
+						</Form>
+					</Modal>
 				}
 			</>
 			}

@@ -4,6 +4,7 @@ import Website from '../../_common/Website'
 import Build from '../../_common/Build'
 import Form, { FormInput } from '../../_common/Form'
 import addJwtParam from '../../_common/_auth'
+import Modal from '../../_common/Modal'
 
 interface BuildsProps {
 	website?: Website
@@ -13,12 +14,17 @@ interface TableRowFunction {
 	(b: Build): ReactElement
 }
 
-type TableRowPage = 'website' | 'docker'
+type TableRowPage = 'website' | 'builds'
 
 interface TableRow {
 	name: string
 	pages: TableRowPage[]
 	data: TableRowFunction
+}
+
+interface BuildStopIds {
+	website: number
+	build: string
 }
 
 export function parseTime(ms: number): string {
@@ -40,27 +46,28 @@ export default function Builds({
 	const [loading, setLoading] = useState(true)
 	const [error, setError] = useState('')
 	const [builds, setBuilds] = useState([] as Build[])
+	const [deleteModalData, setDeleteModalData] = useState(null as BuildStopIds)
 	const interval = useRef(null)
 
 	// This component is shared between the website logs page
-	// and the Docker queue page, so defining the rows like this
+	// and the build queue page, so defining the rows like this
 	// makes it easier to manage
 	const tableRows: TableRow[] = [{
 		name: 'ID',
-		pages: ['docker', 'website'],
+		pages: ['builds', 'website'],
 		data: b => (
 			<td title={b.id}>{b.id.split('-')[0]}</td>
 		)
 	}, {
 		name: 'Website',
-		pages: ['docker'],
+		pages: ['builds'],
 		data: b => (
 			<td>{b.website.name}</td>
 		)
 	},
 	{
 		name: 'Commit Message',
-		pages: ['docker', 'website'],
+		pages: ['builds', 'website'],
 		data: b => (
 			<>
 				{b.commit ?
@@ -71,13 +78,13 @@ export default function Builds({
 		)
 	}, {
 		name: 'Status',
-		pages: ['docker', 'website'],
+		pages: ['builds', 'website'],
 		data: b => (
 			<td>{b.status}</td>
 		)
 	}, {
 		name: 'Duration',
-		pages: ['docker', 'website'],
+		pages: ['builds', 'website'],
 		data: b => (
 			<>
 				<td>
@@ -87,27 +94,29 @@ export default function Builds({
 		)
 	}, {
 		name: 'Logs',
-		pages: ['docker', 'website'],
+		pages: ['builds', 'website'],
 		data: b => (
 			<td><a href={addJwtParam(`/websites/${b.website.id}/build/${b.id}/logs`)}>Logs</a></td>
 		)
 	}, {
 		name: 'Stop',
-		pages: ['docker', 'website'],
+		pages: ['builds', 'website'],
 		data: b => (
 			<td>
-				<Form action={`/websites/${b.website.id}/build/${b.id}/stop`}>
-					<FormInput>
-						<button style={{
-							float: 'unset'
-						}} type='submit' disabled={!['queued', 'building'].includes(b.status)}>Stop</button>
-					</FormInput>
-				</Form>
+				<FormInput>
+					<button style={{
+						float: 'unset'
+					}} disabled={!['queued', 'building'].includes(b.status)}
+					onClick={() => setDeleteModalData({
+						website: b.website.id,
+						build: b.id
+					})}>Stop</button>
+				</FormInput>
 			</td>
 		)
 	}]
 
-	const thisPage: TableRowPage = website ? 'website' : 'docker'
+	const thisPage: TableRowPage = website ? 'website' : 'builds'
 	const thisPageTableRows = tableRows.filter(r => r.pages.includes(thisPage))
 
 	function loadLogs() {
@@ -143,6 +152,15 @@ export default function Builds({
 		}
 	}, [])
 
+	useEffect(() => {
+		if (deleteModalData === null) return;
+		let b = builds.filter(e => e.id === deleteModalData.build);
+		if (b.length === 0) return;
+		if (!['queued', 'building'].includes(b[0].status)) {
+			setDeleteModalData(null);
+		}
+	}, [builds])
+
 	return (
 		<>
 		{error ? <div className='error'>{error}</div> :
@@ -158,11 +176,21 @@ export default function Builds({
 				</tr>)
 				: (builds.length === 0 ?
 					<tr>
-						<td colSpan={thisPageTableRows.length}>{thisPage === 'docker' ? 'No builds queued' : 'No builds queued for this website'}</td>
+						<td colSpan={thisPageTableRows.length}>{thisPage === 'builds' ? 'No builds queued' : 'No builds queued for this website'}</td>
 					</tr>
 				: builds.map(b => <tr>{thisPageTableRows.map(r => r.data(b))}</tr>))}
 			</tbody>
 		</table>}
+
+		{deleteModalData && <Modal title="Stop Build" close={() => setDeleteModalData(null)}>
+				<p>Are you sure you want to stop build with ID {deleteModalData.build.split('-')[0]}?</p>
+				<Form action={`/websites/${deleteModalData.website}/build/${deleteModalData.build}/stop`}>
+					<FormInput>
+						<button type='submit'>Stop</button>
+					</FormInput>
+				</Form>
+			</Modal>
+		}
 		</>
 	)
 }

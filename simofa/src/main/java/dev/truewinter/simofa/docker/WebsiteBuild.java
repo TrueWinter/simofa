@@ -3,6 +3,7 @@ package dev.truewinter.simofa.docker;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import dev.truewinter.simofa.Website;
 import dev.truewinter.simofa.common.BuildStatus;
+import dev.truewinter.simofa.common.LogType;
 import dev.truewinter.simofa.common.SimofaLog;
 import org.jetbrains.annotations.Nullable;
 
@@ -64,6 +65,8 @@ public class WebsiteBuild {
         }
 
         this.status = status;
+
+        addLog(new SimofaLog(LogType.INFO, "Build status changed to " + status));
     }
 
     @Nullable

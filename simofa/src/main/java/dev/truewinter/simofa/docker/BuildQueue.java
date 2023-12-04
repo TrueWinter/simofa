@@ -3,6 +3,8 @@ package dev.truewinter.simofa.docker;
 import dev.truewinter.simofa.Simofa;
 import dev.truewinter.simofa.Website;
 import dev.truewinter.simofa.common.BuildStatus;
+import dev.truewinter.simofa.common.LogType;
+import dev.truewinter.simofa.common.SimofaLog;
 import dev.truewinter.simofa.common.Util;
 import dev.truewinter.simofa.config.Config;
 
@@ -81,6 +83,7 @@ public class BuildQueue {
                  return false;
              }).findFirst();
             if (build.isPresent()) {
+                build.get().addLog(new SimofaLog(LogType.WARN, "Deletion was requested for the container used for this build"));
                 remove(build.get().getWebsite());
                 break;
             }

@@ -9,7 +9,7 @@ export default function Images() {
 	const [loading, setLoading] = useState(true);
 
 	useEffect(() => {
-		fetch(addJwtParam('/api/docker/images'))
+		fetch(addJwtParam('/api/builds/images'))
 			.then(d => d.json())
 			.then(setImages)
 			.catch(e => setError(`An error occurred: ${e}`))

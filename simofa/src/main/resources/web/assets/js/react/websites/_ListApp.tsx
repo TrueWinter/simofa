@@ -5,12 +5,14 @@ import Website, { WebsitesResponse } from '../_common/Website'
 import DeploymentServer, { DeploymentServersResponse } from '../_common/DeploymentServer'
 import Form, { FormInput } from '../_common/Form'
 import addJwtParam from '../_common/_auth'
+import Modal from '../_common/Modal'
 
 function App() {
 	const [websites, setWebsites] = useState([] as Website[]);
 	const [servers, setServers] = useState(new Map() as Map<number, DeploymentServer>);
 	const [error, setError] = useState('');
 	const [loading, setLoading] = useState(true);
+	const [deleteModalData, setDeleteModalData] = useState(0);
 
 	useEffect(() => {
 		Promise.all([
@@ -69,11 +71,9 @@ function App() {
 											<td><a href={addJwtParam(`/websites/${e.id}/edit`)}>Edit</a></td>
 											<td><a href={addJwtParam(`/websites/${e.id}/logs`)}>Logs</a></td>
 											<td>
-												<Form action={`/websites/${e.id}/delete`}>
-													<FormInput>
-														<button type="submit" style={{ float: 'unset' }}>Delete</button>
-													</FormInput>
-												</Form>
+												<FormInput>
+													<button type="button" style={{ float: 'unset' }} onClick={() => setDeleteModalData(e.id)}>Delete</button>
+												</FormInput>
 											</td>
 										</tr>
 									)
@@ -83,6 +83,15 @@ function App() {
 					</tbody>
 				</table>
 			}
+
+			{!!deleteModalData && <Modal title="Delete Website" close={() => setDeleteModalData(0)}>
+				<p>Are you sure you want to delete website with ID {deleteModalData}?</p>
+				<Form action={`/websites/${deleteModalData}/delete`}>
+					<FormInput>
+						<button type="submit">Delete</button>
+					</FormInput>
+				</Form>
+			</Modal>}
 		</>
 	)
 }
