@@ -184,7 +184,7 @@ export default function Builds({
 
 		{deleteModalData && <Modal title="Stop Build" close={() => setDeleteModalData(null)}>
 				<p>Are you sure you want to stop build with ID {deleteModalData.build.split('-')[0]}?</p>
-				<Form action={`/websites/${deleteModalData.website}/build/${deleteModalData.build}/stop`}>
+				<Form action={`/websites/${deleteModalData.website}/build/${deleteModalData.build}/stop${thisPage === 'builds' ? '?redirectTo=%2Fbuilds%2Fqueue' : ''}`}>
 					<FormInput>
 						<button type='submit'>Stop</button>
 					</FormInput>

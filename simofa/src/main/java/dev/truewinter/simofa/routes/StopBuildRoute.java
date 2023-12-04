@@ -1,6 +1,7 @@
 package dev.truewinter.simofa.routes;
 
 import dev.truewinter.simofa.Simofa;
+import dev.truewinter.simofa.common.Util;
 import dev.truewinter.simofa.docker.WebsiteBuild;
 import io.javalin.http.Context;
 
@@ -28,6 +29,12 @@ public class StopBuildRoute extends Route {
         }
 
         Simofa.getBuildQueueManager().getBuildQueue().remove(build.get().getWebsite());
-        redirect(ctx, String.format("/websites/%d/logs", websiteId));
+
+        String redirectTo = ctx.queryParam("redirectTo");
+        if (Util.isBlank(redirectTo)) {
+            redirectTo = String.format("/websites/%d/logs", websiteId);
+        }
+
+        redirect(ctx, redirectTo);
     }
 }

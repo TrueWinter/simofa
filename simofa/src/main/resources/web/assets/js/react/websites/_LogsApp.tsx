@@ -31,6 +31,12 @@ export default function LogsApp() {
 		return `${date} ${time} GMT`;
 	}
 
+	function doScroll() {
+		if (shouldScrollDown.current) {
+			logRef.current?.scrollTo(0, logRef.current.scrollHeight)
+		}
+	}
+
 	function loadLogs(websiteId: string, buildId: string) {
 		if (fetchingLogs.current) {
 			console.log('Still waiting for previous log fetch to finish');
@@ -60,9 +66,7 @@ export default function LogsApp() {
 
 				// wait until next tick
 				setTimeout(() => {
-					if (shouldScrollDown.current) {
-						logRef.current?.scrollTo(0, logRef.current.scrollHeight)
-					}
+					doScroll();
 				}, 0);
 			})
 			.catch(err => {
@@ -70,6 +74,7 @@ export default function LogsApp() {
 				if (interval.current) {
 					stopUpdating(interval.current)
 					setStatus('<unknown>')
+					setDuration(0)
 				}
 			})
 			.finally(() => {
@@ -85,6 +90,7 @@ export default function LogsApp() {
 	function handleResize() {
 		// .toString() to make TypeScript happy
 		logRef.current.style.height = `${(window.innerHeight - (document.body.clientHeight - logRef.current.clientHeight + 8)).toString()}px`;
+		doScroll();
 	}
 
 	useEffect(() => {
@@ -100,6 +106,8 @@ export default function LogsApp() {
 		interval.current = setInterval(() => {
 			loadLogs(websiteId, buildId)
 		}, 5 * 1000)
+
+		handleResize()
 
 		logRef.current.addEventListener('scroll', handleScroll)
 		window.addEventListener('resize', handleResize)
