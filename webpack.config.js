@@ -18,11 +18,12 @@ if (devMode) {
 }
 
 const BASE_PATH = path.join(__dirname, 'simofa', 'src', 'main', 'resources', 'web', 'assets');
+const BASE_PATH_BUILD = path.join(__dirname, 'simofa', 'target', 'classes', 'web', 'assets');
 
 const jsBase = path.join(BASE_PATH, 'js');
 const imgBase = path.join(BASE_PATH, 'img');
 const cssBase = path.join(BASE_PATH, 'css');
-const outBase = path.join(BASE_PATH, 'build');
+const outBase = path.join(devMode ? BASE_PATH : BASE_PATH_BUILD, 'build');
 
 function getDirFiles(base, dir = null) {
 	let files = [];

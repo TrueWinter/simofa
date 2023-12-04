@@ -11,7 +11,7 @@ export default function LogsApp() {
 	const [loading, setLoading] = useState(true)
 	const [updating, setUpdating] = useState(false)
 	const [status, setStatus] = useState('<unknown>')
-	const [duration, setDuration] = useState(0);
+	const [duration, setDuration] = useState(0)
 	const interval = useRef(null)
 	const logRef = useRef(null as HTMLDivElement)
 	const fetchingLogs = useRef(false)
@@ -82,6 +82,11 @@ export default function LogsApp() {
 		shouldScrollDown.current = logRef.current.scrollHeight === logRef.current.scrollTop + logRef.current.clientHeight
 	}
 
+	function handleResize() {
+		// .toString() to make TypeScript happy
+		logRef.current.style.height = `${(window.innerHeight - (document.body.clientHeight - logRef.current.clientHeight + 8)).toString()}px`;
+	}
+
 	useEffect(() => {
 		const websiteId = document.getElementById('website-id').dataset.id;
 		const buildId = document.getElementById('build-id').dataset.id;
@@ -97,10 +102,12 @@ export default function LogsApp() {
 		}, 5 * 1000)
 
 		logRef.current.addEventListener('scroll', handleScroll)
-		
+		window.addEventListener('resize', handleResize)
+
 		return () => {
 			stopUpdating(interval.current)
 			logRef.current.removeEventListener('scroll', handleScroll)
+			window.removeEventListener('resize', handleResize)
 		}
 	}, [])
 
@@ -118,8 +125,6 @@ export default function LogsApp() {
 	
 			{error ? <div className="error">{error}</div> :
 				<div ref={logRef} style={{
-					maxHeight: '60vh',
-					height: '60vh',
 					overflow: 'auto'
 				}}>
 					{loading ? new Array(10).fill(0).map(() => <Skeleton />) :

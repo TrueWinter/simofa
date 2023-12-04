@@ -8,7 +8,7 @@
     <artifactId>SimofaProject</artifactId>
     <packaging>pom</packaging>
     <!-- Do not manually modify the version. Use versions:set instead -->
-    <version>0.0.6</version>
+    <version>0.0.7</version>
 
     <modules>
         <module>simofa</module>
