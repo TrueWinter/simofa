@@ -25,12 +25,14 @@ All other aspects of website building/deployment (such as SSL certificates and w
 - 20GB disk space (minimum)
 - Modern web browser (Chrome 92+/Firefox 95+)
 
+**Important: Install Simofa on it's own server. It expects to be the only software managing Docker containers on the build server, and will delete all containers when it exits.**
+
 ### Deploy server
 - Java 16+
 - Linux
 - unzip (or similar tool)
 - 1 CPU core
-- 1GB memory
+- 1GB memory (recommended)
 - SSL recommended if build server and deploy server are communicating over the internet
 
 **Important:** Keep the build server and deploy server versions in sync
