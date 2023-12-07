@@ -98,9 +98,12 @@ public class WebsiteBuilder extends Thread {
                         }
                     }
 
-                    Simofa.getBuildQueueManager().getBuildQueue().remove(build.getWebsite());
+                    Simofa.getBuildQueueManager().getBuildQueue().getCurrentBuilds()
+                            .removeIf(w -> w.getId().equals(build.getId()));
 
-                    if (waitResponse.getStatusCode() == 0) {
+                    if (waitResponse.getStatusCode() != 0) {
+                        Simofa.getBuildQueueManager().getBuildQueue().remove(build.getWebsite());
+                    } else {
                         File tempDir = null;
                         try {
                             tempDir = Util.createTempDir(build.getId() + "-dist");
