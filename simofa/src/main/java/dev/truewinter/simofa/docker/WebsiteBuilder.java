@@ -5,6 +5,7 @@ import com.github.dockerjava.api.model.StreamType;
 import com.github.dockerjava.api.model.WaitResponse;
 import dev.truewinter.simofa.DeploymentServer;
 import dev.truewinter.simofa.GitCredential;
+import dev.truewinter.simofa.GitFetcher;
 import dev.truewinter.simofa.Simofa;
 import dev.truewinter.simofa.common.BuildStatus;
 import dev.truewinter.simofa.common.LogType;
@@ -37,33 +38,21 @@ public class WebsiteBuilder extends Thread {
     public void run() {
         Simofa.getLogger().info(String.format("Running build %s for website %d", build.getId(), build.getWebsite().getId()));
         build.setStatus(BuildStatus.BUILDING);
+
         try {
             File tmpDir = Util.createTempDir(build.getId());
             File tmpInDir = new File(tmpDir, "in");
 
-            CloneCommand cloneCommand = Git.cloneRepository()
-                    .setURI(build.getWebsite().getGitUrl())
-                    .setBranch(build.getWebsite().getGitBranch())
-                    .setCloneAllBranches(false)
-                    .setDirectory(tmpInDir);
+            File tmpCacheDir = new File(tmpDir, "cache");
+            File websiteCacheDir = new File(build.getCacheDir(), "website-" + build.getWebsite().getId());
 
-            GitCredential gitCredential = build.getWebsite().getGitCredential();
-            if (gitCredential != null) {
-                cloneCommand.setCredentialsProvider(new UsernamePasswordCredentialsProvider(
-                        gitCredential.getUsername(),
-                        gitCredential.getPassword()
-                ));
-            }
-            Git git = cloneCommand.call();
+            GitFetcher.fetch(build, tmpInDir, websiteCacheDir);
 
             File tmpScriptDir = new File(tmpDir, "scripts");
             FileOutputStream fileOutputStream = new FileOutputStream(new File(tmpScriptDir, "build.sh"));
             fileOutputStream.write(build.getWebsite().getBuildCommand().getBytes());
             fileOutputStream.close();
-            git.close();
 
-            File tmpCacheDir = new File(tmpDir, "cache");
-            File websiteCacheDir = new File(build.getCacheDir(), "website-" + build.getWebsite().getId());
             File websiteCache = new File(websiteCacheDir, "cache.zip");
             if (websiteCache.exists()) {
                 FileInputStream fileInputStream = new FileInputStream(websiteCache);
@@ -109,8 +98,7 @@ public class WebsiteBuilder extends Thread {
                         }
                     }
 
-                    Simofa.getBuildQueueManager().getBuildQueue().getCurrentBuilds()
-                        .removeIf(w -> w.getId().equals(build.getId()));
+                    Simofa.getBuildQueueManager().getBuildQueue().remove(build.getWebsite());
 
                     if (waitResponse.getStatusCode() == 0) {
                         File tempDir = null;

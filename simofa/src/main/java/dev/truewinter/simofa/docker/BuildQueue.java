@@ -100,12 +100,11 @@ public class BuildQueue {
                 if (w.getStatus().equals(BuildStatus.QUEUED.toString()) ||
                         w.getStatus().equals(BuildStatus.BUILDING.toString())) {
                     w.setStatus(BuildStatus.STOPPED);
+                }
 
-                    System.out.printf("Stopping build %s%n", w.getId());
-                    if (!Util.isBlank(w.getContainerId())) {
-                        System.out.printf("Build %s has container %s%n", w.getId(), w.getContainerId());
-                        Simofa.getDockerManager().deleteContainer(w.getContainerId());
-                    }
+                if (!Util.isBlank(w.getContainerId())) {
+                    System.out.printf("Deleting container %s for build %s%n", w.getContainerId(), w.getId());
+                    Simofa.getDockerManager().deleteContainer(w.getContainerId());
                 }
             });
         }

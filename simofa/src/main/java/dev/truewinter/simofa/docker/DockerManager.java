@@ -131,7 +131,13 @@ public class DockerManager {
     }
 
     public void deleteContainer(String id) {
-        dockerClient.removeContainerCmd(id).withForce(true).withRemoveVolumes(true).exec();
+        List<com.github.dockerjava.api.model.Container> containers = dockerClient.listContainersCmd().withShowAll(true).exec();
+        for (com.github.dockerjava.api.model.Container container : containers) {
+            if (container.getId().equals(id)) {
+                dockerClient.removeContainerCmd(container.getId()).withForce(true).withRemoveVolumes(true).exec();
+                break;
+            }
+        }
     }
 
     @SuppressWarnings("RedundantThrows")
