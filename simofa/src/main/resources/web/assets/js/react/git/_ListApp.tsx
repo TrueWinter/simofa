@@ -2,7 +2,7 @@ import { Fragment, useEffect, useState } from 'react'
 import render from '../_common/_render'
 import Skeleton from '../_common/Skeleton'
 import Form, { FormInput } from '../_common/Form'
-import Git from '../_common/Git'
+import type { GitCredential as Git } from '../../java'
 import addJwtParam from '../_common/_auth'
 import Modal from '../_common/Modal'
 

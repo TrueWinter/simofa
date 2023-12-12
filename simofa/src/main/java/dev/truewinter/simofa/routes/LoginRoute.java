@@ -8,12 +8,10 @@ import io.javalin.http.Cookie;
 import java.sql.SQLException;
 
 public class LoginRoute extends Route {
-    @Override
     public void get(Context ctx) {
         render(ctx, "login");
     }
 
-    @Override
     public void post(Context ctx) {
         String username = ctx.formParam("username");
         String password = ctx.formParam("password");

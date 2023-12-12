@@ -4,7 +4,7 @@ import PullPopup from './_components/PullPopup'
 
 import css from '../../../css/react/logs/LogsApp.module.css'
 import Builds from './_components/Builds';
-import Website from '../_common/Website';
+import type { Website } from '../../java';
 
 export default function LogsApp() {
 	const website: Website = JSON.parse(document.getElementById('data').dataset.website);

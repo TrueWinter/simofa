@@ -1,13 +1,20 @@
 package dev.truewinter.simofa.routes;
 
 import dev.truewinter.simofa.Account;
+import dev.truewinter.simofa.RouteLoader;
 import io.javalin.http.Context;
+import io.javalin.http.HandlerType;
 
 import java.sql.SQLException;
 import java.util.Optional;
 
+@SuppressWarnings("unused")
+@RouteLoader.RouteClass()
 public class DeleteAccountRoute extends Route {
-    @Override
+    @RouteLoader.RouteInfo(
+            url = "/accounts/{id}/delete",
+            method = HandlerType.POST
+    )
     public void post(Context ctx) {
         int id = Integer.parseInt(ctx.pathParam("id"));
 

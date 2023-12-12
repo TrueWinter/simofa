@@ -1,12 +1,19 @@
 package dev.truewinter.simofa.routes;
 
 import dev.truewinter.simofa.DeploymentServer;
+import dev.truewinter.simofa.RouteLoader;
 import io.javalin.http.Context;
+import io.javalin.http.HandlerType;
 
 import java.util.Optional;
 
+@SuppressWarnings("unused")
+@RouteLoader.RouteClass()
 public class DeleteDeploymentServerRoute extends Route {
-    @Override
+    @RouteLoader.RouteInfo(
+            url = "/deployment-servers/{id}/delete",
+            method = HandlerType.POST
+    )
     public void post(Context ctx) {
         int id = Integer.parseInt(ctx.pathParam("id"));
 

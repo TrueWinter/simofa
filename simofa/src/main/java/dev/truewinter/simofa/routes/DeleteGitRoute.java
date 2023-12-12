@@ -1,12 +1,19 @@
 package dev.truewinter.simofa.routes;
 
 import dev.truewinter.simofa.GitCredential;
+import dev.truewinter.simofa.RouteLoader;
 import io.javalin.http.Context;
+import io.javalin.http.HandlerType;
 
 import java.util.Optional;
 
+@SuppressWarnings("unused")
+@RouteLoader.RouteClass()
 public class DeleteGitRoute extends Route {
-    @Override
+    @RouteLoader.RouteInfo(
+            url = "/git/{id}/delete",
+            method = HandlerType.POST
+    )
     public void post(Context ctx) {
         int id = Integer.parseInt(ctx.pathParam("id"));
 

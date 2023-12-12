@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import Skeleton from '../../_common/Skeleton'
-import DockerContainer from '../../_common/DockerContainer';
+import type { Container as DockerContainer } from '../../../java';
 import Form, { FormInput } from '../../_common/Form';
 import StatusIndicator from '../_components/StatusIndicator';
 import addJwtParam from '../../_common/_auth';

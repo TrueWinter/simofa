@@ -7,10 +7,8 @@ import dev.truewinter.simofa.common.Util;
 import dev.truewinter.simofa.config.Config;
 import dev.truewinter.simofa.database.Database;
 import dev.truewinter.simofa.pebble.SimofaPebbleExtension;
-import dev.truewinter.simofa.routes.*;
-import dev.truewinter.simofa.routes.api.*;
-import dev.truewinter.simofa.routes.api.deploy.LogReceiverAPIRoute;
-import dev.truewinter.simofa.routes.api.deploy.StatusReceiverAPIRoute;
+import dev.truewinter.simofa.routes.LoginRoute;
+import dev.truewinter.simofa.routes.Route;
 import dev.truewinter.simofa.routes.webhook.GithubWebhookRoute;
 import io.javalin.Javalin;
 import io.javalin.http.Header;
@@ -87,6 +85,10 @@ public class WebServer extends Thread {
             }
         });
 
+        // A small selection of routes are registered here.
+        // The rest are automatically loaded from the `routes`
+        // package and registered by the RouteLoader.
+
         server.get("/", ctx -> {
             if (!Route.isLoggedIn(ctx)) {
                 ctx.redirect("/login");
@@ -119,184 +121,15 @@ public class WebServer extends Thread {
             new LoginRoute().post(ctx);
         });
 
-        server.get("/logout", ctx -> {
-            new LogoutRoute().verifyLogin(ctx).get(ctx);
-        });
-
-        server.get("/websites", ctx -> {
-            new WebsitesRoute().verifyLogin(ctx).get(ctx);
-        });
-
-        server.get("/websites/add", ctx -> {
-            new AddWebsiteRoute().verifyLogin(ctx).get(ctx);
-        });
-
-        server.post("/websites/add", ctx -> {
-            new AddWebsiteRoute().verifyLogin(ctx).verifyCSRF(ctx, "websites/add").post(ctx);
-        });
-
-        server.get("/websites/{id}/edit", ctx -> {
-            new EditWebsiteRoute().verifyLogin(ctx).get(ctx);
-        });
-
-        server.post("/websites/{id}/edit", ctx -> {
-            new EditWebsiteRoute().verifyLogin(ctx).verifyCSRF(ctx, "error").post(ctx);
-        });
-
-        server.post("/websites/{id}/delete", ctx -> {
-            new DeleteWebsiteRoute().verifyLogin(ctx).verifyCSRF(ctx, "error").post(ctx);
-        });
-
-        server.post("/websites/{id}/pull", ctx -> {
-            new PullWebsiteRoute().verifyLogin(ctx).verifyCSRF(ctx, "error").post(ctx);
-        });
-
-        server.get("/websites/{id}/logs", ctx -> {
-            new LogsRoute().verifyLogin(ctx).get(ctx);
-        });
-
-        server.get("/websites/{wid}/build/{bid}/logs", ctx -> {
-            new BuildLogsRoute().verifyLogin(ctx).get(ctx);
-        });
-
-        server.post("/websites/{wid}/build/{bid}/stop", ctx -> {
-            new StopBuildRoute().verifyLogin(ctx).verifyCSRF(ctx, "error").post(ctx);
-        });
-
-        server.get("/deployment-servers", ctx -> {
-            new DeploymentServersRoute().verifyLogin(ctx).get(ctx);
-        });
-
-        server.get("/deployment-servers/add", ctx -> {
-            new AddDeploymentServerRoute().verifyLogin(ctx).get(ctx);
-        });
-
-        server.post("/deployment-servers/add", ctx -> {
-            new AddDeploymentServerRoute().verifyLogin(ctx).verifyCSRF(ctx, "deployment-servers/add").post(ctx);
-        });
-
-        server.get("/deployment-servers/{id}/edit", ctx -> {
-            new EditDeploymentServerRoute().verifyLogin(ctx).get(ctx);
-        });
-
-        server.post("/deployment-servers/{id}/edit", ctx -> {
-            new EditDeploymentServerRoute().verifyLogin(ctx).verifyCSRF(ctx, "error").post(ctx);
-        });
-
-        server.post("/deployment-servers/{id}/delete", ctx -> {
-            new DeleteDeploymentServerRoute().verifyLogin(ctx).verifyCSRF(ctx, "error").post(ctx);
-        });
-
-        server.get("/accounts", ctx -> {
-            new AccountsRoute().verifyLogin(ctx).get(ctx);
-        });
-
-        server.get("/accounts/add", ctx -> {
-            new AddAccountRoute().verifyLogin(ctx).get(ctx);
-        });
-
-        server.post("/accounts/add", ctx -> {
-            new AddAccountRoute().verifyLogin(ctx).verifyCSRF(ctx, "accounts/add").post(ctx);
-        });
-
-        server.get("/accounts/{id}/edit", ctx -> {
-            new EditAccountRoute().verifyLogin(ctx).get(ctx);
-        });
-
-        server.post("/accounts/{id}/edit", ctx -> {
-            new EditAccountRoute().verifyLogin(ctx).verifyCSRF(ctx, "error").post(ctx);
-        });
-
-        server.post("/accounts/{id}/delete", ctx -> {
-           new DeleteAccountRoute().verifyLogin(ctx).verifyCSRF(ctx, "error").post(ctx);
-        });
-
-        server.post("/builds/containers/{id}/delete", ctx -> {
-            new DeleteDockerContainerRoute().verifyLogin(ctx).verifyCSRF(ctx, "error").post(ctx);
-        });
-
-        server.get("/builds/*", ctx -> {
-            new BuildsRoute().verifyLogin(ctx).get(ctx);
-        });
+        RouteLoader routeLoader = new RouteLoader();
+        try {
+            routeLoader.load(server);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
 
         server.get("/builds", ctx -> {
             Route.redirect(ctx, "/builds/");
-        });
-
-        server.get("/git", ctx -> {
-            new GitRoute().verifyLogin(ctx).get(ctx);
-        });
-
-        server.get("/git/add", ctx -> {
-            new AddGitRoute().verifyLogin(ctx).get(ctx);
-        });
-
-        server.post("/git/add", ctx -> {
-            new AddGitRoute().verifyLogin(ctx).verifyCSRF(ctx, "error").post(ctx);
-        });
-
-        server.get("/git/{id}/edit", ctx -> {
-            new EditGitRoute().verifyLogin(ctx).get(ctx);
-        });
-
-        server.post("/git/{id}/edit", ctx -> {
-            new EditGitRoute().verifyLogin(ctx).verifyCSRF(ctx, "error").post(ctx);
-        });
-
-        server.post("/git/{id}/delete", ctx -> {
-            new DeleteGitRoute().verifyLogin(ctx).verifyCSRF(ctx, "error").post(ctx);
-        });
-
-        server.get("/api/deployment-servers", ctx -> {
-            new DeploymentServersAPIRoute().verifyLogin(ctx).get(ctx);
-        });
-
-        server.get("/api/websites", ctx -> {
-            new WebsitesAPIRoute().verifyLogin(ctx).get(ctx);
-        });
-
-        server.get("/api/websites/{wid}/build/{bid}/logs", ctx -> {
-            new BuildLogsAPIRoute().verifyLogin(ctx).get(ctx);
-        });
-
-        server.post("/api/websites/{wid}/build/{bid}/logs/add", ctx -> {
-            new LogReceiverAPIRoute().post(ctx);
-        });
-
-        server.post("/api/websites/{wid}/build/{bid}/status/set", ctx -> {
-            new StatusReceiverAPIRoute().post(ctx);
-        });
-
-        server.get("/api/queue", ctx -> {
-            new QueueAPI().verifyLogin(ctx).get(ctx);
-        });
-
-        server.get("/api/accounts", ctx -> {
-            new AccountsAPIRoute().verifyLogin(ctx).get(ctx);
-        });
-
-        server.get("/api/builds/images", ctx -> {
-            new DockerImagesAPIRoute().verifyLogin(ctx).get(ctx);
-        });
-
-        server.get("/api/builds/containers", ctx -> {
-            new DockerContainersAPIRoute().verifyLogin(ctx).get(ctx);
-        });
-
-        server.get("/api/templates", ctx -> {
-            new TemplatesAPIRoute().verifyLogin(ctx).get(ctx);
-        });
-
-        server.post("/api/templates/add", ctx -> {
-            new AddTemplateAPIRoute().verifyLogin(ctx).verifyCSRF(ctx, "error").post(ctx);
-        });
-
-        server.post("/api/templates/{id}/delete", ctx -> {
-            new DeleteTemplateAPIRoute().verifyLogin(ctx).verifyCSRF(ctx, "error").post(ctx);
-        });
-
-        server.get("/api/git", ctx -> {
-            new GitAPIRoute().verifyLogin(ctx).get(ctx);
         });
 
         server.post("/public-api/deploy/website/{id}/github", ctx -> {

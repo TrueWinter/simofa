@@ -3,7 +3,7 @@
 Simofa is a tool to help automate static website building and deployment. It is not a fully-featured alternative for \[insert PaaS here\].
 
 It:
-  - awaits GitHub/Gitea commit webhooks
+  - awaits GitHub commit webhooks
   - runs user-configured build commands in a secure Docker container
   - sends the built site to the server where it is to be deployed and runs the user-configured deployment script
   - handles failed builds/deployments
@@ -22,10 +22,14 @@ All other aspects of website building/deployment (such as SSL certificates and w
 - Linux recommended
 - 2 CPU cores (minimum, recommended: ceil(`config.concurrent_builds` \* \[average build CPU usage (default 0.5)\]) + 1)
 - 2GB memory (minimum, recommended: ceil(`config.concurrent_builds` \* \[average build memory usage (default 256MB)\]) + 1GB)
-- 20GB disk space (minimum)
+- 20GB disk space (minimum). You should have enough disk space for:
+  - All containers and build data
+  - All git repositories (once they are cloned, they are saved to `config.cache_directory` for future builds)
+  - Build cache files
+  - Processing files (copying, zipping, etc.)
 - Modern web browser (Chrome 92+/Firefox 95+)
 
-**Important: Install Simofa on it's own server. It expects to be the only software managing Docker containers on the build server, and will delete all containers when it exits.**
+**Important: Install Simofa on its own server. It expects to be the only software managing Docker containers on the build server, and will delete all containers when it exits.**
 
 ### Deploy server
 - Java 16+
@@ -33,7 +37,7 @@ All other aspects of website building/deployment (such as SSL certificates and w
 - unzip (or similar tool)
 - 1 CPU core
 - 1GB memory (recommended)
-- SSL recommended if build server and deploy server are communicating over the internet
+- Reverse proxy with SSL recommended if build server and deploy server are communicating over the internet
 
 **Important:** Keep the build server and deploy server versions in sync
 
@@ -45,7 +49,7 @@ When Simofa is first started, it will create a user with the username `admin` an
 
 ### Git
 
-Your website repositories should be hosted on GitHub (or other Git service compatible with GitHub webhooks, such as Gitea). Only user/pass authentication is accepted at the moment. The git repository is cloned to a temporary directory before being copied to the Docker container, so the container never receives your git credentials.
+Your website repositories should be hosted on GitHub. Only user/pass authentication is accepted at the moment. The git repository is cloned to a temporary directory before being copied to the Docker container, so the container never receives your git credentials.
 
 Configure webhook to `{simofa_url}/public-api/deploy/website/{id}/github`, where `{id}` is the website ID and `{simofa_url}` is a publicly acessible URL for Simofa. Use the JSON content type, and the deploy token (generated when adding the website) as the secret.
 
@@ -118,9 +122,9 @@ In addition to the above requirements, you will need the following to develop Si
 - Node 16+
 - 6-10GB memory (depending on IDE, Docker memory allocation, etc.)
 - IDE with Maven support (IntelliJ is recommended)
-- Visual Studio Code
+- Visual Studio Code for developing JS and CSS (recommended, but any text editor will do)
 
-Run `mvn clean install` from the `simofa-maven-plugin` module.
+Run `mvn clean install` from the `simofa-maven-plugin` module. Then run `mvn clean package` from the root module to generate TypeScript definitions.
 
 Set `simofa_internals.dev` to `true` in `config.yml`. Run `npm run dev` and wait for it to finish. Ensure that `simofa/src/main/resources/web/assets/build/assets-manifest.json` contains entries for CSS and JavaScript. Then, run Simofa from your IDE.
 

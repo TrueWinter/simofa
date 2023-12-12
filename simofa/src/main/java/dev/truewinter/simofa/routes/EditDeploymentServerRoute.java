@@ -5,13 +5,17 @@ import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.json.JsonMapper;
 import dev.truewinter.simofa.DeploymentServer;
+import dev.truewinter.simofa.RouteLoader;
 import dev.truewinter.simofa.formvalidators.AddEditDeploymentServerValidator;
 import io.javalin.http.Context;
+import io.javalin.http.HandlerType;
 
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Optional;
 
+@SuppressWarnings("unused")
+@RouteLoader.RouteClass()
 public class EditDeploymentServerRoute extends Route {
     private HashMap<String, Object> getDeploymentServerDataForModel(DeploymentServer d) throws JsonProcessingException {
         // This configuration makes it easier to get the
@@ -29,7 +33,9 @@ public class EditDeploymentServerRoute extends Route {
         return containerMap;
     }
 
-    @Override
+    @RouteLoader.RouteInfo(
+            url = "/deployment-servers/{id}/edit"
+    )
     public void get(Context ctx) {
         int id = Integer.parseInt(ctx.pathParam("id"));
         try {
@@ -50,7 +56,10 @@ public class EditDeploymentServerRoute extends Route {
         }
     }
 
-    @Override
+    @RouteLoader.RouteInfo(
+            url = "/deployment-servers/{id}/edit",
+            method = HandlerType.POST
+    )
     public void post(Context ctx) {
         int id = Integer.parseInt(ctx.pathParam("id"));
 

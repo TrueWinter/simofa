@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import DockerImage from '../../_common/DockerImage'
+import type { Image as DockerImage } from '../../../java'
 import Skeleton from '../../_common/Skeleton'
 import addJwtParam from '../../_common/_auth';
 

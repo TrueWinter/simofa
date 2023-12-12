@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef, ReactElement } from 'react'
 import Skeleton from '../../_common/Skeleton'
-import Website from '../../_common/Website'
+import type { Website } from '../../../java';
 import Build from '../../_common/Build'
 import Form, { FormInput } from '../../_common/Form'
 import addJwtParam from '../../_common/_auth'

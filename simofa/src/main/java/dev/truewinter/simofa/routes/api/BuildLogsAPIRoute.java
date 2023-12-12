@@ -1,5 +1,6 @@
 package dev.truewinter.simofa.routes.api;
 
+import dev.truewinter.simofa.RouteLoader;
 import dev.truewinter.simofa.Simofa;
 import dev.truewinter.simofa.common.SimofaLog;
 import dev.truewinter.simofa.common.Util;
@@ -12,8 +13,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
 
+@SuppressWarnings("unused")
+@RouteLoader.RouteClass()
 public class BuildLogsAPIRoute extends Route {
-    @Override
+    @RouteLoader.RouteInfo(
+            url = "/api/websites/{wid}/build/{bid}/logs"
+    )
     public void get(Context ctx) {
         int websiteId = Integer.parseInt(ctx.pathParam("wid"));
         String buildId = ctx.pathParam("bid");

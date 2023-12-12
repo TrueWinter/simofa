@@ -2,7 +2,7 @@ import render from '../../_common/_render'
 import { KeyboardEvent, useState } from 'react'
 import CloseButton from '../../_common/CloseButton'
 import Form, { FormInput } from '../../_common/Form'
-import Website from '../../_common/Website'
+import type { Website } from '../../../java';
 import { toCamelCase } from '../../../util'
 
 import css from '../../../../css/react/logs/LogsApp.module.css'

@@ -1,5 +1,6 @@
 package dev.truewinter.simofa.routes;
 
+import dev.truewinter.simofa.RouteLoader;
 import dev.truewinter.simofa.Simofa;
 import dev.truewinter.simofa.docker.WebsiteBuild;
 import io.javalin.http.Context;
@@ -8,8 +9,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
 
+@SuppressWarnings("unused")
+@RouteLoader.RouteClass()
 public class BuildLogsRoute extends Route {
-    @Override
+    @RouteLoader.RouteInfo(
+            url = "/websites/{wid}/build/{bid}/logs"
+    )
     public void get(Context ctx) {
         int websiteId = Integer.parseInt(ctx.pathParam("wid"));
         String buildId = ctx.pathParam("bid");

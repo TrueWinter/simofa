@@ -3,14 +3,18 @@ package dev.truewinter.simofa.routes;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.truewinter.simofa.Account;
+import dev.truewinter.simofa.RouteLoader;
 import dev.truewinter.simofa.common.Util;
 import io.javalin.http.Context;
+import io.javalin.http.HandlerType;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.HashMap;
 import java.util.Optional;
 
+@SuppressWarnings("unused")
+@RouteLoader.RouteClass()
 public class EditAccountRoute extends Route {
     private HashMap<String, Object> getAccountDataForModel(Account a) throws JsonProcessingException {
         // This configuration makes it easier to get the
@@ -26,7 +30,9 @@ public class EditAccountRoute extends Route {
         return containerMap;
     }
 
-    @Override
+    @RouteLoader.RouteInfo(
+            url = "/accounts/{id}/edit"
+    )
     public void get(Context ctx) {
         int id = Integer.parseInt(ctx.pathParam("id"));
 
@@ -44,7 +50,10 @@ public class EditAccountRoute extends Route {
         }
     }
 
-    @Override
+    @RouteLoader.RouteInfo(
+            url = "/accounts/{id}/edit",
+            method = HandlerType.POST
+    )
     public void post(Context ctx) {
         int id = Integer.parseInt(ctx.pathParam("id"));
 

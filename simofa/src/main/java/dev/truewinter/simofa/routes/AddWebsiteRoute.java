@@ -1,20 +1,31 @@
 package dev.truewinter.simofa.routes;
 
 import dev.truewinter.simofa.GitCredential;
+import dev.truewinter.simofa.RouteLoader;
 import dev.truewinter.simofa.Website;
 import dev.truewinter.simofa.formvalidators.AddEditWebsiteValidator;
 import io.javalin.http.Context;
+import io.javalin.http.HandlerType;
 
 import java.sql.SQLException;
 import java.util.Optional;
 
+@SuppressWarnings("unused")
+@RouteLoader.RouteClass(
+        csrfErrorPage = "websites/add"
+)
 public class AddWebsiteRoute extends Route {
-    @Override
+    @RouteLoader.RouteInfo(
+            url = "/websites/add"
+    )
     public void get(Context ctx) {
         render(ctx, "websites/add");
     }
 
-    @Override
+    @RouteLoader.RouteInfo(
+            url = "/websites/add",
+            method = HandlerType.POST
+    )
     public void post(Context ctx) {
         String name = ctx.formParam("name");
         String dockerImage = ctx.formParam("docker_image");

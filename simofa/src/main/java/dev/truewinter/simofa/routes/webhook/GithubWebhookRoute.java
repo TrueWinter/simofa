@@ -1,6 +1,5 @@
 package dev.truewinter.simofa.routes.webhook;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.truewinter.simofa.SignatureVerification;
 import dev.truewinter.simofa.Simofa;
@@ -9,14 +8,12 @@ import dev.truewinter.simofa.common.Util;
 import dev.truewinter.simofa.routes.Route;
 import io.javalin.http.Context;
 
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Optional;
 
 public class GithubWebhookRoute extends Route {
-    @Override
     public void post(Context ctx) {
         int websiteId = Integer.parseInt(ctx.pathParam("id"));
         HashMap<String, Object> resp = new HashMap<>();

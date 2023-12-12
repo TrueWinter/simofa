@@ -1,14 +1,21 @@
 package dev.truewinter.simofa.routes;
 
+import dev.truewinter.simofa.RouteLoader;
 import dev.truewinter.simofa.Simofa;
 import dev.truewinter.simofa.Website;
 import dev.truewinter.simofa.common.Util;
 import io.javalin.http.Context;
+import io.javalin.http.HandlerType;
 
 import java.util.Optional;
 
+@SuppressWarnings("unused")
+@RouteLoader.RouteClass()
 public class PullWebsiteRoute extends Route {
-    @Override
+    @RouteLoader.RouteInfo(
+            url = "/websites/{id}/pull",
+            method = HandlerType.POST
+    )
     public void post(Context ctx) {
         int id = Integer.parseInt(ctx.pathParam("id"));
         String gitUrl = ctx.formParam("repository");

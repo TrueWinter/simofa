@@ -3,13 +3,17 @@ package dev.truewinter.simofa.routes;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.truewinter.simofa.GitCredential;
+import dev.truewinter.simofa.RouteLoader;
 import dev.truewinter.simofa.Website;
 import dev.truewinter.simofa.formvalidators.AddEditWebsiteValidator;
 import io.javalin.http.Context;
+import io.javalin.http.HandlerType;
 
 import java.util.HashMap;
 import java.util.Optional;
 
+@SuppressWarnings("unused")
+@RouteLoader.RouteClass()
 public class EditWebsiteRoute extends Route {
     private HashMap<String, Object> getWebsiteDataForModel(Website w) throws JsonProcessingException {
         // This configuration makes it easier to get the
@@ -25,7 +29,9 @@ public class EditWebsiteRoute extends Route {
         return containerMap;
     }
 
-    @Override
+    @RouteLoader.RouteInfo(
+            url = "/websites/{id}/edit"
+    )
     public void get(Context ctx) {
         int id = Integer.parseInt(ctx.pathParam("id"));
         try {
@@ -46,7 +52,10 @@ public class EditWebsiteRoute extends Route {
         }
     }
 
-    @Override
+    @RouteLoader.RouteInfo(
+            url = "/websites/{id}/edit",
+            method = HandlerType.POST
+    )
     public void post(Context ctx) {
         int id = Integer.parseInt(ctx.pathParam("id"));
         try {

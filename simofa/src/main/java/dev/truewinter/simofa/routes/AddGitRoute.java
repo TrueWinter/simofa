@@ -1,18 +1,27 @@
 package dev.truewinter.simofa.routes;
 
 import dev.truewinter.simofa.GitCredential;
+import dev.truewinter.simofa.RouteLoader;
 import dev.truewinter.simofa.formvalidators.AddEditGitValidator;
 import io.javalin.http.Context;
+import io.javalin.http.HandlerType;
 
 import java.util.Optional;
 
+@SuppressWarnings("unused")
+@RouteLoader.RouteClass()
 public class AddGitRoute extends Route {
-    @Override
+    @RouteLoader.RouteInfo(
+            url = "/git/add"
+    )
     public void get(Context ctx) {
         render(ctx, "git/add");
     }
 
-    @Override
+    @RouteLoader.RouteInfo(
+            url = "/git/add",
+            method = HandlerType.POST
+    )
     public void post(Context ctx) {
         String username = ctx.formParam("username");
         String password = ctx.formParam("password");

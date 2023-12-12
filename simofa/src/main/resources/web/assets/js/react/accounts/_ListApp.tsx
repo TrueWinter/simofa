@@ -1,6 +1,7 @@
 import { Fragment, useEffect, useState } from 'react'
 import render from '../_common/_render'
-import Account, { AccountsResponse } from '../_common/Account'
+import { AccountsResponse } from '../_common/Account'
+import type { Account } from '../../java.d.ts';
 import Skeleton from '../_common/Skeleton';
 import Form, { FormInput } from '../_common/Form';
 import addJwtParam from '../_common/_auth';

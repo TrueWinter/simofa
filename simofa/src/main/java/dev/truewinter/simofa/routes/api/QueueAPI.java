@@ -1,5 +1,6 @@
 package dev.truewinter.simofa.routes.api;
 
+import dev.truewinter.simofa.RouteLoader;
 import dev.truewinter.simofa.Simofa;
 import dev.truewinter.simofa.Website;
 import dev.truewinter.simofa.common.Util;
@@ -9,9 +10,13 @@ import io.javalin.http.Context;
 
 import java.util.*;
 
+@SuppressWarnings("unused")
+@RouteLoader.RouteClass()
 public class QueueAPI extends Route {
     // Shared between `/websites/{id}/logs` and `/builds/queue`
-    @Override
+    @RouteLoader.RouteInfo(
+            url = "/api/queue"
+    )
     public void get(Context ctx) {
         HashMap<String, Object> map = new HashMap<>();
         map.put("success", true);

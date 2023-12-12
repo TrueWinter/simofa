@@ -1,19 +1,30 @@
 package dev.truewinter.simofa.routes;
 
 import dev.truewinter.simofa.DeploymentServer;
+import dev.truewinter.simofa.RouteLoader;
 import dev.truewinter.simofa.formvalidators.AddEditDeploymentServerValidator;
 import io.javalin.http.Context;
+import io.javalin.http.HandlerType;
 
 import java.sql.SQLException;
 import java.util.Optional;
 
+@SuppressWarnings("unused")
+@RouteLoader.RouteClass(
+        csrfErrorPage = "deployment-servers/add"
+)
 public class AddDeploymentServerRoute extends Route {
-    @Override
+    @RouteLoader.RouteInfo(
+            url = "/deployment-servers/add"
+    )
     public void get(Context ctx) {
         render(ctx, "deployment-servers/add");
     }
 
-    @Override
+    @RouteLoader.RouteInfo(
+            url = "/deployment-servers/add",
+            method = HandlerType.POST
+    )
     public void post(Context ctx) {
         String name = ctx.formParam("name");
         String url = ctx.formParam("url");

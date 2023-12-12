@@ -7,3 +7,4 @@ target
 /migrator.yml
 simofa/src/main/resources/web/assets/build
 simofa/src/main/resources/web/assets/css/**/*.d.ts
+simofa/src/main/resources/web/assets/js/java.d.ts

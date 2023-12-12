@@ -1,16 +1,23 @@
 package dev.truewinter.simofa.routes;
 
+import dev.truewinter.simofa.RouteLoader;
 import dev.truewinter.simofa.Simofa;
 import dev.truewinter.simofa.common.Util;
 import dev.truewinter.simofa.docker.WebsiteBuild;
 import io.javalin.http.Context;
+import io.javalin.http.HandlerType;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
 
+@SuppressWarnings("unused")
+@RouteLoader.RouteClass()
 public class StopBuildRoute extends Route {
-    @Override
+    @RouteLoader.RouteInfo(
+            url = "/websites/{wid}/build/{bid}/stop",
+            method = HandlerType.POST
+    )
     public void post(Context ctx) {
         int websiteId = Integer.parseInt(ctx.pathParam("wid"));
         String buildId = ctx.pathParam("bid");

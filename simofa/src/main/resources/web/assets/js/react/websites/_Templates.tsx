@@ -1,10 +1,9 @@
 import { MouseEvent, useEffect, useState } from 'react'
 import Skeleton from '../_common/Skeleton'
-import Website from '../_common/Website'
 import Form, { FormInput } from '../_common/Form'
 
 import css from '../../../css/react/websites/Add.module.css'
-import Template from '../_common/Template'
+import type { Template } from '../../java'
 import addJwtParam from '../_common/_auth'
 
 interface TemplatesProps {

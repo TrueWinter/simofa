@@ -5,12 +5,16 @@ import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.json.JsonMapper;
 import dev.truewinter.simofa.GitCredential;
+import dev.truewinter.simofa.RouteLoader;
 import dev.truewinter.simofa.formvalidators.AddEditGitValidator;
 import io.javalin.http.Context;
+import io.javalin.http.HandlerType;
 
 import java.util.HashMap;
 import java.util.Optional;
 
+@SuppressWarnings("unused")
+@RouteLoader.RouteClass()
 public class EditGitRoute extends Route {
     private HashMap<String, Object> getGitCredentialDataForModel(GitCredential g) throws JsonProcessingException {
         HashMap<String, Object> containerMap = new HashMap<>();
@@ -26,7 +30,9 @@ public class EditGitRoute extends Route {
         return containerMap;
     }
 
-    @Override
+    @RouteLoader.RouteInfo(
+            url = "/git/{id}/edit"
+    )
     public void get(Context ctx) {
         int id = Integer.parseInt(ctx.pathParam("id"));
 
@@ -42,7 +48,10 @@ public class EditGitRoute extends Route {
         }
     }
 
-    @Override
+    @RouteLoader.RouteInfo(
+            url = "/git/{id}/edit",
+            method = HandlerType.POST
+    )
     public void post(Context ctx) {
         int id = Integer.parseInt(ctx.pathParam("id"));
         String username = ctx.formParam("username");

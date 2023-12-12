@@ -1,4 +1,4 @@
-import Website from "./Website"
+import type { Website } from "../../java"
 
 export default interface Build {
 	id: string

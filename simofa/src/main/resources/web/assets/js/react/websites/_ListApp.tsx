@@ -1,7 +1,8 @@
 import { Fragment, useEffect, useState } from 'react'
 import render from '../_common/_render'
 import Skeleton from '../_common/Skeleton'
-import Website, { WebsitesResponse } from '../_common/Website'
+import { WebsitesResponse } from '../_common/Website'
+import type { Website } from '../../java';
 import DeploymentServer, { DeploymentServersResponse } from '../_common/DeploymentServer'
 import Form, { FormInput } from '../_common/Form'
 import addJwtParam from '../_common/_auth'

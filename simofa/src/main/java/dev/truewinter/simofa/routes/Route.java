@@ -23,10 +23,10 @@ abstract public class Route {
     private static Config config;
     private static Map<String, String> assetManifest;
 
-    public void get(Context ctx) {}
-    public void post(Context ctx) {}
+    /*public void get(Context ctx) {}
+    public void post(Context ctx) {}*/
 
-    public Route verifyLogin(Context ctx) {
+    public static boolean verifyLogin(Context ctx) {
         if (!isLoggedIn(ctx)) {
             if (ctx.path().startsWith("/api")) {
                 HashMap<String, Object> json = new HashMap<>();
@@ -42,13 +42,13 @@ abstract public class Route {
                 }
             }
 
-            return new NoopRoute();
+            return false;
         }
 
-        return this;
+        return true;
     }
 
-    public Route verifyCSRF(Context ctx, String errorPage) {
+    public static boolean verifyCSRF(Context ctx, String errorPage) {
         String csrf = ctx.formParam("csrf");
 
         Optional<LoginCookie> loginCookie = getLoginCookie(ctx);
@@ -56,13 +56,13 @@ abstract public class Route {
         if (csrf == null || loginCookie.isEmpty() || !Util.secureCompare(csrf, loginCookie.get().getCsrf())) {
             ctx.status(400);
             renderError(ctx, errorPage, "CSRF token is invalid");
-            return new NoopRoute();
+            return false;
         }
 
-        return this;
+        return true;
     }
 
-    private void addDefaultModelValues(Context ctx, String view, HashMap<String, Object> model) {
+    private static void addDefaultModelValues(Context ctx, String view, HashMap<String, Object> model) {
         Optional<LoginCookie> cookie = getLoginCookie(ctx);
         if (cookie.isPresent()) {
             model.put("user_id", String.valueOf(cookie.get().getUserId()));
@@ -85,30 +85,30 @@ abstract public class Route {
         }
     }
 
-    public final void render(Context ctx, String path) {
+    public static final void render(Context ctx, String path) {
         render(ctx, path, new HashMap<>());
     }
 
-    public final void render(Context ctx, String path, HashMap<String, Object> model) {
+    public static final void render(Context ctx, String path, HashMap<String, Object> model) {
         addDefaultModelValues(ctx, path, model);
         ctx.render(getPath(path), model);
     }
 
-    public final void renderError(Context ctx, String path, String error) {
+    public static final void renderError(Context ctx, String path, String error) {
         renderError(ctx, path, error, new HashMap<>());
     }
 
-    public final void renderError(Context ctx, String path, String error, HashMap<String, Object> model) {
+    public static final void renderError(Context ctx, String path, String error, HashMap<String, Object> model) {
         addDefaultModelValues(ctx, path, model);
         model.put("error", error);
         ctx.render(getPath(path), model);
     }
 
-    public final void renderSuccess(Context ctx, String path, String success) {
+    public static final void renderSuccess(Context ctx, String path, String success) {
         renderSuccess(ctx, path, success, new HashMap<>());
     }
 
-    public final void renderSuccess(Context ctx, String path, String success, HashMap<String, Object> model) {
+    public static final void renderSuccess(Context ctx, String path, String success, HashMap<String, Object> model) {
         addDefaultModelValues(ctx, path, model);
         model.put("success", success);
         ctx.render(getPath(path), model);
@@ -191,19 +191,6 @@ abstract public class Route {
             return Optional.empty();
         } catch (Exception e) {
             return Optional.empty();
-        }
-    }
-
-    public static class NoopRoute extends Route {
-        public void get(Context ctx) {}
-        public void post(Context ctx) {}
-
-        public Route verifyLogin(Context ctx) {
-            return this;
-        }
-
-        public Route verifyCSRF(Context ctx, String errorPage) {
-            return this;
         }
     }
 }
