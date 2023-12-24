@@ -1,9 +1,10 @@
 package dev.truewinter.simofa;
 
+import dev.truewinter.simofa.api.GitCredential;
 import dev.truewinter.simofa.common.LogType;
 import dev.truewinter.simofa.common.SimofaLog;
 import dev.truewinter.simofa.common.Util;
-import dev.truewinter.simofa.docker.WebsiteBuild;
+import dev.truewinter.simofa.api.WebsiteBuild;
 import org.apache.commons.io.FileUtils;
 import org.eclipse.jgit.api.*;
 import org.eclipse.jgit.api.errors.GitAPIException;

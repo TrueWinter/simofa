@@ -1,16 +1,17 @@
-package dev.truewinter.simofa.docker;
+package dev.truewinter.simofa.api;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import dev.truewinter.simofa.Website;
+import dev.truewinter.simofa.api.events.BuildQueuedEvent;
+import dev.truewinter.simofa.api.events.BuildStatusChangedEvent;
 import dev.truewinter.simofa.common.BuildStatus;
 import dev.truewinter.simofa.common.LogType;
 import dev.truewinter.simofa.common.SimofaLog;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.UUID;
 
+@SuppressWarnings("unused")
 public class WebsiteBuild {
     private final String id;
     private final Website website;
@@ -27,13 +28,17 @@ public class WebsiteBuild {
     @JsonIgnore
     private final String cacheDir;
 
-    protected WebsiteBuild(Website website, String commit, String cacheDir) {
+    public WebsiteBuild(Website website, String commit, String cacheDir) {
         this.id = UUID.randomUUID().toString();
         this.website = website;
         this.commit = commit;
         this.status = BuildStatus.QUEUED;
         this.logs = new ArrayList<>();
         this.cacheDir = cacheDir;
+
+        addLog(new SimofaLog(LogType.INFO, "Build queued"));
+
+        SimofaPluginManager.getInstance().getPluginManager().fireEvent(new BuildQueuedEvent(this));
     }
 
     public String getId() {
@@ -67,6 +72,8 @@ public class WebsiteBuild {
         this.status = status;
 
         addLog(new SimofaLog(LogType.INFO, "Build status changed to " + status));
+
+        SimofaPluginManager.getInstance().getPluginManager().fireEvent(new BuildStatusChangedEvent(this));
     }
 
     @Nullable

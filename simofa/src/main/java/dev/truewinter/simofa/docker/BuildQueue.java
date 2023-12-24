@@ -1,7 +1,8 @@
 package dev.truewinter.simofa.docker;
 
 import dev.truewinter.simofa.Simofa;
-import dev.truewinter.simofa.Website;
+import dev.truewinter.simofa.api.Website;
+import dev.truewinter.simofa.api.WebsiteBuild;
 import dev.truewinter.simofa.common.BuildStatus;
 import dev.truewinter.simofa.common.LogType;
 import dev.truewinter.simofa.common.SimofaLog;
@@ -96,20 +97,25 @@ public class BuildQueue {
     public synchronized void remove(int id) {
         websiteBuildQueue.removeIf(w -> w.getWebsite().getId() == id);
         if (websiteBuildList.containsKey(id)) {
-            websiteBuildList.get(id).forEach(w -> {
-                if (w.getStatus().equals(BuildStatus.QUEUED.toString()) ||
-                        w.getStatus().equals(BuildStatus.BUILDING.toString())) {
-                    w.setStatus(BuildStatus.STOPPED);
-                }
-
-                if (!Util.isBlank(w.getContainerId())) {
-                    System.out.printf("Deleting container %s for build %s%n", w.getContainerId(), w.getId());
-                    Simofa.getDockerManager().deleteContainer(w.getContainerId());
-                }
-            });
+            websiteBuildList.get(id).forEach(this::remove);
         }
 
         beingBuiltList.removeIf(w -> w.getWebsite().getId() == id);
+    }
+
+    public synchronized void remove(WebsiteBuild w) {
+        if (!w.getStatus().equals(BuildStatus.STOPPED.toString())) {
+            if (w.getStatus().equals(BuildStatus.QUEUED.toString()) ||
+                    w.getStatus().equals(BuildStatus.PREPARING.toString()) ||
+                    w.getStatus().equals(BuildStatus.BUILDING.toString())) {
+                w.setStatus(BuildStatus.STOPPED);
+            }
+
+            if (!Util.isBlank(w.getContainerId())) {
+                Simofa.getLogger().info(String.format("Deleting container %s for build %s", w.getContainerId(), w.getId()));
+                Simofa.getDockerManager().deleteContainer(w.getContainerId());
+            }
+        }
     }
 
     public synchronized List<WebsiteBuild> getCurrentBuilds() {

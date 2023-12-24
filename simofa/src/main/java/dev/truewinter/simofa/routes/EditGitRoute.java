@@ -4,7 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.json.JsonMapper;
-import dev.truewinter.simofa.GitCredential;
+import dev.truewinter.simofa.api.GitCredential;
 import dev.truewinter.simofa.RouteLoader;
 import dev.truewinter.simofa.formvalidators.AddEditGitValidator;
 import io.javalin.http.Context;

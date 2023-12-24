@@ -4,6 +4,7 @@ import org.jetbrains.annotations.Nullable;
 
 public enum BuildStatus {
     QUEUED("queued"),
+    PREPARING("preparing"),
     BUILDING("building"),
     DEPLOYING("deploying"),
     DEPLOYED("deployed"),

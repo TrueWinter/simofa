@@ -2,7 +2,7 @@ package dev.truewinter.simofa.routes;
 
 import dev.truewinter.simofa.RouteLoader;
 import dev.truewinter.simofa.Simofa;
-import dev.truewinter.simofa.docker.WebsiteBuild;
+import dev.truewinter.simofa.api.WebsiteBuild;
 import io.javalin.http.Context;
 
 import java.util.HashMap;
@@ -21,14 +21,14 @@ public class BuildLogsRoute extends Route {
         HashMap<Integer, List<WebsiteBuild>> allBuildsList = Simofa.getBuildQueueManager().getBuildQueue().getWebsiteBuildList();
 
         if (!allBuildsList.containsKey(websiteId)) {
-            ctx.status(404).result("No builds found for that website");
+            ctx.redirect("/websites/" + websiteId + "/logs");
             return;
         }
 
         List<WebsiteBuild> buildList = allBuildsList.get(websiteId);
         Optional<WebsiteBuild> build = buildList.stream().filter(b -> b.getId().equals(buildId)).findFirst();
         if (build.isEmpty()) {
-            ctx.status(404).result("Build not found");
+            ctx.redirect("/websites/" + websiteId + "/logs");
             return;
         }
 

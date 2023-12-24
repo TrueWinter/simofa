@@ -1,7 +1,7 @@
 package dev.truewinter.simofa.routes;
 
 import dev.truewinter.simofa.RouteLoader;
-import dev.truewinter.simofa.Website;
+import dev.truewinter.simofa.api.Website;
 import io.javalin.http.Context;
 import io.javalin.http.HandlerType;
 

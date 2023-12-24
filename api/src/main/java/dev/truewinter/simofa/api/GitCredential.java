@@ -1,4 +1,4 @@
-package dev.truewinter.simofa;
+package dev.truewinter.simofa.api;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 

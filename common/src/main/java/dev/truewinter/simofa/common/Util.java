@@ -4,13 +4,16 @@ import org.apache.commons.io.FileUtils;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
+import java.io.FilenameFilter;
 import java.io.IOException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.SecureRandom;
+import java.util.ArrayList;
 import java.util.Base64;
+import java.util.List;
 import java.util.Properties;
 
 public class Util {
@@ -116,5 +119,22 @@ public class Util {
 
     public static String dos2unix(String string) {
         return string.replaceAll("\r\n", "\n");
+    }
+
+    public static List<File> getPluginJars() throws Exception {
+        List<File> pluginJars = new ArrayList<>();
+
+        File[] files = Path.of(getInstallPath(), "plugins").toFile()
+                .listFiles((dir, name) -> name.endsWith(".jar"));
+
+        if (files != null) {
+            for (File file : files) {
+                if (file.isFile()) {
+                    pluginJars.add(file);
+                }
+            }
+        }
+
+        return pluginJars;
     }
 }

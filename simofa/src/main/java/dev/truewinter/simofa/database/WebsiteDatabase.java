@@ -1,8 +1,8 @@
 package dev.truewinter.simofa.database;
 
 import com.zaxxer.hikari.HikariDataSource;
-import dev.truewinter.simofa.GitCredential;
-import dev.truewinter.simofa.Website;
+import dev.truewinter.simofa.api.GitCredential;
+import dev.truewinter.simofa.api.Website;
 import dev.truewinter.simofa.common.Util;
 
 import java.sql.*;

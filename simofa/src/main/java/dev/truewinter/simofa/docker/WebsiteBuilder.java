@@ -4,9 +4,9 @@ import com.github.dockerjava.api.model.Frame;
 import com.github.dockerjava.api.model.StreamType;
 import com.github.dockerjava.api.model.WaitResponse;
 import dev.truewinter.simofa.DeploymentServer;
-import dev.truewinter.simofa.GitCredential;
 import dev.truewinter.simofa.GitFetcher;
 import dev.truewinter.simofa.Simofa;
+import dev.truewinter.simofa.api.WebsiteBuild;
 import dev.truewinter.simofa.common.BuildStatus;
 import dev.truewinter.simofa.common.LogType;
 import dev.truewinter.simofa.common.SimofaLog;
@@ -19,9 +19,6 @@ import org.apache.hc.client5.http.entity.mime.MultipartEntityBuilder;
 import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
 import org.apache.hc.client5.http.impl.classic.HttpClientBuilder;
 import org.apache.hc.core5.http.HttpEntity;
-import org.eclipse.jgit.api.CloneCommand;
-import org.eclipse.jgit.api.Git;
-import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
@@ -37,7 +34,7 @@ public class WebsiteBuilder extends Thread {
     @Override
     public void run() {
         Simofa.getLogger().info(String.format("Running build %s for website %d", build.getId(), build.getWebsite().getId()));
-        build.setStatus(BuildStatus.BUILDING);
+        build.setStatus(BuildStatus.PREPARING);
 
         try {
             File tmpDir = Util.createTempDir(build.getId());
@@ -102,7 +99,7 @@ public class WebsiteBuilder extends Thread {
                             .removeIf(w -> w.getId().equals(build.getId()));
 
                     if (waitResponse.getStatusCode() != 0) {
-                        Simofa.getBuildQueueManager().getBuildQueue().remove(build.getWebsite());
+                        Simofa.getBuildQueueManager().getBuildQueue().remove(build);
                     } else {
                         File tempDir = null;
                         try {
@@ -236,6 +233,8 @@ public class WebsiteBuilder extends Thread {
                     build.getStatus().equals(BuildStatus.ERROR.toString())) {
                 return;
             }
+
+            build.setStatus(BuildStatus.BUILDING);
 
             Simofa.getDockerManager().createContainer(
                     build.getWebsite(),

@@ -1,6 +1,6 @@
 package dev.truewinter.simofa.routes;
 
-import dev.truewinter.simofa.GitCredential;
+import dev.truewinter.simofa.api.GitCredential;
 import dev.truewinter.simofa.RouteLoader;
 import dev.truewinter.simofa.formvalidators.AddEditGitValidator;
 import io.javalin.http.Context;

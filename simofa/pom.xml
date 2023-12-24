@@ -105,6 +105,11 @@
             <artifactId>commons-codec</artifactId>
             <version>1.15</version>
         </dependency>
+        <dependency>
+            <groupId>dev.truewinter.simofa</groupId>
+            <artifactId>SimofaAPI</artifactId>
+            <version>${project.version}</version>
+        </dependency>
     </dependencies>
 
     <repositories>
@@ -144,7 +149,7 @@
                     <jsonLibrary>jackson2</jsonLibrary>
                     <classes>
                         <class>dev.truewinter.simofa.Account</class>
-                        <class>dev.truewinter.simofa.Website</class>
+                        <class>dev.truewinter.simofa.api.Website</class>
                         <class>dev.truewinter.simofa.Template</class>
                         <class>dev.truewinter.simofa.docker.Container</class>
                         <class>dev.truewinter.simofa.docker.Image</class>

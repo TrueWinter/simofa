@@ -123,7 +123,8 @@ export default function LogsApp() {
 		<>
 			<div className="success" style={{
 				display: 'flex',
-				justifyContent: 'space-around'
+				justifyContent: 'space-around',
+				gap: '16px'
 			}}>
 				<span>Status: {status}</span>
 				<span>Duration: {duration === 0 ? '0s' : parseTime(duration)}</span>

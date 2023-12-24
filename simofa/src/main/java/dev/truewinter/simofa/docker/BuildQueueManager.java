@@ -1,6 +1,7 @@
 package dev.truewinter.simofa.docker;
 
 import dev.truewinter.simofa.Simofa;
+import dev.truewinter.simofa.api.WebsiteBuild;
 import dev.truewinter.simofa.common.BuildStatus;
 import dev.truewinter.simofa.config.Config;
 import dev.truewinter.simofa.database.Database;

@@ -3,7 +3,7 @@ package dev.truewinter.simofa.routes.webhook;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.truewinter.simofa.SignatureVerification;
 import dev.truewinter.simofa.Simofa;
-import dev.truewinter.simofa.Website;
+import dev.truewinter.simofa.api.Website;
 import dev.truewinter.simofa.common.Util;
 import dev.truewinter.simofa.routes.Route;
 import io.javalin.http.Context;

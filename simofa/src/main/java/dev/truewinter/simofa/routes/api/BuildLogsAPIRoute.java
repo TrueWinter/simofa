@@ -4,11 +4,10 @@ import dev.truewinter.simofa.RouteLoader;
 import dev.truewinter.simofa.Simofa;
 import dev.truewinter.simofa.common.SimofaLog;
 import dev.truewinter.simofa.common.Util;
-import dev.truewinter.simofa.docker.WebsiteBuild;
+import dev.truewinter.simofa.api.WebsiteBuild;
 import dev.truewinter.simofa.routes.Route;
 import io.javalin.http.Context;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;

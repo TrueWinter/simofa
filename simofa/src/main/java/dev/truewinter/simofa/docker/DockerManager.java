@@ -2,7 +2,6 @@ package dev.truewinter.simofa.docker;
 
 import com.github.dockerjava.api.DockerClient;
 import com.github.dockerjava.api.command.*;
-import com.github.dockerjava.api.exception.NotFoundException;
 import com.github.dockerjava.api.model.*;
 import com.github.dockerjava.core.DefaultDockerClientConfig;
 import com.github.dockerjava.core.DockerClientConfig;
@@ -11,7 +10,8 @@ import com.github.dockerjava.core.RemoteApiVersion;
 import com.github.dockerjava.httpclient5.ApacheDockerHttpClient;
 import com.github.dockerjava.transport.DockerHttpClient;
 import dev.truewinter.simofa.Simofa;
-import dev.truewinter.simofa.Website;
+import dev.truewinter.simofa.api.Website;
+import dev.truewinter.simofa.api.WebsiteBuild;
 import dev.truewinter.simofa.config.Config;
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
@@ -22,10 +22,12 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
 public class DockerManager {
     private static DockerManager dockerManager;
     private final DockerClient dockerClient;
+    private static final String DOCKER_LABEL = "dev.truewinter.simofa";
 
     private DockerManager(Config config) {
         DefaultDockerClientConfig.Builder clientConfigBuilder = DefaultDockerClientConfig
@@ -69,14 +71,6 @@ public class DockerManager {
                 );
             });
         }
-
-        List<dev.truewinter.simofa.docker.Container> containerList = getContainers();
-        if (!containerList.isEmpty()) {
-            Simofa.getLogger().warn("Containers found. Simofa expects to be the only software managing Docker containers on the server it's installed on.");
-            containerList.forEach(c -> {
-                Simofa.getLogger().warn(String.format("\t- %s (%s)", c.getName(), c.getId()));
-            });
-        }
     }
 
     public static DockerManager getInstance(Config config) {
@@ -89,6 +83,7 @@ public class DockerManager {
     public void shutdown() throws IOException {
         Simofa.getLogger().info("Removing running containers");
         getContainers().forEach(c -> {
+            System.out.println(c.getName());
             Simofa.getLogger().info(String.format("Removing container %s", c.getId()));
             try {
                 deleteContainer(c.getId());
@@ -118,7 +113,9 @@ public class DockerManager {
     public List<dev.truewinter.simofa.docker.Container> getContainers() {
         List<com.github.dockerjava.api.model.Container> containerList = dockerClient.listContainersCmd().withShowAll(true).exec();
         List<dev.truewinter.simofa.docker.Container> containers = new ArrayList<>();
-        containerList.forEach(c -> {
+        containerList.stream()
+                .filter(c -> c.labels.containsKey(DOCKER_LABEL))
+                .forEach(c -> {
             containers.add(new dev.truewinter.simofa.docker.Container(
                     c.getId(),
                     Arrays.stream(c.getNames()).findFirst().orElse("<unknown>"),
@@ -134,7 +131,12 @@ public class DockerManager {
         List<com.github.dockerjava.api.model.Container> containers = dockerClient.listContainersCmd().withShowAll(true).exec();
         for (com.github.dockerjava.api.model.Container container : containers) {
             if (container.getId().equals(id)) {
-                dockerClient.removeContainerCmd(container.getId()).withForce(true).withRemoveVolumes(true).exec();
+                if (!container.getLabels().containsKey(DOCKER_LABEL)) {
+                    System.err.printf("Container %s not managed by Simofa%n", container.getId());
+                } else {
+                    dockerClient.removeContainerCmd(container.getId()).withForce(true).withRemoveVolumes(true).exec();
+                }
+
                 break;
             }
         }
@@ -158,7 +160,8 @@ public class DockerManager {
                 // which is required for some software
                 // (such as bundler) to work
                 .withEntrypoint("/bin/bash", "-l", "-c")
-                .withCmd("dos2unix {script} && chmod +x {script} && {script}".replace("{script}", buildScript));
+                .withCmd("dos2unix {script} && chmod +x {script} && {script}".replace("{script}", buildScript))
+                .withLabels(Map.of(DOCKER_LABEL, "build"));
         CreateContainerResponse createContainerResponse = createContainerCmd.exec();
         String id = createContainerResponse.getId();
         dockerCallback.created(id);

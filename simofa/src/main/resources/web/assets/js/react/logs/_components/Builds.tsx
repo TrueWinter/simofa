@@ -106,7 +106,7 @@ export default function Builds({
 				<FormInput>
 					<button style={{
 						float: 'unset'
-					}} disabled={!['queued', 'building'].includes(b.status)}
+					}} disabled={!['queued', 'preparing', 'building'].includes(b.status)}
 					onClick={() => setDeleteModalData({
 						website: b.website.id,
 						build: b.id
@@ -156,7 +156,7 @@ export default function Builds({
 		if (deleteModalData === null) return;
 		let b = builds.filter(e => e.id === deleteModalData.build);
 		if (b.length === 0) return;
-		if (!['queued', 'building'].includes(b[0].status)) {
+		if (!['queued', 'preparing', 'building'].includes(b[0].status)) {
 			setDeleteModalData(null);
 		}
 	}, [builds])
@@ -164,23 +164,25 @@ export default function Builds({
 	return (
 		<>
 		{error ? <div className='error'>{error}</div> :
-		<table>
-			<thead>
-				<tr>
-					{thisPageTableRows.map(r => <td>{r.name}</td>)}
-				</tr>
-			</thead>
-			<tbody>
-			{loading ? new Array(1).fill(0).map(() => <tr>
-					{new Array(thisPageTableRows.length).fill(0).map(() => <td><Skeleton /></td>)}
-				</tr>)
-				: (builds.length === 0 ?
+		<div className="table">
+			<table>
+				<thead>
 					<tr>
-						<td colSpan={thisPageTableRows.length}>{thisPage === 'builds' ? 'No builds queued' : 'No builds queued for this website'}</td>
+						{thisPageTableRows.map(r => <td>{r.name}</td>)}
 					</tr>
-				: builds.map(b => <tr>{thisPageTableRows.map(r => r.data(b))}</tr>))}
-			</tbody>
-		</table>}
+				</thead>
+				<tbody>
+				{loading ? new Array(1).fill(0).map(() => <tr>
+						{new Array(thisPageTableRows.length).fill(0).map(() => <td><Skeleton /></td>)}
+					</tr>)
+					: (builds.length === 0 ?
+						<tr>
+							<td colSpan={thisPageTableRows.length}>{thisPage === 'builds' ? 'No builds queued' : 'No builds queued for this website'}</td>
+						</tr>
+					: builds.map(b => <tr>{thisPageTableRows.map(r => r.data(b))}</tr>))}
+				</tbody>
+			</table>
+		</div>}
 
 		{deleteModalData && <Modal title="Stop Build" close={() => setDeleteModalData(null)}>
 				<p>Are you sure you want to stop build with ID {deleteModalData.build.split('-')[0]}?</p>

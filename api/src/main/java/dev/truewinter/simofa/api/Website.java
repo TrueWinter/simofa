@@ -1,4 +1,4 @@
-package dev.truewinter.simofa;
+package dev.truewinter.simofa.api;
 
 import dev.truewinter.simofa.common.Util;
 import org.jetbrains.annotations.Nullable;

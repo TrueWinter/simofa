@@ -1,5 +1,6 @@
 package dev.truewinter.simofa;
 
+import dev.truewinter.simofa.api.SimofaPluginManager;
 import dev.truewinter.simofa.common.Util;
 import dev.truewinter.simofa.config.Config;
 import dev.truewinter.simofa.config.MigratorConfig;
@@ -25,6 +26,7 @@ public class Simofa {
     private static String secret;
     private static DockerManager dockerManager;
     private static BuildQueueManager buildQueueManager;
+    private static SimofaPluginManager pluginManager;
 
     public static void main(String[] args) throws Exception {
         try {
@@ -101,6 +103,11 @@ public class Simofa {
         buildQueueManager.start();
         logger.info("Initialized build queue manager");
 
+        logger.info("Loading plugins");
+        pluginManager = SimofaPluginManager.getInstance(new API(database));
+        pluginManager.getPluginManager().loadPlugins(Util.getPluginJars());
+        logger.info("Loaded plugins");
+
         Runtime.getRuntime().addShutdownHook(new Thread() {
             @Override
             public void run() {
@@ -127,6 +134,11 @@ public class Simofa {
 
     public static void shutdown() {
         logger.info("Shutting down");
+
+        if (pluginManager != null) {
+            pluginManager.getPluginManager().handleShutdown();
+        }
+
         if (webServer != null) {
             logger.info("Stopping web server");
             webServer.stopServer();

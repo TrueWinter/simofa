@@ -15,6 +15,7 @@
         <module>common</module>
         <module>deploy</module>
         <module>mavenplugin</module>
+        <module>api</module>
     </modules>
 
     <build>

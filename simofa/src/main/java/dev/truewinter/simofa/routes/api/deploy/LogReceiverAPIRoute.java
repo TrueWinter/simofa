@@ -4,7 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.truewinter.simofa.RouteLoader;
 import dev.truewinter.simofa.Simofa;
 import dev.truewinter.simofa.common.SimofaLog;
-import dev.truewinter.simofa.docker.WebsiteBuild;
+import dev.truewinter.simofa.api.WebsiteBuild;
 import io.javalin.http.Context;
 import io.javalin.http.HandlerType;
 

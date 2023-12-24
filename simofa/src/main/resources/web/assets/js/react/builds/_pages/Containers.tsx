@@ -45,38 +45,40 @@ export default function Containers() {
 			{error ? <div className="error">{error}</div> :
 			<>
 				{!loading && containers.length === 0 ? 'No containers found' :
-					<table>
-						<thead>
-							<tr>
-								<th colSpan={2}>ID</th>
-								<th>Name</th>
-								<th>Status</th>
-								<th>Actions</th>
-							</tr>
-						</thead>
-						<tbody>
-							{loading ? new Array(2).fill(0).map(e => <tr>
-								{new Array(4).fill(0).map((e, i) => <td colSpan={i === 0 ? 2 : undefined}><Skeleton /></td>)}
-							</tr>) : containers.map(e => <tr>
-								<td style={{
-									borderRightColor: 'transparent',
-									paddingRight: 0
-								}}><StatusIndicator state={e.state} /></td>
-								<td style={{
-									paddingLeft: 0
-								}}>{e.id.substring(0, 12)}</td>
-								<td>{e.name}</td>
-								<td>{e.status}</td>
-								<td>
-									<FormInput>
-										<button style={{
-											float: 'unset'
-										}} onClick={() => setDeleteModalData(e.id)}>Delete</button>
-									</FormInput>
-								</td>
-							</tr>)}
-						</tbody>
-					</table>
+					<div className="table">
+						<table>
+							<thead>
+								<tr>
+									<th colSpan={2}>ID</th>
+									<th>Name</th>
+									<th>Status</th>
+									<th>Actions</th>
+								</tr>
+							</thead>
+							<tbody>
+								{loading ? new Array(2).fill(0).map(e => <tr>
+									{new Array(4).fill(0).map((e, i) => <td colSpan={i === 0 ? 2 : undefined}><Skeleton /></td>)}
+								</tr>) : containers.map(e => <tr>
+									<td style={{
+										borderRightColor: 'transparent',
+										paddingRight: 0
+									}}><StatusIndicator state={e.state} /></td>
+									<td style={{
+										paddingLeft: 0
+									}}>{e.id.substring(0, 12)}</td>
+									<td>{e.name}</td>
+									<td>{e.status}</td>
+									<td>
+										<FormInput>
+											<button style={{
+												float: 'unset'
+											}} onClick={() => setDeleteModalData(e.id)}>Delete</button>
+										</FormInput>
+									</td>
+								</tr>)}
+							</tbody>
+						</table>
+					</div>
 				}
 
 
