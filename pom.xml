@@ -16,6 +16,8 @@
         <module>deploy</module>
         <module>mavenplugin</module>
         <module>api</module>
+        <module>officialplugins</module>
+        <module>officialplugins/pushover</module>
     </modules>
 
     <build>

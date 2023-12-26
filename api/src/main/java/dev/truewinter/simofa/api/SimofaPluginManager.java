@@ -16,7 +16,7 @@ public class SimofaPluginManager {
     private final SimofaAPI api;
 
     private SimofaPluginManager(SimofaAPI api) {
-        pluginManager = new PluginManager<>(PluginLogger::handlePluginManagerLog);
+        pluginManager = new PluginManager<>(getClass().getClassLoader(), PluginLogger::handlePluginManagerLog);
         this.api = api;
     }
 

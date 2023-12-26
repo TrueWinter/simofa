@@ -23,9 +23,9 @@
         <dependency>
             <groupId>dev.truewinter</groupId>
             <artifactId>PluginManager</artifactId>
-            <version>0.0.3</version>
+            <version>0.0.5</version>
             <!--<scope>system</scope>
-            <systemPath>${basedir}/../../PluginManager/target/PluginManager-0.0.1.jar</systemPath>-->
+            <systemPath>${basedir}/../../PluginManager/target/PluginManager-0.0.4.jar</systemPath>-->
         </dependency>
         <dependency>
             <groupId>dev.truewinter.simofa.common</groupId>
