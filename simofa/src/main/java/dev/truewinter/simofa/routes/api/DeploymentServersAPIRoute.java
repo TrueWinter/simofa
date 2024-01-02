@@ -1,6 +1,6 @@
 package dev.truewinter.simofa.routes.api;
 
-import dev.truewinter.simofa.DeploymentServer;
+import dev.truewinter.simofa.api.DeploymentServer;
 import dev.truewinter.simofa.RouteLoader;
 import dev.truewinter.simofa.routes.Route;
 import io.javalin.http.Context;

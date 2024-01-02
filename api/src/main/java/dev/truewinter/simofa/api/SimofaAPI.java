@@ -49,4 +49,20 @@ public interface SimofaAPI {
      * @see SimofaAPI#triggerBuild(Website, String)
      */
     void triggerBuild(Website website, String message, boolean useCache);
+
+    /**
+     * Returns a list of deployment servers
+     */
+    List<DeploymentServer> getDeploymentServers() throws SQLException;
+
+    /**
+     * Adds a deployment server. The ID will be ignored.
+     */
+    void addDeploymentServer(DeploymentServer deploymentServer) throws SQLException;
+
+    /**
+     * Edits a deployment server with the given ID, editing all database fields
+     * to match the passed DeploymentServer.
+     */
+    void editDeploymentServer(DeploymentServer deploymentServer) throws SQLException;
 }

@@ -3,7 +3,7 @@ package dev.truewinter.simofa.docker;
 import com.github.dockerjava.api.model.Frame;
 import com.github.dockerjava.api.model.StreamType;
 import com.github.dockerjava.api.model.WaitResponse;
-import dev.truewinter.simofa.DeploymentServer;
+import dev.truewinter.simofa.api.DeploymentServer;
 import dev.truewinter.simofa.GitFetcher;
 import dev.truewinter.simofa.Simofa;
 import dev.truewinter.simofa.api.WebsiteBuild;

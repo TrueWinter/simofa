@@ -5,6 +5,10 @@ import dev.truewinter.PluginManager.Logger;
 import dev.truewinter.PluginManager.Plugin;
 import org.jetbrains.annotations.NotNull;
 
+/**
+ * For <code>dev.truewinter.PluginManager</code> docs,
+ * <a href="https://javadoc.jitpack.io/dev/truewinter/PluginManager/latest/javadoc/">click here</a>.
+ */
 @SuppressWarnings("unused")
 public abstract class SimofaPlugin extends Plugin<SimofaAPI> {
     @Override

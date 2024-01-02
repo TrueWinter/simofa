@@ -116,6 +116,16 @@ The example below shows the recommended way to allow a client (with website ID `
 
 - Stopping the Simofa Deploy server doesn't always roll back the running deployments. This is due to Java instantly killing sub-processes if Simofa Deploy is stopped instead of waiting for them to finish. This also prevents the logs and status from being submitted before shutting down.
 
+## Plugins
+
+Simofa allows the development of plugins that interact with it. Official plugins are released alongside Simofa with `-plugin` in the name (this is not required for custom plugins), and their source code is stored in the `officialplugins` directory.
+
+Installing plugins is simple. Create a new directory called `plugins` in the same location as your `config.yml` and copy the plugin JAR file into this new directory. Then, start Simofa. If a plugin requires configuration, it should create a default configuration file in the `plugins` directory. After you configure the plugin, restart Simofa again.
+
+Documentation for the plugin API is available [here](https://javadoc.jitpack.io/dev/truewinter/Simofa/SimofaAPI/latest/javadoc/).
+
+**Important: Plugin support is still experimental and only a small portion of the API is currently available to plugins.**
+
 ## Development
 
 In addition to the above requirements, you will need the following to develop Simofa:

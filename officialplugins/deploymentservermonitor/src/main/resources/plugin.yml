@@ -1,0 +1,2 @@
+name: DeploymentServerMonitor
+main_class: dev.truewinter.simofaplugins.deploymentservermonitor.DeploymentServerMonitor

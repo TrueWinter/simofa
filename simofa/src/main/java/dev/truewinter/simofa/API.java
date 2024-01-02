@@ -1,5 +1,6 @@
 package dev.truewinter.simofa;
 
+import dev.truewinter.simofa.api.DeploymentServer;
 import dev.truewinter.simofa.api.SimofaAPI;
 import dev.truewinter.simofa.api.Website;
 import dev.truewinter.simofa.api.WebsiteBuild;
@@ -61,5 +62,20 @@ public class API implements SimofaAPI {
     @Override
     public void triggerBuild(Website website, String message, boolean useCache) {
         triggerBuild(website, getCommitMessage(message, useCache));
+    }
+
+    @Override
+    public List<DeploymentServer> getDeploymentServers() throws SQLException {
+        return database.getDeploymentServerDatabase().getDeploymentServers();
+    }
+
+    @Override
+    public void addDeploymentServer(DeploymentServer deploymentServer) throws SQLException {
+        database.getDeploymentServerDatabase().addDeploymentServer(deploymentServer);
+    }
+
+    @Override
+    public void editDeploymentServer(DeploymentServer deploymentServer) throws SQLException {
+        database.getDeploymentServerDatabase().editDeploymentServer(deploymentServer);
     }
 }

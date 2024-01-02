@@ -142,6 +142,10 @@ public class WebServer extends Thread {
                 }
             }
         });
+
+        server.get("/status", ctx -> {
+            ctx.status(200).result("OK");
+        });
     }
 
     public void stopServer() {

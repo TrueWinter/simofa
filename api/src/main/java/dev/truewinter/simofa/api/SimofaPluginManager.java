@@ -7,7 +7,7 @@ import java.util.HashMap;
 
 /**
  * For <code>dev.truewinter.PluginManager</code> docs,
- * <a href="https://javadoc.jitpack.io/com/github/TrueWinter/PluginManager/latest/javadoc/">click here</a>.
+ * <a href="https://javadoc.jitpack.io/dev/truewinter/PluginManager/latest/javadoc/">click here</a>.
  */
 public class SimofaPluginManager {
     private static SimofaPluginManager simofaPluginManager;
