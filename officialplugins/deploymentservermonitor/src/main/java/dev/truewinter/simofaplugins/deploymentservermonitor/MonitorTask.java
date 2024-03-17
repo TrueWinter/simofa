@@ -6,6 +6,7 @@ import dev.truewinter.simofa.api.DeploymentServer;
 import dev.truewinter.simofa.api.SimofaAPI;
 import dev.truewinter.simofaplugins.pushover.PushoverPlugin;
 
+import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
@@ -25,6 +26,22 @@ public class MonitorTask extends TimerTask {
         this.api = api;
     }
 
+    private boolean isOnline(DeploymentServer deploymentServer, int attempt) throws IOException {
+        if (attempt == 3) return false;
+
+        URL url = new URL(deploymentServer.getUrl() +
+                (deploymentServer.getUrl().endsWith("/") ? "" : "/") + "status");
+        HttpURLConnection con = (HttpURLConnection) url.openConnection();
+        con.setConnectTimeout(5000);
+        con.setReadTimeout(5000);
+        int status = con.getResponseCode();
+        if (status != 200) {
+            return isOnline(deploymentServer, attempt + 1);
+        }
+
+        return true;
+    }
+
     @Override
     public void run() {
         try {
@@ -33,13 +50,7 @@ public class MonitorTask extends TimerTask {
 
             for (DeploymentServer deploymentServer : deploymentServers) {
                 try {
-                    URL url = new URL(deploymentServer.getUrl() +
-                            (deploymentServer.getUrl().endsWith("/") ? "" : "/") + "status");
-                    HttpURLConnection con = (HttpURLConnection) url.openConnection();
-                    con.setConnectTimeout(5000);
-                    con.setReadTimeout(5000);
-                    int status = con.getResponseCode();
-                    if (status != 200) {
+                    if (!isOnline(deploymentServer, 0)) {
                         throw new Exception("Non-200 status");
                     } else {
                         previouslyOfflineDeploymentServers.remove((Object) deploymentServer.getId());
@@ -52,7 +63,7 @@ public class MonitorTask extends TimerTask {
                 }
             }
 
-            if (offlineDeploymentServers.size() > 0) {
+            if (!offlineDeploymentServers.isEmpty()) {
                 StringBuilder stringBuilder = new StringBuilder();
                 offlineDeploymentServers.forEach((d, m) -> stringBuilder.append(String.format("- %s: %s%n", d.getName(), m)));
                 pushoverPlugin.pushMessage("Deployment Server(s) Offline", stringBuilder.toString());
