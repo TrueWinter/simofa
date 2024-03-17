@@ -36,9 +36,11 @@ public class MonitorTask extends TimerTask {
         con.setReadTimeout(5000);
         int status = con.getResponseCode();
         if (status != 200) {
+            con.disconnect();
             return isOnline(deploymentServer, attempt + 1);
         }
 
+        con.disconnect();
         return true;
     }
 
