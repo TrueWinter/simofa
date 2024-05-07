@@ -7,7 +7,7 @@
     <parent>
         <groupId>dev.truewinter.simofa</groupId>
         <artifactId>SimofaProject</artifactId>
-        <version>0.1.3</version>
+        <version>0.1.4</version>
     </parent>
 
     <groupId>dev.truewinter</groupId>
@@ -219,10 +219,6 @@
                                 </filter>
                             </filters>
                             <relocations>
-                                <relocation>
-                                    <pattern>io.javalin</pattern>
-                                    <shadedPattern>dev.truewinter.simofa.libraries.javalin</shadedPattern>
-                                </relocation>
                                 <relocation>
                                     <pattern>org.jetbrains</pattern>
                                     <shadedPattern>dev.truewinter.simofa.libraries.jetbrains</shadedPattern>
