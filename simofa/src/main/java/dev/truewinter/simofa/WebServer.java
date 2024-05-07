@@ -3,6 +3,8 @@ package dev.truewinter.simofa;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mitchellbosecke.pebble.PebbleEngine;
 import com.mitchellbosecke.pebble.loader.FileLoader;
+import dev.truewinter.simofa.api.SimofaPluginManager;
+import dev.truewinter.simofa.api.events.WebServerStartedEvent;
 import dev.truewinter.simofa.common.Util;
 import dev.truewinter.simofa.config.Config;
 import dev.truewinter.simofa.database.Database;
@@ -74,6 +76,8 @@ public class WebServer extends Thread {
                         Location.EXTERNAL : Location.CLASSPATH;
             });
         }).start(config.getPort());
+
+        SimofaPluginManager.getInstance().getPluginManager().fireEvent(new WebServerStartedEvent());
 
         server.before(ctx -> {
             ctx.header("X-Robots-Tag", "noindex");

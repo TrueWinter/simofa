@@ -71,7 +71,8 @@ public interface SimofaAPI {
     void editDeploymentServer(DeploymentServer deploymentServer) throws SQLException;
 
     /**
-     * Registers a route at /c/{plugin_name}/{path}
+     * Registers a route at /c/{plugin_name}/{path}. Only call this method after the
+     * {@link dev.truewinter.simofa.api.events.WebServerStartedEvent} has been dispatched.
      */
     void registerRoute(Plugin<SimofaAPI> plugin, HandlerType method, String path, Handler handler);
 }
