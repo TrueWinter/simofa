@@ -1,5 +1,9 @@
 package dev.truewinter.simofa.api;
 
+import dev.truewinter.PluginManager.Plugin;
+import io.javalin.http.Handler;
+import io.javalin.http.HandlerType;
+
 import java.sql.SQLException;
 import java.util.List;
 
@@ -65,4 +69,9 @@ public interface SimofaAPI {
      * to match the passed DeploymentServer.
      */
     void editDeploymentServer(DeploymentServer deploymentServer) throws SQLException;
+
+    /**
+     * Registers a route at /c/{plugin_name}/{path}
+     */
+    void registerRoute(Plugin<SimofaAPI> plugin, HandlerType method, String path, Handler handler);
 }

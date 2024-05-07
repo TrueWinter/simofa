@@ -1,19 +1,24 @@
 package dev.truewinter.simofa;
 
+import dev.truewinter.PluginManager.Plugin;
 import dev.truewinter.simofa.api.DeploymentServer;
 import dev.truewinter.simofa.api.SimofaAPI;
 import dev.truewinter.simofa.api.Website;
 import dev.truewinter.simofa.api.WebsiteBuild;
 import dev.truewinter.simofa.database.Database;
+import io.javalin.http.Handler;
+import io.javalin.http.HandlerType;
 
 import java.sql.SQLException;
 import java.util.List;
 
 public class API implements SimofaAPI {
     private final Database database;
+    private final WebServer server;
 
-    protected API(Database database) {
+    protected API(Database database, WebServer server) {
         this.database = database;
+        this.server = server;
     }
 
     @Override
@@ -77,5 +82,10 @@ public class API implements SimofaAPI {
     @Override
     public void editDeploymentServer(DeploymentServer deploymentServer) throws SQLException {
         database.getDeploymentServerDatabase().editDeploymentServer(deploymentServer);
+    }
+
+    @Override
+    public void registerRoute(Plugin<SimofaAPI> plugin, HandlerType method, String path, Handler handler) {
+        server.registerRoute(method, String.format("/c/%s/%s", plugin.getName(), path), handler);
     }
 }

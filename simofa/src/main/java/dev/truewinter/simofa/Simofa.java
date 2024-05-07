@@ -104,7 +104,7 @@ public class Simofa {
         logger.info("Initialized build queue manager");
 
         logger.info("Loading plugins");
-        pluginManager = SimofaPluginManager.getInstance(new API(database));
+        pluginManager = SimofaPluginManager.getInstance(new API(database, webServer));
         pluginManager.getPluginManager().loadPlugins(Util.getPluginJars());
         logger.info("Loaded plugins");
 

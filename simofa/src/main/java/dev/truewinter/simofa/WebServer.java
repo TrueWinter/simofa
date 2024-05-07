@@ -11,6 +11,8 @@ import dev.truewinter.simofa.routes.LoginRoute;
 import dev.truewinter.simofa.routes.Route;
 import dev.truewinter.simofa.routes.webhook.GithubWebhookRoute;
 import io.javalin.Javalin;
+import io.javalin.http.Handler;
+import io.javalin.http.HandlerType;
 import io.javalin.http.Header;
 import io.javalin.http.staticfiles.Location;
 import io.javalin.rendering.template.JavalinPebble;
@@ -142,6 +144,14 @@ public class WebServer extends Thread {
                 ctx.result("OK");
             });
         }
+    }
+
+    public void registerRoute(HandlerType method, String path, Handler handler) {
+        if (server == null) {
+            throw new IllegalStateException("Web server not started yet");
+        }
+
+        server.addHandler(method, path, handler);
     }
 
     public void stopServer() {
