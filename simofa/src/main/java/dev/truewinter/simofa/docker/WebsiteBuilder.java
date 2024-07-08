@@ -193,7 +193,9 @@ public class WebsiteBuilder extends Thread {
                 }
 
                 @Override
-                public void onStart(Closeable closeable) {}
+                public void onStart(Closeable closeable) {
+                    build.setStatus(BuildStatus.BUILDING);
+                }
 
                 @Override
                 public void onNext(Frame frame) {
@@ -233,8 +235,6 @@ public class WebsiteBuilder extends Thread {
                     build.getStatus().equals(BuildStatus.ERROR.toString())) {
                 return;
             }
-
-            build.setStatus(BuildStatus.BUILDING);
 
             Simofa.getDockerManager().createContainer(
                     build.getWebsite(),
