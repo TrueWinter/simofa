@@ -41,18 +41,21 @@ public class GitFetcher {
                 .setURI(build.getWebsite().getGitUrl())
                 .setBranch(build.getWebsite().getGitBranch())
                 .setCloneAllBranches(false)
+                .setDepth(1)
                 .setDirectory(tmpInDir);
 
         setCredentials(build, cloneCommand);
         cloneCommand.call().close();
 
         if (!Util.isBlank(build.getCacheDir())) {
-            System.out.println("will copy git");
+            if (!websiteCacheDir.exists() && !websiteCacheDir.mkdir()) {
+                Simofa.getLogger().warn("Failed to create cache directory for website " + build.getWebsite().getId());
+            }
+
             File gitCacheDir = new File(websiteCacheDir, "git");
             if (!gitCacheDir.exists() && !gitCacheDir.mkdir()) {
                 build.addLog(new SimofaLog(LogType.WARN, "Unable to create git cache directory for website " + build.getWebsite().getId()));
             } else {
-                System.out.println("copying git");
                 FileUtils.copyDirectory(tmpInDir, gitCacheDir);
             }
         }
