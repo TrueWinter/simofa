@@ -105,9 +105,13 @@ public class BuildQueue {
 
     public synchronized void remove(WebsiteBuild w) {
         if (!w.getStatus().equals(BuildStatus.STOPPED.toString())) {
-            if (w.getStatus().equals(BuildStatus.QUEUED.toString()) ||
-                    w.getStatus().equals(BuildStatus.PREPARING.toString()) ||
-                    w.getStatus().equals(BuildStatus.BUILDING.toString())) {
+            Set<String> statusSet = new HashSet<>(){{
+                // TODO: Use enums properly
+                add(BuildStatus.QUEUED.toString());
+                add(BuildStatus.PREPARING.toString());
+                add(BuildStatus.BUILDING.toString());
+            }};
+            if (statusSet.contains(w.getStatus())) {
                 w.setStatus(BuildStatus.STOPPED);
             }
 

@@ -90,9 +90,7 @@ public class WebsiteBuilder extends Thread {
                         build.setStatus(BuildStatus.DEPLOYING);
                     } else {
                         build.addLog(new SimofaLog(LogType.ERROR, exitMsg));
-                        if (!build.getStatus().equals(BuildStatus.STOPPED.toString())) {
-                            build.setStatus(BuildStatus.ERROR);
-                        }
+                        build.setStatus(BuildStatus.ERROR);
                     }
 
                     Simofa.getBuildQueueManager().getBuildQueue().getCurrentBuilds()
@@ -213,7 +211,7 @@ public class WebsiteBuilder extends Thread {
 
                 @Override
                 public void onError(Throwable throwable) {
-                    throwable.printStackTrace();
+                    Simofa.getLogger().error("An error occurred while running Docker container", throwable);
                     build.addLog(new SimofaLog(LogType.ERROR, throwable.getMessage()));
                     build.setStatus(BuildStatus.ERROR);
                 }
@@ -225,10 +223,12 @@ public class WebsiteBuilder extends Thread {
                 public void close() {}
             };
 
-            // With the correct timing, it is possible to start a Docker container
-            // for a build that was stopped while the files were being pulled from Git.
-            // This fixes that edge case, and, as a precaution, prevents the container
-            // from starting if a build is in an error state.
+            /*
+                With the correct timing, it is possible to start a Docker container
+                for a build that was stopped while the files were being pulled from Git.
+                This fixes that edge case, and, as a precaution, prevents the container
+                from starting if a build is in an error state.
+            */
             if (build.getStatus().equals(BuildStatus.STOPPED.toString()) ||
                     build.getStatus().equals(BuildStatus.ERROR.toString())) {
                 return;
@@ -252,7 +252,6 @@ public class WebsiteBuilder extends Thread {
             try {
                 FileUtils.deleteDirectory(new File(tmpDirPath));
             } catch (Exception e) {
-                e.printStackTrace();
                 Simofa.getLogger().error("Failed to delete temporary directory " + tmpDirPath, e);
             }
         }

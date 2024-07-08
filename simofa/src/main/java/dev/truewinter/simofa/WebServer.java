@@ -20,7 +20,6 @@ import io.javalin.http.staticfiles.Location;
 import io.javalin.rendering.template.JavalinPebble;
 import io.javalin.util.JavalinLogger;
 
-import java.io.File;
 import java.io.FileInputStream;
 import java.util.Map;
 
@@ -42,7 +41,7 @@ public class WebServer extends Thread {
 
             @SuppressWarnings("unchecked")
             Map<String, String> json = objectMapper.readValue(config.isDevMode() ?
-                            new FileInputStream(new File("simofa/src/main/resources/web/assets/build/assets-manifest.json")) :
+                            new FileInputStream("simofa/src/main/resources/web/assets/build/assets-manifest.json") :
                             getClass().getClassLoader().getResourceAsStream("web/assets/build/assets-manifest.json"),
                     Map.class);
             Route.setAssetManifest(json);
@@ -131,7 +130,7 @@ public class WebServer extends Thread {
         try {
             routeLoader.load(server);
         } catch (Exception e) {
-            e.printStackTrace();
+            Simofa.getLogger().error("Failed to register routes", e);
         }
 
         server.get("/builds", ctx -> {
@@ -156,6 +155,7 @@ public class WebServer extends Thread {
         }
 
         server.addHandler(method, path, handler);
+        Simofa.getLogger().info("Registered plugin route " + path);
     }
 
     public void stopServer() {

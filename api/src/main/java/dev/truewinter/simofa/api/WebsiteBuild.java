@@ -9,6 +9,8 @@ import dev.truewinter.simofa.common.SimofaLog;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
 
 @SuppressWarnings("unused")
@@ -58,14 +60,19 @@ public class WebsiteBuild {
     }
 
     public void setStatus(BuildStatus status) {
+        if (this.status.equals(BuildStatus.STOPPED)) return;
+
         if (status.equals(BuildStatus.BUILDING)) {
             startTime = System.currentTimeMillis();
         }
 
-        if (!(this.status.equals(BuildStatus.STOPPED) || this.status.equals(BuildStatus.ERROR) ||
-                this.status.equals(BuildStatus.DEPLOYED)) &&
-                (status.equals(BuildStatus.STOPPED) || status.equals(BuildStatus.ERROR) ||
-                        status.equals(BuildStatus.DEPLOYED))) {
+        Set<BuildStatus> endStatuses = new HashSet<>(){{
+            add(BuildStatus.STOPPED);
+            add(BuildStatus.ERROR);
+            add(BuildStatus.DEPLOYED);
+        }};
+
+        if (!endStatuses.contains(this.status) && endStatuses.contains(status)) {
             endTime = System.currentTimeMillis();
         }
 
