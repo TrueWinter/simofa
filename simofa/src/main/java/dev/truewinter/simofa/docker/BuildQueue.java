@@ -44,6 +44,8 @@ public class BuildQueue {
     }
 
     public synchronized void queue(Website website, String commit) {
+        if (commit.toLowerCase().contains("[no ci]")) return;
+
         remove(website);
         WebsiteBuild websiteBuild = new WebsiteBuild(website, commit, config.getCacheDir());
         websiteBuildQueue.add(websiteBuild);
