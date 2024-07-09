@@ -6,12 +6,14 @@ import dev.truewinter.simofa.api.events.BuildStatusChangedEvent;
 import dev.truewinter.simofa.common.BuildStatus;
 import dev.truewinter.simofa.common.LogType;
 import dev.truewinter.simofa.common.SimofaLog;
+import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
+import java.util.function.BiConsumer;
 
 @SuppressWarnings("unused")
 public class WebsiteBuild {
@@ -29,6 +31,8 @@ public class WebsiteBuild {
     private long endTime;
     @JsonIgnore
     private final String cacheDir;
+
+    private static BiConsumer<WebsiteBuild, SimofaLog> sseConsumer;
 
     public WebsiteBuild(Website website, String commit, String cacheDir) {
         this.id = UUID.randomUUID().toString();
@@ -98,6 +102,9 @@ public class WebsiteBuild {
 
     public void addLog(SimofaLog log) {
         logs.add(log);
+        if (sseConsumer != null) {
+            sseConsumer.accept(this, log);
+        }
     }
 
     public long getStartTime() {
@@ -129,5 +136,10 @@ public class WebsiteBuild {
         }
 
         return cacheDir;
+    }
+
+    @ApiStatus.Internal
+    public static void internal_registerSseConsumer(BiConsumer<WebsiteBuild, SimofaLog> consumer) {
+        WebsiteBuild.sseConsumer = consumer;
     }
 }

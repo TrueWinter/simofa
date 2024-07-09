@@ -4,9 +4,10 @@ import BuildLog from '../_common/BuildLog'
 import Skeleton from '../_common/Skeleton'
 import addJwtParam from '../_common/_auth'
 import { parseTime } from '../logs/_components/Builds'
+import { useDebouncedState } from '../_common/useDebouncedState'
 
 export default function LogsApp() {
-	const [logs, setLogs] = useState([] as BuildLog[])
+	const [logs, setLogs] = useDebouncedState<BuildLog[]>([], 100, doScroll)
 	const [error, setError] = useState('')
 	const [loading, setLoading] = useState(true)
 	const [updating, setUpdating] = useState(false)
@@ -15,12 +16,16 @@ export default function LogsApp() {
 	const interval = useRef(null)
 	const logRef = useRef(null as HTMLDivElement)
 	const fetchingLogs = useRef(false)
-	const lastFetch = useRef(0)
 	const shouldScrollDown = useRef(true)
+  const eventSource = useRef<EventSource>(null);
 
 	function stopUpdating(id: number) {
 		clearInterval(id)
 		setUpdating(false)
+
+    if (eventSource.current) {
+      eventSource.current.close();
+    }
 	}
 
 	function getDate(timestamp: string): string {
@@ -32,10 +37,20 @@ export default function LogsApp() {
 	}
 
 	function doScroll() {
+    console.log(shouldScrollDown.current, logRef.current.scrollHeight, logRef.current.scrollTop, logRef.current.clientHeight);
 		if (shouldScrollDown.current) {
-			logRef.current?.scrollTo(0, logRef.current.scrollHeight)
+      // Wait until next tick
+      setTimeout(() => {
+        logRef.current?.scrollTo(0, logRef.current.scrollHeight);
+      }, 0);
 		}
 	}
+
+  function update(d) {
+    setStatus(d.status);
+    setDuration(d.duration);
+    setLogs(l => l.concat(d.logs));
+  }
 
 	function loadLogs(websiteId: string, buildId: string) {
 		if (fetchingLogs.current) {
@@ -45,11 +60,9 @@ export default function LogsApp() {
 
 		fetchingLogs.current = true
 
-		fetch(addJwtParam(`/api/websites/${websiteId}/build/${buildId}/logs${lastFetch.current > 0 ? `?after=${lastFetch.current.toString()}` : ''}`))
+		fetch(addJwtParam(`/api/websites/${websiteId}/build/${buildId}/logs`))
 			.then(d => d.json())
 			.then(d => {
-				setLogs(l => l.concat(d.logs))
-
 				if (['error', 'stopped', 'deployed'].includes(d.status)) {
 					console.log('Build complete, clearing interval');
 					stopUpdating(interval.current)
@@ -57,17 +70,22 @@ export default function LogsApp() {
 					setUpdating(true)
 				}
 
-				setStatus(d.status);
-				setDuration(d.duration);
+				update(d);
 
-				if (d.logs.length > 0) {
-					lastFetch.current = d.logs[d.logs.length - 1].timestamp
-				}
-
-				// wait until next tick
-				setTimeout(() => {
-					doScroll();
-				}, 0);
+        const finishedStatuses = ['STOPPED', 'ERROR', 'DEPLOYED'];
+        if (!eventSource.current && !finishedStatuses.includes(d.status)) {
+          eventSource.current = new EventSource(`/api/sse/websites/${websiteId}/build/${buildId}/logs?after=${d.logs[d.logs.length - 1].timestamp.toString()}`);
+          eventSource.current.onmessage = (event) => {
+            const logs = JSON.parse(event.data);
+            update(logs);
+            if (finishedStatuses.includes(logs.status)) {
+              // Wait 10 seconds for final logs to come through
+              setTimeout(() => {
+                eventSource.current.close();
+              }, 10000);
+            }
+          };
+        }
 			})
 			.catch(err => {
 				console.error(err)
@@ -83,8 +101,8 @@ export default function LogsApp() {
 			})
 	}
 
-	function handleScroll() {	
-		shouldScrollDown.current = logRef.current.scrollHeight === logRef.current.scrollTop + logRef.current.clientHeight
+	function handleScroll() {
+		shouldScrollDown.current = logRef.current.scrollHeight - logRef.current.scrollTop <= logRef.current.clientHeight + 32
 	}
 
 	function handleResize() {
@@ -97,15 +115,15 @@ export default function LogsApp() {
 		const websiteId = document.getElementById('website-id').dataset.id;
 		const buildId = document.getElementById('build-id').dataset.id;
 
-		loadLogs(websiteId, buildId)
+		loadLogs(websiteId, buildId);
 
 		// WebSockets would be a better solution, but that
 		// requires keeping track of active sessions on the
 		// server, closing old connections, and handling
 		// auth before sending any data.
-		interval.current = setInterval(() => {
+		/*interval.current = setInterval(() => {
 			loadLogs(websiteId, buildId)
-		}, 5 * 1000)
+		}, 5 * 1000)*/
 
 		handleResize()
 

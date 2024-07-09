@@ -8,9 +8,11 @@ import dev.truewinter.simofa.api.WebsiteBuild;
 import dev.truewinter.simofa.routes.Route;
 import io.javalin.http.Context;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @SuppressWarnings("unused")
 @RouteLoader.RouteClass()
@@ -23,32 +25,28 @@ public class BuildLogsAPIRoute extends Route {
         String buildId = ctx.pathParam("bid");
         String after = ctx.queryParam("after");
 
+        ctx.json(getLogs(websiteId, buildId, after));
+    }
+
+    protected static HashMap<String, Object> getLogs(int websiteId, String buildId, String after) {
         HashMap<Integer, List<WebsiteBuild>> allBuildsList = Simofa.getBuildQueueManager().getBuildQueue().getWebsiteBuildList();
 
-        HashMap<String, Object> resp = new HashMap<>();
-        resp.put("success", true);
-
         if (!allBuildsList.containsKey(websiteId)) {
-            resp.put("success", false);
-            resp.put("error", "No builds found for that website");
-            ctx.status(404).json(resp);
-            return;
+            return errorResponse("No builds found for that website");
         }
 
         List<WebsiteBuild> buildList = allBuildsList.get(websiteId);
         Optional<WebsiteBuild> build = buildList.stream().filter(b -> b.getId().equals(buildId)).findFirst();
         if (build.isEmpty()) {
-            resp.put("success", false);
-            resp.put("error", "Build not found");
-            ctx.status(404).json(resp);
-            return;
+            return errorResponse("Build not found");
         }
 
         List<SimofaLog> logs;
         try {
             if (!Util.isBlank(after)) {
                 logs = build.get().getLogs().stream()
-                        .filter(l -> l.getTimestamp() > Long.parseLong(after)).toList();
+                        .filter(l -> l.getTimestamp() > Long.parseLong(after))
+                        .collect(Collectors.toCollection(ArrayList::new));
             } else {
                 logs = build.get().getLogs();
             }
@@ -56,9 +54,27 @@ public class BuildLogsAPIRoute extends Route {
             logs = build.get().getLogs();
         }
 
-        resp.put("status", build.get().getStatus());
-        resp.put("duration", build.get().getRunTime());
+        logs.sort((a, b) -> {
+            if (a.getTimestamp() == b.getTimestamp()) return 0;
+            return a.getTimestamp() < b.getTimestamp() ? -1 : 1;
+        });
+
+        return successResponse(build.get(), logs);
+    }
+
+    private static HashMap<String, Object> errorResponse(String error) {
+        HashMap<String, Object> resp = new HashMap<>();
+        resp.put("success", false);
+        resp.put("error", error);
+        return resp;
+    }
+
+    protected static HashMap<String, Object> successResponse(WebsiteBuild build, List<SimofaLog> logs) {
+        HashMap<String, Object> resp = new HashMap<>();
+        resp.put("success", true);
+        resp.put("status", build.getStatus());
+        resp.put("duration", build.getRunTime());
         resp.put("logs", logs);
-        ctx.json(resp);
+        return resp;
     }
 }
