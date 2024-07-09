@@ -15,7 +15,7 @@ public class StatusSubmitter extends Submitter<BuildStatus> {
         super(buildServer);
     }
 
-    public void post(@NotNull String status, int attempt) throws Exception {
+    public void post(@NotNull BuildStatus status, int attempt) throws Exception {
         if (attempt >= Submitter.RETRIES) {
             throw new Exception("Failed to post status");
         }
@@ -31,7 +31,7 @@ public class StatusSubmitter extends Submitter<BuildStatus> {
             connection.connect();
 
             try (OutputStream outputStream = connection.getOutputStream()) {
-                outputStream.write(status.getBytes(StandardCharsets.UTF_8));
+                outputStream.write(status.toString().getBytes(StandardCharsets.UTF_8));
             }
 
             int responseCode = connection.getResponseCode();
@@ -57,7 +57,7 @@ public class StatusSubmitter extends Submitter<BuildStatus> {
             previousStatus = status;
 
             try {
-                post(status.toString(), 0);
+                post(status, 0);
             } catch (Exception e) {
                 callback.error(e);
                 return;

@@ -80,7 +80,7 @@ export default function Builds({
 		name: 'Status',
 		pages: ['builds', 'website'],
 		data: b => (
-			<td>{b.status}</td>
+			<td>{b.status.toLowerCase()}</td>
 		)
 	}, {
 		name: 'Duration',
@@ -106,7 +106,7 @@ export default function Builds({
 				<FormInput>
 					<button style={{
 						float: 'unset'
-					}} disabled={!['queued', 'preparing', 'building'].includes(b.status)}
+					}} disabled={!['QUEUED', 'PREPARING', 'BUILDING'].includes(b.status)}
 					onClick={() => setDeleteModalData({
 						website: b.website.id,
 						build: b.id
@@ -156,7 +156,7 @@ export default function Builds({
 		if (deleteModalData === null) return;
 		let b = builds.filter(e => e.id === deleteModalData.build);
 		if (b.length === 0) return;
-		if (!['queued', 'preparing', 'building'].includes(b[0].status)) {
+		if (!['QUEUED', 'PREPARING', 'BUILDING'].includes(b[0].status)) {
 			setDeleteModalData(null);
 		}
 	}, [builds])

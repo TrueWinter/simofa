@@ -231,10 +231,7 @@ public class WebsiteBuilder extends Thread {
                 This fixes that edge case, and, as a precaution, prevents the container
                 from starting if a build is in an error state.
             */
-            if (build.getStatus().equals(BuildStatus.STOPPED.toString()) ||
-                    build.getStatus().equals(BuildStatus.ERROR.toString())) {
-                return;
-            }
+            if (build.getStatus().equals(BuildStatus.STOPPED) || build.getStatus().equals(BuildStatus.ERROR)) return;
 
             Simofa.getDockerManager().createContainer(
                     build.getWebsite(),

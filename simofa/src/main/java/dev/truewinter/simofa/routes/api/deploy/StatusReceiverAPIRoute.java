@@ -35,12 +35,7 @@ public class StatusReceiverAPIRoute extends FromDeploymentServerAPIRoute {
                     resp.put("error", "Incorrect key");
                 } else {
                     String status = ctx.body();
-                    BuildStatus buildStatus = BuildStatus.toBuildStatus(status);
-                    if (buildStatus == null) {
-                        resp.put("error", "Invalid build status");
-                    } else {
-                        build.setStatus(buildStatus);
-                    }
+                    build.setStatus(BuildStatus.valueOf(status));
                 }
             } catch (Exception e) {
                 Simofa.getLogger().error("An error occurred while processing deployment status", e);

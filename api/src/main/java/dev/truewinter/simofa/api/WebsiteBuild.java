@@ -55,8 +55,8 @@ public class WebsiteBuild {
         return commit;
     }
 
-    public String getStatus() {
-        return status.toString();
+    public BuildStatus getStatus() {
+        return status;
     }
 
     public void setStatus(BuildStatus status) {
@@ -78,7 +78,7 @@ public class WebsiteBuild {
 
         this.status = status;
 
-        addLog(new SimofaLog(LogType.INFO, "Build status changed to " + status));
+        addLog(new SimofaLog(LogType.INFO, "Build status changed to " + status.toString().toLowerCase()));
 
         SimofaPluginManager.getInstance().getPluginManager().fireEvent(new BuildStatusChangedEvent(this));
     }

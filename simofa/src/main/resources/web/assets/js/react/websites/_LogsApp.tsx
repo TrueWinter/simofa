@@ -126,7 +126,7 @@ export default function LogsApp() {
 				justifyContent: 'space-around',
 				gap: '16px'
 			}}>
-				<span>Status: {status}</span>
+				<span>Status: {status.toLowerCase()}</span>
 				<span>Duration: {duration === 0 ? '0s' : parseTime(duration)}</span>
 				{updating && <span>Updating every 5 seconds</span>}
 			</div>

@@ -57,7 +57,7 @@ public class BuildQueueManager {
                 }
 
                 for (WebsiteBuild w : new ArrayList<>(buildQueue.getCurrentBuilds())) {
-                    if (w.getStatus().equals(BuildStatus.BUILDING.toString()) && w.getContainerId() != null) {
+                    if (w.getStatus().equals(BuildStatus.BUILDING) && w.getContainerId() != null) {
                         long TWENTY_MINUTES = 20 * 60 * 1000;
                         if (w.getRunTime() > TWENTY_MINUTES) {
                             buildQueue.remove(w.getWebsite());

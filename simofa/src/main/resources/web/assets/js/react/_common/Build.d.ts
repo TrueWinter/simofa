@@ -3,7 +3,7 @@ import type { Website } from "../../java"
 export default interface Build {
 	id: string
 	commit: string
-	status: 'queued' | 'preparing' | 'building' | 'deploying' | 'deployed' | 'error' | 'stopped'
+	status: 'QUEUED' | 'PREPARING' | 'BUILDING' | 'DEPLOYING' | 'DEPLOYED' | 'ERROR' | 'STOPPED'
 	website: Website
 	runTime: number
 }

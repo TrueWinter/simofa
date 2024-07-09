@@ -23,15 +23,16 @@ public class EventListeners implements Listener {
 
     @EventHandler
     public void onBuildStatusChange(BuildStatusChangedEvent e) {
+        String buildStatus = e.getBuild().getStatus().toString();
         List<String> buildStatuses = config.getStringList("statuses");
-        if (buildStatuses.contains(e.getBuild().getStatus())) {
+        if (buildStatuses.contains(buildStatus)) {
             plugin.pushMessage(config.getString("title"), String.format(
                     "Build: %s%n" +
                     "Website: %s%n" +
                     "Status: %s",
                     e.getBuild().getId(),
                     e.getBuild().getWebsite().getId(),
-                    e.getBuild().getStatus()
+                    buildStatus
             ));
         }
     }
