@@ -116,15 +116,6 @@ export default function LogsApp() {
 		const buildId = document.getElementById('build-id').dataset.id;
 
 		loadLogs(websiteId, buildId);
-
-		// WebSockets would be a better solution, but that
-		// requires keeping track of active sessions on the
-		// server, closing old connections, and handling
-		// auth before sending any data.
-		/*interval.current = setInterval(() => {
-			loadLogs(websiteId, buildId)
-		}, 5 * 1000)*/
-
 		handleResize()
 
 		logRef.current.addEventListener('scroll', handleScroll)
