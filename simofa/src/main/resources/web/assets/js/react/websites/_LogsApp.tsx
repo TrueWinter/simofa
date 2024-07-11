@@ -10,7 +10,6 @@ export default function LogsApp() {
 	const [logs, setLogs] = useDebouncedState<BuildLog[]>([], 100, doScroll)
 	const [error, setError] = useState('')
 	const [loading, setLoading] = useState(true)
-	const [updating, setUpdating] = useState(false)
 	const [status, setStatus] = useState('<unknown>')
 	const [duration, setDuration] = useState(0)
 	const interval = useRef(null)
@@ -21,7 +20,6 @@ export default function LogsApp() {
 
 	function stopUpdating(id: number) {
 		clearInterval(id)
-		setUpdating(false)
 
     if (eventSource.current) {
       eventSource.current.close();
@@ -37,7 +35,6 @@ export default function LogsApp() {
 	}
 
 	function doScroll() {
-    console.log(shouldScrollDown.current, logRef.current.scrollHeight, logRef.current.scrollTop, logRef.current.clientHeight);
 		if (shouldScrollDown.current) {
       // Wait until next tick
       setTimeout(() => {
@@ -66,8 +63,6 @@ export default function LogsApp() {
 				if (['error', 'stopped', 'deployed'].includes(d.status)) {
 					console.log('Build complete, clearing interval');
 					stopUpdating(interval.current)
-				} else {
-					setUpdating(true)
 				}
 
 				update(d);
@@ -75,6 +70,10 @@ export default function LogsApp() {
         const finishedStatuses = ['STOPPED', 'ERROR', 'DEPLOYED'];
         if (!eventSource.current && !finishedStatuses.includes(d.status)) {
           eventSource.current = new EventSource(`/api/sse/websites/${websiteId}/build/${buildId}/logs?after=${d.logs[d.logs.length - 1].timestamp.toString()}`);
+          eventSource.current.onerror = () => {
+            // TODO: Show error notification
+            eventSource.current.close();
+          };
           eventSource.current.onmessage = (event) => {
             const logs = JSON.parse(event.data);
             update(logs);
@@ -137,7 +136,6 @@ export default function LogsApp() {
 			}}>
 				<span>Status: {status.toLowerCase()}</span>
 				<span>Duration: {duration === 0 ? '0s' : parseTime(duration)}</span>
-				{updating && <span>Updating every 5 seconds</span>}
 			</div>
 			<hr/>
 	
