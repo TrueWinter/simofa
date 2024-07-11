@@ -11,6 +11,7 @@ import dev.truewinter.simofa.database.Database;
 import dev.truewinter.simofa.pebble.SimofaPebbleExtension;
 import dev.truewinter.simofa.routes.LoginRoute;
 import dev.truewinter.simofa.routes.Route;
+import dev.truewinter.simofa.routes.SseRoute;
 import dev.truewinter.simofa.routes.api.BuildLogsSseRoute;
 import dev.truewinter.simofa.routes.webhook.GithubWebhookRoute;
 import io.javalin.Javalin;
@@ -142,8 +143,9 @@ public class WebServer extends Thread {
             new GithubWebhookRoute().post(ctx);
         });
 
-        BuildLogsSseRoute.init();
-        server.sse("/api/sse/websites/{wid}/build/{bid}/logs", BuildLogsSseRoute::sse);
+        SseRoute.init();
+        server.sse("/api/sse/websites/{wid}/build/{bid}/logs",
+                client -> SseRoute.handle(client, BuildLogsSseRoute::sse));
 
         if (config.isDevMode()) {
             server.get("/_dev/reload", ctx -> {

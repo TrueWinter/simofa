@@ -69,7 +69,7 @@ export default function LogsApp() {
 
         const finishedStatuses = ['STOPPED', 'ERROR', 'DEPLOYED'];
         if (!eventSource.current && !finishedStatuses.includes(d.status)) {
-          eventSource.current = new EventSource(`/api/sse/websites/${websiteId}/build/${buildId}/logs?after=${d.logs[d.logs.length - 1].timestamp.toString()}`);
+          eventSource.current = new EventSource(addJwtParam(`/api/sse/websites/${websiteId}/build/${buildId}/logs`));
           eventSource.current.onerror = () => {
             // TODO: Show error notification
             eventSource.current.close();

@@ -12,7 +12,7 @@ import java.util.*;
 
 @SuppressWarnings("unused")
 @RouteLoader.RouteClass()
-public class QueueAPI extends Route {
+public class QueueAPIRoute extends Route {
     // Shared between `/websites/{id}/logs` and `/builds/queue`
     @RouteLoader.RouteInfo(
             url = "/api/queue"

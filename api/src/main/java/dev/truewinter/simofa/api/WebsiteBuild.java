@@ -3,17 +3,16 @@ package dev.truewinter.simofa.api;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import dev.truewinter.simofa.api.events.BuildQueuedEvent;
 import dev.truewinter.simofa.api.events.BuildStatusChangedEvent;
+import dev.truewinter.simofa.api.internal.SseRegistry;
 import dev.truewinter.simofa.common.BuildStatus;
 import dev.truewinter.simofa.common.LogType;
 import dev.truewinter.simofa.common.SimofaLog;
-import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
-import java.util.function.BiConsumer;
 
 @SuppressWarnings("unused")
 public class WebsiteBuild {
@@ -32,7 +31,11 @@ public class WebsiteBuild {
     @JsonIgnore
     private final String cacheDir;
 
-    private static BiConsumer<WebsiteBuild, SimofaLog> sseConsumer;
+    public static final Set<BuildStatus> END_STATUSES = new HashSet<>(){{
+        add(BuildStatus.STOPPED);
+        add(BuildStatus.ERROR);
+        add(BuildStatus.DEPLOYED);
+    }};
 
     public WebsiteBuild(Website website, String commit, String cacheDir) {
         this.id = UUID.randomUUID().toString();
@@ -70,20 +73,13 @@ public class WebsiteBuild {
             startTime = System.currentTimeMillis();
         }
 
-        Set<BuildStatus> endStatuses = new HashSet<>(){{
-            add(BuildStatus.STOPPED);
-            add(BuildStatus.ERROR);
-            add(BuildStatus.DEPLOYED);
-        }};
-
-        if (!endStatuses.contains(this.status) && endStatuses.contains(status)) {
+        if (!END_STATUSES.contains(this.status) && END_STATUSES.contains(status)) {
             endTime = System.currentTimeMillis();
         }
 
         this.status = status;
 
         addLog(new SimofaLog(LogType.INFO, "Build status changed to " + status.toString().toLowerCase()));
-
         SimofaPluginManager.getInstance().getPluginManager().fireEvent(new BuildStatusChangedEvent(this));
     }
 
@@ -102,9 +98,7 @@ public class WebsiteBuild {
 
     public void addLog(SimofaLog log) {
         logs.add(log);
-        if (sseConsumer != null) {
-            sseConsumer.accept(this, log);
-        }
+        SseRegistry.accept(SseRegistry.Instances.WEBSITE_LOGS, this, log);
     }
 
     public long getStartTime() {
@@ -136,10 +130,5 @@ public class WebsiteBuild {
         }
 
         return cacheDir;
-    }
-
-    @ApiStatus.Internal
-    public static void internal_registerSseConsumer(BiConsumer<WebsiteBuild, SimofaLog> consumer) {
-        WebsiteBuild.sseConsumer = consumer;
     }
 }
