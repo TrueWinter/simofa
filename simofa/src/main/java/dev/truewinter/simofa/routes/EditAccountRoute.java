@@ -34,7 +34,7 @@ public class EditAccountRoute extends Route {
             url = "/accounts/{id}/edit"
     )
     public void get(Context ctx) {
-        int id = Integer.parseInt(ctx.pathParam("id"));
+        String id = ctx.pathParam("id");
 
         try {
             Optional<Account> account = getDatabase().getAccountDatabase().getAccountById(id);
@@ -55,7 +55,7 @@ public class EditAccountRoute extends Route {
             method = HandlerType.POST
     )
     public void post(Context ctx) {
-        int id = Integer.parseInt(ctx.pathParam("id"));
+        String id = ctx.pathParam("id");
 
         try {
             Optional<Account> account = getDatabase().getAccountDatabase().getAccountById(id);

@@ -12,25 +12,25 @@ import java.util.HashSet;
 
 public class LoginCookie {
     public static final int EXPIRES_IN = 24 * 60 * 60;
-    private final int userId;
+    private final String userId;
     private final String csrf;
     private final HashSet<String> routes;
 
-    public LoginCookie(int userId, String csrf) {
+    public LoginCookie(String userId, String csrf) {
         this.userId = userId;
         this.csrf = csrf;
         this.routes = new HashSet<>();
         this.routes.add("/");
     }
 
-    public LoginCookie(int userId, String csrf, HashSet<String> routes) {
+    public LoginCookie(String userId, String csrf, HashSet<String> routes) {
         this.userId = userId;
         this.csrf = csrf;
         this.routes = routes;
     }
 
-    // User ID (or 0 if authenticated with JWT query parameter)
-    public int getUserId() {
+    // User ID (or null if authenticated with JWT query parameter)
+    public String getUserId() {
         return userId;
     }
 
@@ -60,9 +60,9 @@ public class LoginCookie {
         Algorithm algorithm = Algorithm.HMAC256(Simofa.getSecret());
         JWTVerifier verifier = JWT.require(algorithm).acceptLeeway(10).build();
         DecodedJWT jwt = verifier.verify(jwtString);
-        int userId = 0;
+        String userId = null;
         if (!jwtQuery) {
-            userId = jwt.getClaim("user_id").asInt();
+            userId = jwt.getClaim("user_id").asString();
         }
         String csrf = jwt.getClaim("csrf").asString();
         HashSet<String> routes = new HashSet<>(jwt.getClaim("routes").asList(String.class));

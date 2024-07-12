@@ -6,12 +6,13 @@ import Skeleton from '../_common/Skeleton';
 import Form, { FormInput } from '../_common/Form';
 import addJwtParam from '../_common/_auth';
 import Modal from '../_common/Modal';
+import { shortUuid } from '../_common/shortUuid';
 
 function App() {
 	const [accounts, setAccounts] = useState([] as Account[]);
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState('');
-	const [deleteModalData, setDeleteModalData] = useState(0);
+	const [deleteModalData, setDeleteModalData] = useState(null);
 
 	useEffect(() => {
 		fetch(addJwtParam('/api/accounts')).then(accounts => {
@@ -49,7 +50,7 @@ function App() {
 							</tr>) :
 								<>
 									{accounts.map(a => <tr key={a.id}>
-										<td>{a.id}</td>
+										<td title={a.id}>{shortUuid(a.id)}</td>
 										<td>{a.username}</td>
 										<td><a href={addJwtParam(`/accounts/${a.id}/edit`)}>Edit</a></td>
 										<td>

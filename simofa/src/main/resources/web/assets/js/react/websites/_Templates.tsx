@@ -5,6 +5,7 @@ import Form, { FormInput } from '../_common/Form'
 import css from '../../../css/react/websites/Add.module.css'
 import type { Template } from '../../java'
 import addJwtParam from '../_common/_auth'
+import { shortUuid } from '../_common/shortUuid'
 
 interface TemplatesProps {
 	loadTemplate: Function
@@ -68,7 +69,7 @@ export default function Templates({
 		})
 	}
 
-	function deleteTemplate(id: number) {
+	function deleteTemplate(id: string) {
 		setLoading(true);
 		fetch(addJwtParam(`/api/templates/${id}/delete`), {
 			method: 'POST',
@@ -113,7 +114,7 @@ export default function Templates({
 							<>
 							{
 								templates.map(e => <tr key={e.id}>
-									<td>{e.id}</td>
+									<td title={e.id}>{shortUuid(e.id)}</td>
 									<td>{e.name}</td>
 									<td><span className={css['template-link']} data-template={e.template} onClick={_loadTemplate}>Load</span></td>
 									<td><button type="submit" onClick={() => deleteTemplate(e.id)}>Delete</button></td>

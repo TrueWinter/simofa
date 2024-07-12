@@ -19,7 +19,7 @@ public class DeleteTemplateAPIRoute extends Route {
             method = HandlerType.POST
     )
     public void post(Context ctx) {
-        int id = Integer.parseInt(ctx.pathParam("id"));
+        String id = ctx.pathParam("id");
         Map<String, Object> resp = new HashMap<>();
         resp.put("success", true);
 

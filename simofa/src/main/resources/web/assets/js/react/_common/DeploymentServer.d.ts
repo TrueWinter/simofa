@@ -5,7 +5,7 @@ export interface DeploymentServersResponse {
 }
 
 export default interface DeploymentServer {
-	id: number
+	id: string
 	name: string
 	url: string
 	key: string

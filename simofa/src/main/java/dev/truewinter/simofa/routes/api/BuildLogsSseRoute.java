@@ -3,7 +3,6 @@ package dev.truewinter.simofa.routes.api;
 import dev.truewinter.simofa.Simofa;
 import dev.truewinter.simofa.api.WebsiteBuild;
 import dev.truewinter.simofa.api.internal.SseRegistry;
-import dev.truewinter.simofa.common.BuildStatus;
 import dev.truewinter.simofa.common.SimofaLog;
 import dev.truewinter.simofa.routes.SseRoute;
 import io.javalin.http.Context;
@@ -30,7 +29,7 @@ public class BuildLogsSseRoute extends SseRoute {
         String id = String.format("%s-%s", ctx.pathParam("wid"), ctx.pathParam("bid"));
 
         List<WebsiteBuild> builds = Simofa.getBuildQueueManager().getBuildQueue().getWebsiteBuildList()
-                .get(Integer.parseInt(ctx.pathParam("wid")));
+                .get(ctx.pathParam("wid"));
         if (builds == null || builds.isEmpty()) {
             client.sendEvent("error", "No builds found for that website");
             return;
@@ -61,7 +60,7 @@ public class BuildLogsSseRoute extends SseRoute {
             throw new IllegalArgumentException("Log must be of type SimofaLog");
         }
 
-        String id = String.format("%d-%s", build.getWebsite().getId(), build.getId());
+        String id = String.format("%s-%s", build.getWebsite().getId(), build.getId());
         if (!clients.containsKey(id)) return;
 
         List<SimofaLog> logs = List.of((SimofaLog) log);

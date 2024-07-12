@@ -21,11 +21,10 @@ public class QueueAPIRoute extends Route {
         HashMap<String, Object> map = new HashMap<>();
         map.put("success", true);
 
-        String websiteIdString = ctx.queryParam("website");
+        String websiteId = ctx.queryParam("website");
 
-        if (!Util.isBlank(websiteIdString)) {
+        if (!Util.isBlank(websiteId)) {
             try {
-                int websiteId = Integer.parseInt(websiteIdString);
                 Optional<Website> website = getDatabase().getWebsiteDatabase().getWebsiteById(websiteId);
                 if (website.isPresent()) {
                     List<WebsiteBuild> websiteBuildList = new ArrayList<>(Simofa.getBuildQueueManager().getBuildQueue()
@@ -53,16 +52,7 @@ public class QueueAPIRoute extends Route {
     }
 
     private void sort(List<WebsiteBuild> list) {
-        list.sort((a, b) -> {
-            if (a.getStartTime() == b.getStartTime()) {
-                return 0;
-            }
-
-            if (a.getStartTime() - b.getStartTime() > 0 || a.getStartTime() == 0) {
-                return -1;
-            } else {
-                return 1;
-            }
-        });
+        list.sort(Comparator.comparing(WebsiteBuild::getId));
+        Collections.reverse(list);
     }
 }

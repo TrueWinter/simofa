@@ -37,7 +37,7 @@ public class EditDeploymentServerRoute extends Route {
             url = "/deployment-servers/{id}/edit"
     )
     public void get(Context ctx) {
-        int id = Integer.parseInt(ctx.pathParam("id"));
+        String id = ctx.pathParam("id");
         try {
             Optional<DeploymentServer> deploymentServer = getDatabase().getDeploymentServerDatabase().getDeploymentServer(id);
             deploymentServer.ifPresentOrElse(d -> {
@@ -61,7 +61,7 @@ public class EditDeploymentServerRoute extends Route {
             method = HandlerType.POST
     )
     public void post(Context ctx) {
-        int id = Integer.parseInt(ctx.pathParam("id"));
+        String id = ctx.pathParam("id");
 
         try {
             Optional<DeploymentServer> deploymentServer = getDatabase().getDeploymentServerDatabase().getDeploymentServer(id);
@@ -76,13 +76,16 @@ public class EditDeploymentServerRoute extends Route {
 
             Optional<String> error = new AddEditDeploymentServerValidator().hasError(ctx);
             if (error.isPresent()) {
-                renderError(ctx, "deployment-servers/add", error.get(), getDeploymentServerDataForModel(deploymentServer.get()));
+                renderError(ctx, "deployment-servers/add", error.get(),
+                        getDeploymentServerDataForModel(deploymentServer.get()));
                 return;
             }
 
             DeploymentServer deploymentServer1 = new DeploymentServer(id, name, url, key);
             getDatabase().getDeploymentServerDatabase().editDeploymentServer(deploymentServer1);
-            renderSuccess(ctx, "deployment-servers/edit", "Edited deployment server", getDeploymentServerDataForModel(getDatabase().getDeploymentServerDatabase().getDeploymentServer(id).get()));
+            renderSuccess(ctx, "deployment-servers/edit", "Edited deployment server",
+                    getDeploymentServerDataForModel(getDatabase().getDeploymentServerDatabase()
+                            .getDeploymentServer(id).get()));
         } catch (Exception e) {
             e.printStackTrace();
             ctx.status(500).result("Failed to edit deployment server");

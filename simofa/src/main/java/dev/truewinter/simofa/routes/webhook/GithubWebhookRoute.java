@@ -15,7 +15,7 @@ import java.util.Optional;
 
 public class GithubWebhookRoute extends Route {
     public void post(Context ctx) {
-        int websiteId = Integer.parseInt(ctx.pathParam("id"));
+        String websiteId = ctx.pathParam("id");
         HashMap<String, Object> resp = new HashMap<>();
         resp.put("success", true);
 
@@ -62,7 +62,7 @@ public class GithubWebhookRoute extends Route {
                 String commit = "<unknown>";
                 @SuppressWarnings("unchecked")
                 ArrayList<LinkedHashMap<String, Object>> commits = (ArrayList<LinkedHashMap<String, Object>>) data.get("commits");
-                if (commits.size() > 0) {
+                if (!commits.isEmpty()) {
                     commit = (String) commits.get(0).get("message");
                 }
 

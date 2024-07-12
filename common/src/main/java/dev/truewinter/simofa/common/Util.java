@@ -1,5 +1,6 @@
 package dev.truewinter.simofa.common;
 
+import com.github.f4b6a3.uuid.UuidCreator;
 import org.apache.commons.io.FileUtils;
 import org.jetbrains.annotations.Nullable;
 
@@ -11,10 +12,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.SecureRandom;
-import java.util.ArrayList;
-import java.util.Base64;
-import java.util.List;
-import java.util.Properties;
+import java.util.*;
 
 public class Util {
     // https://stackoverflow.com/a/15954821
@@ -136,5 +134,10 @@ public class Util {
         }
 
         return pluginJars;
+    }
+
+    // "TimeOrderedEpoch" is a bit harder to remember than v7. This wrapper method exists to avoid mixing versions
+    public static UUID createv7UUID() {
+        return UuidCreator.getTimeOrderedEpoch();
     }
 }

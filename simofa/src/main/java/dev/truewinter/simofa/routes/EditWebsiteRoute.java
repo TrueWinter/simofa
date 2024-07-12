@@ -33,7 +33,7 @@ public class EditWebsiteRoute extends Route {
             url = "/websites/{id}/edit"
     )
     public void get(Context ctx) {
-        int id = Integer.parseInt(ctx.pathParam("id"));
+        String id = ctx.pathParam("id");
         try {
             Optional<Website> website = getDatabase().getWebsiteDatabase().getWebsiteById(id);
             website.ifPresentOrElse(w -> {
@@ -57,7 +57,7 @@ public class EditWebsiteRoute extends Route {
             method = HandlerType.POST
     )
     public void post(Context ctx) {
-        int id = Integer.parseInt(ctx.pathParam("id"));
+        String id = ctx.pathParam("id");
         try {
             Optional<Website> w = getDatabase().getWebsiteDatabase().getWebsiteById(id);
             if (w.isEmpty()) {
@@ -93,7 +93,7 @@ public class EditWebsiteRoute extends Route {
             //noinspection ConstantConditions
             if (!gitCredential.equals("anonymous")) {
                 try {
-                    Optional<GitCredential> gitCredential1 = getDatabase().getGitDatabase().getGitCredential(Integer.parseInt(gitCredential));
+                    Optional<GitCredential> gitCredential1 = getDatabase().getGitDatabase().getGitCredential(gitCredential);
                     if (gitCredential1.isPresent()) {
                         gitCredentialRef = gitCredential1.get();
                     } else {
@@ -118,7 +118,7 @@ public class EditWebsiteRoute extends Route {
                     buildCommand,
                     deploymentCommand,
                     deploymentFailedCommand,
-                    Integer.parseInt(deploymentServer),
+                    deploymentServer,
                     deployToken
             );
 

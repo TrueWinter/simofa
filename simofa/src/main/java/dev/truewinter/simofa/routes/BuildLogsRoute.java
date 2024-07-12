@@ -16,9 +16,9 @@ public class BuildLogsRoute extends Route {
             url = "/websites/{wid}/build/{bid}/logs"
     )
     public void get(Context ctx) {
-        int websiteId = Integer.parseInt(ctx.pathParam("wid"));
+        String websiteId = ctx.pathParam("wid");
         String buildId = ctx.pathParam("bid");
-        HashMap<Integer, List<WebsiteBuild>> allBuildsList = Simofa.getBuildQueueManager().getBuildQueue().getWebsiteBuildList();
+        HashMap<String, List<WebsiteBuild>> allBuildsList = Simofa.getBuildQueueManager().getBuildQueue().getWebsiteBuildList();
 
         if (!allBuildsList.containsKey(websiteId)) {
             ctx.redirect("/websites/" + websiteId + "/logs");

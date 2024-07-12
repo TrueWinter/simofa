@@ -12,6 +12,7 @@ import type { GitCredential as Git } from '../../java'
 
 import css from '../../../css/react/websites/Add.module.css'
 import addJwtParam from '../_common/_auth'
+import { shortUuid } from '../_common/shortUuid'
 
 interface AnyObject {
 	[x: string]: any;
@@ -198,7 +199,7 @@ function App() {
 						<FormInput label="Git Credential">
 							<select name="git_credential" required={true} ref={refs.dockerImage}>
 								<option selected={true} value="anonymous">anonymous</option>
-								{git.map(e => <option value={e.id} selected={getInitValue('git_credential') === e.id}>[{e.id}] {e.username}</option>)}
+								{git.map(e => <option value={e.id} title={e.id} selected={getInitValue('git_credential') === e.id}>[{shortUuid(e.id)}] {e.username}</option>)}
 							</select>
 						</FormInput>
 						<FormInput label="Build Command" styles={{
@@ -215,7 +216,7 @@ function App() {
 						<FormInput label="Deployment Server">
 							<select name="deployment_server" required={true}>
 								<option disabled={true} selected={true}>Select a server</option>
-								{servers.map(e => <option value={e.id} selected={getInitValue('deployment_server') === e.id}>[{e.id}] {e.name}</option>)}
+								{servers.map(e => <option value={e.id} title={e.id} selected={getInitValue('deployment_server') === e.id}>[{shortUuid(e.id)}] {e.name}</option>)}
 							</select>
 						</FormInput>
 						<FormInput label="Deploy Token" styles={{

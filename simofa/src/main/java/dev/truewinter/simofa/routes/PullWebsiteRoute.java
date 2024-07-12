@@ -17,7 +17,7 @@ public class PullWebsiteRoute extends Route {
             method = HandlerType.POST
     )
     public void post(Context ctx) {
-        int id = Integer.parseInt(ctx.pathParam("id"));
+        String id = ctx.pathParam("id");
         String gitUrl = ctx.formParam("repository");
         String gitBranch = ctx.formParam("branch");
         String noCache = ctx.formParam("noCache");

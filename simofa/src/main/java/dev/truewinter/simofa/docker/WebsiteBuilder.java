@@ -33,7 +33,7 @@ public class WebsiteBuilder extends Thread {
 
     @Override
     public void run() {
-        Simofa.getLogger().info(String.format("Running build %s for website %d", build.getId(), build.getWebsite().getId()));
+        Simofa.getLogger().info(String.format("Running build %s for website %s", build.getId(), build.getWebsite().getId()));
         build.setStatus(BuildStatus.PREPARING);
 
         try {
@@ -138,7 +138,7 @@ public class WebsiteBuilder extends Thread {
                             builder.addTextBody("key", deploymentServer.get().getKey());
                             builder.addTextBody("site_hash", siteHash);
                             builder.addTextBody("build_url", String.format(
-                                    "%s/api/websites/%d/build/%s",
+                                    "%s/api/websites/%s/build/%s",
                                     BuildQueueManager.getConfig().getUrl(),
                                     build.getWebsite().getId(),
                                     build.getId()

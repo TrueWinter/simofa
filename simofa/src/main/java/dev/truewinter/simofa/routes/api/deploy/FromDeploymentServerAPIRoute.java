@@ -14,7 +14,7 @@ import java.util.Optional;
 public abstract class FromDeploymentServerAPIRoute extends Route {
     @Nullable
     public WebsiteBuild getBuild(Context ctx) {
-        int websiteId = Integer.parseInt(ctx.pathParam("wid"));
+        String websiteId = ctx.pathParam("wid");
         String buildId = ctx.pathParam("bid");
 
         List<WebsiteBuild> builds = Simofa.getBuildQueueManager().getBuildQueue().getWebsiteBuildList().get(websiteId);
@@ -26,7 +26,7 @@ public abstract class FromDeploymentServerAPIRoute extends Route {
         WebsiteBuild build = null;
 
         for (WebsiteBuild b : builds) {
-            if (b.getWebsite().getId() == websiteId && b.getId().equals(buildId)) {
+            if (b.getWebsite().getId().equals(websiteId) && b.getId().equals(buildId)) {
                 build = b;
                 break;
             }

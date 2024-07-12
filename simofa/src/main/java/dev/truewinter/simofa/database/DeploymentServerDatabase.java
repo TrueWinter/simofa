@@ -2,6 +2,7 @@ package dev.truewinter.simofa.database;
 
 import com.zaxxer.hikari.HikariDataSource;
 import dev.truewinter.simofa.api.DeploymentServer;
+import dev.truewinter.simofa.common.Util;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -10,21 +11,21 @@ import java.sql.SQLException;
 import java.util.*;
 
 public class DeploymentServerDatabase {
-    private HikariDataSource ds;
+    private final HikariDataSource ds;
 
     public DeploymentServerDatabase(HikariDataSource ds) {
         this.ds = ds;
     }
 
-    public Optional<DeploymentServer> getDeploymentServer(int id) throws SQLException {
+    public Optional<DeploymentServer> getDeploymentServer(String id) throws SQLException {
         try (Connection connection = ds.getConnection()) {
             PreparedStatement statement = connection.prepareStatement("SELECT * FROM `deployment_servers` WHERE id = ?;");
-            statement.setInt(1, id);
+            statement.setString(1, id);
             ResultSet rs = statement.executeQuery();
 
             if (rs.next()) {
                 DeploymentServer deploymentServer = new DeploymentServer(
-                        rs.getInt("id"),
+                        rs.getString("id"),
                         rs.getString("name"),
                         rs.getString("url"),
                         rs.getString("key")
@@ -38,10 +39,11 @@ public class DeploymentServerDatabase {
 
     public void addDeploymentServer(DeploymentServer deploymentServer) throws SQLException {
         try (Connection connection = ds.getConnection()) {
-            PreparedStatement statement = connection.prepareStatement("INSERT INTO `deployment_servers` (name, url, `key`) VALUES (?, ?, ?);");
-            statement.setString(1, deploymentServer.getName());
-            statement.setString(2, deploymentServer.getUrl());
-            statement.setString(3, deploymentServer.getKey());
+            PreparedStatement statement = connection.prepareStatement("INSERT INTO `deployment_servers` (id, name, url, `key`) VALUES (?, ?, ?, ?);");
+            statement.setString(1, Util.createv7UUID().toString());
+            statement.setString(2, deploymentServer.getName());
+            statement.setString(3, deploymentServer.getUrl());
+            statement.setString(4, deploymentServer.getKey());
             statement.execute();
         }
     }
@@ -58,7 +60,7 @@ public class DeploymentServerDatabase {
             statement.setString(1, deploymentServer.getName());
             statement.setString(2, deploymentServer.getUrl());
             statement.setString(3, deploymentServer.getKey());
-            statement.setInt(4, deploymentServer.getId());
+            statement.setString(4, deploymentServer.getId());
             statement.execute();
         }
     }
@@ -72,7 +74,7 @@ public class DeploymentServerDatabase {
 
             while (rs.next()) {
                 DeploymentServer deploymentServer = new DeploymentServer(
-                        rs.getInt("id"),
+                        rs.getString("id"),
                         rs.getString("name"),
                         rs.getString("url"),
                         rs.getString("key")
@@ -84,10 +86,10 @@ public class DeploymentServerDatabase {
         return deploymentServers;
     }
 
-    public void deleteDeploymentServer(int id) throws SQLException {
+    public void deleteDeploymentServer(String id) throws SQLException {
         try (Connection connection = ds.getConnection()) {
             PreparedStatement statement = connection.prepareStatement("DELETE FROM `deployment_servers` WHERE id = ?;");
-            statement.setInt(1, id);
+            statement.setString(1, id);
             statement.execute();
         }
     }

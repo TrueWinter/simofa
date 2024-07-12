@@ -5,18 +5,18 @@ import at.favre.lib.crypto.bcrypt.LongPasswordStrategies;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 public class Account {
-    private final int id;
+    private final String id;
     private final String username;
     @JsonIgnore
     private final String passwordHash;
 
-    public Account(int id, String username, String passwordHash) {
+    public Account(String id, String username, String passwordHash) {
         this.id = id;
         this.username = username;
         this.passwordHash = passwordHash;
     }
 
-    public int getId() {
+    public String getId() {
         return id;
     }
 

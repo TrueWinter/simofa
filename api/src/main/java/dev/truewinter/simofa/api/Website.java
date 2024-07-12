@@ -4,7 +4,7 @@ import dev.truewinter.simofa.common.Util;
 import org.jetbrains.annotations.Nullable;
 
 public class Website {
-    private final int id;
+    private final String id;
     private final String name;
     private final String dockerImage;
     private final int memory;
@@ -15,13 +15,13 @@ public class Website {
     private final String buildCommand;
     private final String deploymentCommand;
     private final String deploymentFailedCommand;
-    private final int deploymentServer;
+    private final String deploymentServer;
     private final String deployToken;
 
-    public Website(int id, String name, String dockerImage, int memory,
+    public Website(String id, String name, String dockerImage, int memory,
                    double cpu, String gitUrl, String gitBranch, GitCredential gitCredential,
                    String buildCommand, String deploymentCommand, String deploymentFailedCommand,
-                   int deploymentServer, String deployToken) {
+                   String deploymentServer, String deployToken) {
         this.id = id;
         this.name = name;
         this.dockerImage = dockerImage;
@@ -37,7 +37,7 @@ public class Website {
         this.deployToken = deployToken;
     }
 
-    public int getId() {
+    public String getId() {
         return id;
     }
 
@@ -82,7 +82,7 @@ public class Website {
         return deploymentFailedCommand;
     }
 
-    public int getDeploymentServer() {
+    public String getDeploymentServer() {
         return deploymentServer;
     }
 

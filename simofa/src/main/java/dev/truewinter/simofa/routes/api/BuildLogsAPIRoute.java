@@ -21,15 +21,15 @@ public class BuildLogsAPIRoute extends Route {
             url = "/api/websites/{wid}/build/{bid}/logs"
     )
     public void get(Context ctx) {
-        int websiteId = Integer.parseInt(ctx.pathParam("wid"));
+        String websiteId = ctx.pathParam("wid");
         String buildId = ctx.pathParam("bid");
         String after = ctx.queryParam("after");
 
         ctx.json(getLogs(websiteId, buildId, after));
     }
 
-    protected static HashMap<String, Object> getLogs(int websiteId, String buildId, String after) {
-        HashMap<Integer, List<WebsiteBuild>> allBuildsList = Simofa.getBuildQueueManager().getBuildQueue().getWebsiteBuildList();
+    protected static HashMap<String, Object> getLogs(String websiteId, String buildId, String after) {
+        HashMap<String, List<WebsiteBuild>> allBuildsList = Simofa.getBuildQueueManager().getBuildQueue().getWebsiteBuildList();
 
         if (!allBuildsList.containsKey(websiteId)) {
             return errorResponse("No builds found for that website");

@@ -18,7 +18,7 @@ public class MonitorTask extends TimerTask {
     private final Logger logger;
     private final PushoverPlugin pushoverPlugin;
     private final SimofaAPI api;
-    private final List<Integer> previouslyOfflineDeploymentServers = new ArrayList<>();
+    private final List<String> previouslyOfflineDeploymentServers = new ArrayList<>();
 
     protected MonitorTask(Plugin<SimofaAPI> pushoverPlugin, Logger logger, SimofaAPI api) {
         this.logger = logger;
@@ -55,7 +55,7 @@ public class MonitorTask extends TimerTask {
                     if (!isOnline(deploymentServer, 0)) {
                         throw new Exception("Non-200 status");
                     } else {
-                        previouslyOfflineDeploymentServers.remove((Object) deploymentServer.getId());
+                        previouslyOfflineDeploymentServers.remove(deploymentServer.getId());
                     }
                 } catch (Exception e) {
                     if (!previouslyOfflineDeploymentServers.contains(deploymentServer.getId())) {

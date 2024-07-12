@@ -5,12 +5,13 @@ import Form, { FormInput } from '../_common/Form'
 import type { GitCredential as Git } from '../../java'
 import addJwtParam from '../_common/_auth'
 import Modal from '../_common/Modal'
+import { shortUuid } from '../_common/shortUuid'
 
 function App() {
 	const [git, setGit] = useState([] as Git[]);
 	const [error, setError] = useState('');
 	const [loading, setLoading] = useState(true);
-	const [deleteModalData, setDeleteModalData] = useState(0);
+	const [deleteModalData, setDeleteModalData] = useState(null);
 
 	useEffect(() => {
 		fetch(addJwtParam('/api/git')).then(d => {
@@ -51,7 +52,7 @@ function App() {
 								{git.map(e => {
 									return (
 										<tr key={e.id}>
-											<td>{e.id}</td>
+											<td title={e.id}>{shortUuid(e.id)}</td>
 											<td>{e.username}</td>
 											<td><a href={addJwtParam(`/git/${e.id}/edit`)}>Edit</a></td>
 											<td>

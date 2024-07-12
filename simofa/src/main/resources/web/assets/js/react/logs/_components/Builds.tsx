@@ -5,6 +5,7 @@ import Build from '../../_common/Build'
 import Form, { FormInput } from '../../_common/Form'
 import addJwtParam from '../../_common/_auth'
 import Modal from '../../_common/Modal'
+import { shortUuid } from '../../_common/shortUuid';
 
 interface BuildsProps {
 	website?: Website
@@ -23,7 +24,7 @@ interface TableRow {
 }
 
 interface BuildStopIds {
-	website: number
+	website: string
 	build: string
 }
 
@@ -56,7 +57,7 @@ export default function Builds({
 		name: 'ID',
 		pages: ['builds', 'website'],
 		data: b => (
-			<td title={b.id}>{b.id.split('-')[0]}</td>
+			<td title={b.id}>{shortUuid(b.id)}</td>
 		)
 	}, {
 		name: 'Website',
@@ -190,7 +191,7 @@ export default function Builds({
 		</div>}
 
 		{deleteModalData && <Modal title="Stop Build" close={() => setDeleteModalData(null)}>
-				<p>Are you sure you want to stop build with ID {deleteModalData.build.split('-')[0]}?</p>
+				<p>Are you sure you want to stop build with ID {deleteModalData.build}?</p>
 				<Form action={`/websites/${deleteModalData.website}/build/${deleteModalData.build}/stop${thisPage === 'builds' ? '?redirectTo=%2Fbuilds%2Fqueue' : ''}`}>
 					<FormInput>
 						<button type='submit'>Stop</button>

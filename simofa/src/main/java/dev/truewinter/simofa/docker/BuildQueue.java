@@ -3,7 +3,6 @@ package dev.truewinter.simofa.docker;
 import dev.truewinter.simofa.Simofa;
 import dev.truewinter.simofa.api.Website;
 import dev.truewinter.simofa.api.WebsiteBuild;
-import dev.truewinter.simofa.api.internal.SseRegistry;
 import dev.truewinter.simofa.common.BuildStatus;
 import dev.truewinter.simofa.common.LogType;
 import dev.truewinter.simofa.common.SimofaLog;
@@ -16,7 +15,7 @@ public class BuildQueue {
     private static BuildQueue buildQueue;
     private final Config config;
     // all builds
-    private final HashMap<Integer, List<WebsiteBuild>> websiteBuildList = new HashMap<>();
+    private final HashMap<String, List<WebsiteBuild>> websiteBuildList = new HashMap<>();
     // builds that are queued
 	// TODO: ArrayDeque?
 	// add() and poll()
@@ -97,13 +96,13 @@ public class BuildQueue {
     // Settings may have changed since the build started,
     // meaning that the Website object may differ. However,
     // the ID will always stay the same for a website.
-    public synchronized void remove(int id) {
-        websiteBuildQueue.removeIf(w -> w.getWebsite().getId() == id);
+    public synchronized void remove(String id) {
+        websiteBuildQueue.removeIf(w -> w.getWebsite().getId().equals(id));
         if (websiteBuildList.containsKey(id)) {
             websiteBuildList.get(id).forEach(this::remove);
         }
 
-        beingBuiltList.removeIf(w -> w.getWebsite().getId() == id);
+        beingBuiltList.removeIf(w -> w.getWebsite().getId().equals(id));
     }
 
     public synchronized void remove(WebsiteBuild w) {
@@ -132,7 +131,7 @@ public class BuildQueue {
         return websiteBuildQueue;
     }
 
-    public HashMap<Integer, List<WebsiteBuild>> getWebsiteBuildList() {
+    public HashMap<String, List<WebsiteBuild>> getWebsiteBuildList() {
         return websiteBuildList;
     }
 }

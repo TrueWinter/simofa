@@ -34,7 +34,7 @@ public class EditGitRoute extends Route {
             url = "/git/{id}/edit"
     )
     public void get(Context ctx) {
-        int id = Integer.parseInt(ctx.pathParam("id"));
+        String id = ctx.pathParam("id");
 
         try {
             Optional<GitCredential> gitCredential = getDatabase().getGitDatabase().getGitCredential(id);
@@ -53,7 +53,7 @@ public class EditGitRoute extends Route {
             method = HandlerType.POST
     )
     public void post(Context ctx) {
-        int id = Integer.parseInt(ctx.pathParam("id"));
+        String id = ctx.pathParam("id");
         String username = ctx.formParam("username");
         String password = ctx.formParam("password");
 

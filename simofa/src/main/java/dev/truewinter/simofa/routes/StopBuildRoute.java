@@ -19,9 +19,9 @@ public class StopBuildRoute extends Route {
             method = HandlerType.POST
     )
     public void post(Context ctx) {
-        int websiteId = Integer.parseInt(ctx.pathParam("wid"));
+        String websiteId = ctx.pathParam("wid");
         String buildId = ctx.pathParam("bid");
-        HashMap<Integer, List<WebsiteBuild>> allBuildsList = Simofa.getBuildQueueManager().getBuildQueue().getWebsiteBuildList();
+        HashMap<String, List<WebsiteBuild>> allBuildsList = Simofa.getBuildQueueManager().getBuildQueue().getWebsiteBuildList();
 
         if (!allBuildsList.containsKey(websiteId)) {
             ctx.status(404).result("No builds found for that website");
@@ -39,7 +39,7 @@ public class StopBuildRoute extends Route {
 
         String redirectTo = ctx.queryParam("redirectTo");
         if (Util.isBlank(redirectTo)) {
-            redirectTo = String.format("/websites/%d/logs", websiteId);
+            redirectTo = String.format("/websites/%s/logs", websiteId);
         }
 
         redirect(ctx, redirectTo);

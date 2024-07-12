@@ -2,6 +2,7 @@ package dev.truewinter.simofa.routes;
 
 import dev.truewinter.simofa.api.DeploymentServer;
 import dev.truewinter.simofa.RouteLoader;
+import dev.truewinter.simofa.common.Util;
 import dev.truewinter.simofa.formvalidators.AddEditDeploymentServerValidator;
 import io.javalin.http.Context;
 import io.javalin.http.HandlerType;
@@ -36,7 +37,7 @@ public class AddDeploymentServerRoute extends Route {
             return;
         }
 
-        DeploymentServer deploymentServer = new DeploymentServer(0, name, url, key);
+        DeploymentServer deploymentServer = new DeploymentServer(Util.createv7UUID().toString(), name, url, key);
         try {
             getDatabase().getDeploymentServerDatabase().addDeploymentServer(deploymentServer);
             redirect(ctx, "/deployment-servers");

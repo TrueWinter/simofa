@@ -5,12 +5,13 @@ import DeploymentServer from '../_common/DeploymentServer'
 import Form, { FormInput } from '../_common/Form'
 import addJwtParam from '../_common/_auth'
 import Modal from '../_common/Modal'
+import { shortUuid } from '../_common/shortUuid'
 
 function App() {
 	const [servers, setServers] = useState([] as DeploymentServer[]);
 	const [error, setError] = useState('');
 	const [loading, setLoading] = useState(true);
-	const [deleteModalData, setDeleteModalData] = useState(0);
+	const [deleteModalData, setDeleteModalData] = useState(null);
 
 	useEffect(() => {
 		fetch(addJwtParam('/api/deployment-servers')).then(d => {
@@ -52,7 +53,7 @@ function App() {
 								{servers.map(e => {
 									return (
 										<tr key={e.id}>
-											<td>{e.id}</td>
+											<td title={e.id}>{shortUuid(e.id)}</td>
 											<td>{e.name}</td>
 											<td>{e.url}</td>
 											<td><a href={addJwtParam(`/deployment-servers/${e.id}/edit`)}>Edit</a></td>

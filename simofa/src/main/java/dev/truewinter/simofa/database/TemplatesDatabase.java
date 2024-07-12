@@ -2,6 +2,7 @@ package dev.truewinter.simofa.database;
 
 import com.zaxxer.hikari.HikariDataSource;
 import dev.truewinter.simofa.Template;
+import dev.truewinter.simofa.common.Util;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -18,15 +19,15 @@ public class TemplatesDatabase {
         this.ds = ds;
     }
 
-    public Optional<Template> getTemplateById(int id) throws SQLException {
+    public Optional<Template> getTemplateById(String id) throws SQLException {
         try (Connection connection = ds.getConnection()) {
             PreparedStatement statement = connection.prepareStatement("SELECT * FROM `templates` WHERE id = ?;");
-            statement.setInt(1, id);
+            statement.setString(1, id);
             ResultSet rs = statement.executeQuery();
 
             if (rs.next()) {
                 Template template = new Template(
-                        rs.getInt("id"),
+                        rs.getString("id"),
                         rs.getString("name"),
                         rs.getString("template")
                 );
@@ -39,9 +40,10 @@ public class TemplatesDatabase {
 
     public void addTemplate(Template template) throws SQLException {
         try (Connection connection = ds.getConnection()) {
-            PreparedStatement statement = connection.prepareStatement("INSERT INTO templates (name, template) VALUES (?, ?);");
-            statement.setString(1, template.getName());
-            statement.setString(2, template.getTemplate());
+            PreparedStatement statement = connection.prepareStatement("INSERT INTO templates (id, name, template) VALUES (?, ?, ?);");
+            statement.setString(1, Util.createv7UUID().toString());
+            statement.setString(2, template.getName());
+            statement.setString(3, template.getTemplate());
             statement.execute();
         }
     }
@@ -69,7 +71,7 @@ public class TemplatesDatabase {
 
             while (rs.next()) {
                 Template template = new Template(
-                        rs.getInt("id"),
+                        rs.getString("id"),
                         rs.getString("name"),
                         rs.getString("template")
                 );
@@ -80,10 +82,10 @@ public class TemplatesDatabase {
         return templates;
     }
 
-    public void deleteTemplate(int id) throws SQLException {
+    public void deleteTemplate(String id) throws SQLException {
         try (Connection connection = ds.getConnection()) {
             PreparedStatement statement = connection.prepareStatement("DELETE FROM `templates` WHERE id = ?;");
-            statement.setInt(1, id);
+            statement.setString(1, id);
             statement.execute();
         }
     }

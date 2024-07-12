@@ -3,6 +3,7 @@ package dev.truewinter.simofa.routes;
 import dev.truewinter.simofa.api.GitCredential;
 import dev.truewinter.simofa.RouteLoader;
 import dev.truewinter.simofa.api.Website;
+import dev.truewinter.simofa.common.Util;
 import dev.truewinter.simofa.formvalidators.AddEditWebsiteValidator;
 import io.javalin.http.Context;
 import io.javalin.http.HandlerType;
@@ -55,7 +56,7 @@ public class AddWebsiteRoute extends Route {
         //noinspection ConstantConditions
         if (!gitCredential.equals("anonymous")) {
             try {
-                Optional<GitCredential> gitCredential1 = getDatabase().getGitDatabase().getGitCredential(Integer.parseInt(gitCredential));
+                Optional<GitCredential> gitCredential1 = getDatabase().getGitDatabase().getGitCredential(gitCredential);
                 if (gitCredential1.isPresent()) {
                     gitCredentialRef = gitCredential1.get();
                 } else {
@@ -69,7 +70,7 @@ public class AddWebsiteRoute extends Route {
 
         @SuppressWarnings("ConstantConditions")
         Website website = new Website(
-                0,
+                Util.createv7UUID().toString(),
                 name,
                 dockerImage,
                 memory,
@@ -80,7 +81,7 @@ public class AddWebsiteRoute extends Route {
                 buildCommand,
                 deploymentCommand,
                 deploymentFailedCommand,
-                Integer.parseInt(deploymentServer),
+                deploymentServer,
                 deployToken
         );
 

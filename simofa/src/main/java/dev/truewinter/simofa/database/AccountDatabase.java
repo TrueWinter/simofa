@@ -2,6 +2,7 @@ package dev.truewinter.simofa.database;
 
 import com.zaxxer.hikari.HikariDataSource;
 import dev.truewinter.simofa.Account;
+import dev.truewinter.simofa.common.Util;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -12,7 +13,7 @@ import java.util.List;
 import java.util.Optional;
 
 public class AccountDatabase {
-    private HikariDataSource ds;
+    private final HikariDataSource ds;
 
     public AccountDatabase(HikariDataSource ds) {
         this.ds = ds;
@@ -20,9 +21,10 @@ public class AccountDatabase {
 
     public void addAccount(String username, String password) throws SQLException {
         try (Connection connection = ds.getConnection()) {
-            PreparedStatement statement = connection.prepareStatement("INSERT INTO users (username, password) VALUES (?, ?);");
-            statement.setString(1, username);
-            statement.setString(2, Account.createHash(password));
+            PreparedStatement statement = connection.prepareStatement("INSERT INTO users (id, username, password) VALUES (?, ?, ?);");
+            statement.setString(1, Util.createv7UUID().toString());
+            statement.setString(2, username);
+            statement.setString(3, Account.createHash(password));
             statement.execute();
         }
     }
@@ -35,7 +37,7 @@ public class AccountDatabase {
 
             if (rs.next()) {
                 Account account = new Account(
-                        rs.getInt("id"),
+                        rs.getString("id"),
                         rs.getString("username"),
                         rs.getString("password")
                 );
@@ -46,15 +48,15 @@ public class AccountDatabase {
         }
     }
 
-    public Optional<Account> getAccountById(int id) throws SQLException {
+    public Optional<Account> getAccountById(String id) throws SQLException {
         try (Connection connection = ds.getConnection()) {
             PreparedStatement statement = connection.prepareStatement("SELECT * FROM `users` WHERE id = ?;");
-            statement.setInt(1, id);
+            statement.setString(1, id);
             ResultSet rs = statement.executeQuery();
 
             if (rs.next()) {
                 Account account = new Account(
-                        rs.getInt("id"),
+                        rs.getString("id"),
                         rs.getString("username"),
                         rs.getString("password")
                 );
@@ -78,7 +80,7 @@ public class AccountDatabase {
 
             while (rs.next()) {
                 Account account = new Account(
-                        rs.getInt("id"),
+                        rs.getString("id"),
                         rs.getString("username"),
                         rs.getString("password")
                 );
@@ -102,10 +104,10 @@ public class AccountDatabase {
         }
     }
 
-    public void deleteAccount(int id) throws SQLException {
+    public void deleteAccount(String id) throws SQLException {
         try (Connection connection = ds.getConnection()) {
             PreparedStatement statement = connection.prepareStatement("DELETE FROM `users` WHERE id = ?;");
-            statement.setInt(1, id);
+            statement.setString(1, id);
             statement.execute();
         }
     }
@@ -120,7 +122,7 @@ public class AccountDatabase {
 
             statement.setString(1, account.getUsername());
             statement.setString(2, account.getPasswordHash());
-            statement.setInt(3, account.getId());
+            statement.setString(3, account.getId());
             statement.execute();
         }
     }

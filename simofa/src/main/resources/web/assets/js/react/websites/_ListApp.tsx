@@ -7,13 +7,14 @@ import DeploymentServer, { DeploymentServersResponse } from '../_common/Deployme
 import Form, { FormInput } from '../_common/Form'
 import addJwtParam from '../_common/_auth'
 import Modal from '../_common/Modal'
+import { shortUuid } from '../_common/shortUuid';
 
 function App() {
 	const [websites, setWebsites] = useState([] as Website[]);
-	const [servers, setServers] = useState(new Map() as Map<number, DeploymentServer>);
+	const [servers, setServers] = useState(new Map() as Map<String, DeploymentServer>);
 	const [error, setError] = useState('');
 	const [loading, setLoading] = useState(true);
-	const [deleteModalData, setDeleteModalData] = useState(0);
+	const [deleteModalData, setDeleteModalData] = useState(null);
 
 	useEffect(() => {
 		Promise.all([
@@ -66,9 +67,9 @@ function App() {
 								{websites.map(e => {
 									return (
 										<tr key={e.id}>
-											<td>{e.id}</td>
+											<td>{shortUuid(e.id)}</td>
 											<td>{e.name}</td>
-											<td>[{e.deploymentServer}] {servers.get(e.deploymentServer)?.name}</td>
+											<td>[{shortUuid(e.deploymentServer)}] {servers.get(e.deploymentServer)?.name}</td>
 											<td><a href={addJwtParam(`/websites/${e.id}/edit`)}>Edit</a></td>
 											<td><a href={addJwtParam(`/websites/${e.id}/logs`)}>Logs</a></td>
 											<td>

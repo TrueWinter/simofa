@@ -32,7 +32,7 @@ public class AddTemplateAPIRoute extends Route {
         }
 
         try {
-            Template template1 = new Template(0, name, template);
+            Template template1 = new Template(Util.createv7UUID().toString(), name, template);
             getDatabase().getTemplatesDatabase().addTemplate(template1);
         } catch (SQLException e) {
             e.printStackTrace();

@@ -2,6 +2,7 @@ package dev.truewinter.simofa.database;
 
 import com.zaxxer.hikari.HikariDataSource;
 import dev.truewinter.simofa.api.GitCredential;
+import dev.truewinter.simofa.common.Util;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -18,15 +19,15 @@ public class GitDatabase {
         this.ds = ds;
     }
 
-    public Optional<GitCredential> getGitCredential(int id) throws SQLException {
+    public Optional<GitCredential> getGitCredential(String id) throws SQLException {
         try (Connection connection = ds.getConnection()) {
             PreparedStatement statement = connection.prepareStatement("SELECT * FROM `git` WHERE id = ?;");
-            statement.setInt(1, id);
+            statement.setString(1, id);
             ResultSet rs = statement.executeQuery();
 
             if (rs.next()) {
                 GitCredential gitCredential = new GitCredential(
-                        rs.getInt("id"),
+                        rs.getString("id"),
                         rs.getString("username"),
                         rs.getString("password")
                 );
@@ -39,9 +40,10 @@ public class GitDatabase {
 
     public void addGitCredential(GitCredential gitCredential) throws SQLException {
         try (Connection connection = ds.getConnection()) {
-            PreparedStatement statement = connection.prepareStatement("INSERT INTO `git` (username, password) VALUES (?, ?);");
-            statement.setString(1, gitCredential.getUsername());
-            statement.setString(2, gitCredential.getPassword());
+            PreparedStatement statement = connection.prepareStatement("INSERT INTO `git` (id, username, password) VALUES (?, ?, ?);");
+            statement.setString(1, Util.createv7UUID().toString());
+            statement.setString(2, gitCredential.getUsername());
+            statement.setString(3, gitCredential.getPassword());
             statement.execute();
         }
     }
@@ -56,7 +58,7 @@ public class GitDatabase {
 
             statement.setString(1, gitCredential.getUsername());
             statement.setString(2, gitCredential.getPassword());
-            statement.setInt(3, gitCredential.getId());
+            statement.setString(3, gitCredential.getId());
             statement.execute();
         }
     }
@@ -70,7 +72,7 @@ public class GitDatabase {
 
             while (rs.next()) {
                 GitCredential gitCredential = new GitCredential(
-                        rs.getInt("id"),
+                        rs.getString("id"),
                         rs.getString("username"),
                         rs.getString("password")
                 );
@@ -81,10 +83,10 @@ public class GitDatabase {
         return gitCredentials;
     }
 
-    public void deleteGitCredential(int id) throws SQLException {
+    public void deleteGitCredential(String id) throws SQLException {
         try (Connection connection = ds.getConnection()) {
             PreparedStatement statement = connection.prepareStatement("DELETE FROM `git` WHERE id = ?;");
-            statement.setInt(1, id);
+            statement.setString(1, id);
             statement.execute();
         }
     }

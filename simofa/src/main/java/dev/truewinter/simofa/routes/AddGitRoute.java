@@ -2,6 +2,7 @@ package dev.truewinter.simofa.routes;
 
 import dev.truewinter.simofa.api.GitCredential;
 import dev.truewinter.simofa.RouteLoader;
+import dev.truewinter.simofa.common.Util;
 import dev.truewinter.simofa.formvalidators.AddEditGitValidator;
 import io.javalin.http.Context;
 import io.javalin.http.HandlerType;
@@ -34,7 +35,7 @@ public class AddGitRoute extends Route {
 
         try {
             getDatabase().getGitDatabase().addGitCredential(new GitCredential(
-                    0, username, password
+                    Util.createv7UUID().toString(), username, password
             ));
 
             redirect(ctx,"/git");

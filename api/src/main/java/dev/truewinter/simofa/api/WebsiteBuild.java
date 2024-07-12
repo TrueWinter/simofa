@@ -7,12 +7,12 @@ import dev.truewinter.simofa.api.internal.SseRegistry;
 import dev.truewinter.simofa.common.BuildStatus;
 import dev.truewinter.simofa.common.LogType;
 import dev.truewinter.simofa.common.SimofaLog;
+import dev.truewinter.simofa.common.Util;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.UUID;
 
 @SuppressWarnings("unused")
 public class WebsiteBuild {
@@ -38,7 +38,7 @@ public class WebsiteBuild {
     }};
 
     public WebsiteBuild(Website website, String commit, String cacheDir) {
-        this.id = UUID.randomUUID().toString();
+        this.id = Util.createv7UUID().toString();
         this.website = website;
         this.commit = commit;
         this.status = BuildStatus.QUEUED;

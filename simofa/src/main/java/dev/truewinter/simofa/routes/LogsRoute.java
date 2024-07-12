@@ -15,7 +15,7 @@ public class LogsRoute extends Route {
             url = "/websites/{id}/logs"
     )
     public void get(Context ctx) {
-        int id = Integer.parseInt(ctx.pathParam("id"));
+        String id = ctx.pathParam("id");
         try {
             Optional<Website> website = getDatabase().getWebsiteDatabase().getWebsiteById(id);
 

@@ -15,7 +15,7 @@ public class DeleteWebsiteRoute extends Route {
             method = HandlerType.POST
     )
     public void post(Context ctx) {
-        int id = Integer.parseInt(ctx.pathParam("id"));
+        String id = ctx.pathParam("id");
 
         try {
             Optional<Website> w = getDatabase().getWebsiteDatabase().getWebsiteById(id);
