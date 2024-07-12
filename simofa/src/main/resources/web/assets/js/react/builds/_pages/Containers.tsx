@@ -14,14 +14,25 @@ export default function Containers() {
 	const [deleteModalData, setDeleteModalData] = useState('')
 
 	function load() {
+    function handleError() {
+      if (interval.current) {
+        clearInterval(interval.current)
+      }
+    }
+
 		fetch(addJwtParam('/api/builds/containers'))
 			.then(d => d.json())
-			.then(setContainers)
+			.then(d => {
+        if (d.error) {
+					setError(d.error)
+          handleError()
+				} else {
+					setContainers(d)
+				}
+      })
 			.catch(e => {
 				console.error(e)
-				if (interval.current) {
-					clearInterval(interval.current)
-				}
+        handleError()
 			})
 			.finally(() => setLoading(false))
 	}

@@ -12,15 +12,12 @@ export default function LogsApp() {
 	const [loading, setLoading] = useState(true)
 	const [status, setStatus] = useState('<unknown>')
 	const [duration, setDuration] = useState(0)
-	const interval = useRef(null)
 	const logRef = useRef(null as HTMLDivElement)
 	const fetchingLogs = useRef(false)
 	const shouldScrollDown = useRef(true)
   const eventSource = useRef<EventSource>(null);
 
-	function stopUpdating(id: number) {
-		clearInterval(id)
-
+	function stopUpdating() {
     if (eventSource.current) {
       eventSource.current.close();
     }
@@ -61,8 +58,7 @@ export default function LogsApp() {
 			.then(d => d.json())
 			.then(d => {
 				if (['error', 'stopped', 'deployed'].includes(d.status)) {
-					console.log('Build complete, clearing interval');
-					stopUpdating(interval.current)
+					stopUpdating()
 				}
 
 				update(d);
@@ -88,11 +84,9 @@ export default function LogsApp() {
 			})
 			.catch(err => {
 				console.error(err)
-				if (interval.current) {
-					stopUpdating(interval.current)
+					stopUpdating()
 					setStatus('<unknown>')
 					setDuration(0)
-				}
 			})
 			.finally(() => {
 				setLoading(false)
@@ -121,7 +115,7 @@ export default function LogsApp() {
 		window.addEventListener('resize', handleResize)
 
 		return () => {
-			stopUpdating(interval.current)
+			stopUpdating()
 			logRef.current.removeEventListener('scroll', handleScroll)
 			window.removeEventListener('resize', handleResize)
 		}

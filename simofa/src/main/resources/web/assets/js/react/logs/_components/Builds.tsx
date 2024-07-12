@@ -120,20 +120,25 @@ export default function Builds({
 	const thisPageTableRows = tableRows.filter(r => r.pages.includes(thisPage))
 
 	function loadLogs() {
+    function handleError() {
+      if (interval.current) {
+        clearInterval(interval.current)
+      }
+    }
+
 		fetch(addJwtParam(website ? `/api/queue?website=${website.id}` : '/api/queue'))
 			.then(d => d.json())
 			.then(d => {
 				if (!d.success) {
 					setError(d.error || 'An error occurred')
+          handleError()
 				} else {
 					setBuilds(d.queue)
 				}
 			})
 			.catch(e => {
 				console.error(e)
-				if (interval.current) {
-					clearInterval(interval.current)
-				}
+				handleError()
 			})
 			.finally(() => setLoading(false))
 	}
