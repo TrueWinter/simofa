@@ -7,6 +7,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
+@SuppressWarnings("unused")
 public class IncreaseCommandMaxLength_2023082801 extends Migration {
     private static final String COMMAND_TEMPLATE = "ALTER TABLE %s MODIFY COLUMN %s VARCHAR(%d);";
 

@@ -8,6 +8,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.*;
 
+@SuppressWarnings("unused")
 public class UseUuidInsteadOfConsecutiveIds_2024071201 extends Migration {
     private static final String ALTER_COMMAND_TEMPLATE = "ALTER TABLE %s MODIFY COLUMN %s CHAR(36);";
     private static final String UPDATE_COMMAND_TEMPLATE = "UPDATE %s SET %s = %s WHERE id = '%s';";
