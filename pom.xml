@@ -5,16 +5,15 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>dev.truewinter.simofa</groupId>
-    <artifactId>SimofaProject</artifactId>
+    <artifactId>simofa</artifactId>
     <packaging>pom</packaging>
     <!-- Do not manually modify the version. Use versions:set instead -->
     <version>0.1.5</version>
 
     <modules>
-        <module>simofa</module>
+        <module>manager</module>
         <module>common</module>
         <module>deploy</module>
-        <module>mavenplugin</module>
         <module>api</module>
         <module>officialplugins</module>
         <module>officialplugins/pushover</module>

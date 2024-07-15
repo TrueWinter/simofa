@@ -1,5 +1,0 @@
-{% extends web_root + "fragments/template.peb" %}
-{% block title %}Builds{% endblock %}
-{% block content %}
-    <div id="app">Loading...</div>
-{% endblock %}

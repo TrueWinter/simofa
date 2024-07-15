@@ -17,8 +17,8 @@ if (devMode) {
 	console.log('RUNNING IN DEV MODE');
 }
 
-const BASE_PATH = path.join(__dirname, 'simofa', 'src', 'main', 'resources', 'web', 'assets');
-const BASE_PATH_BUILD = path.join(__dirname, 'simofa', 'target', 'classes', 'web', 'assets');
+const BASE_PATH = path.join(__dirname, 'manager', 'src', 'main', 'resources', 'web', 'assets');
+const BASE_PATH_BUILD = path.join(__dirname, 'manager', 'target', 'classes', 'web', 'assets');
 
 const jsBase = path.join(BASE_PATH, 'js');
 const imgBase = path.join(BASE_PATH, 'img');

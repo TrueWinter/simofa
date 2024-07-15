@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>{% block title %}{% endblock %} - Simofa</title>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        {% if csrf is not empty %}
+            <meta name="csrf" content="{{ csrf }}" />
+        {% endif %}
+        {% include web_root + "fragments/include-css.peb" with {"css": "css/styles.css"} %}
+        {% set pageAppCss = "js/react/" + view + ".css" %}
+        {% if assets[pageAppCss] is not empty %}
+            {% include web_root + "fragments/include-css.peb" with {"css": pageAppCss} %}
+        {% endif %}
+    </head>
+    <body>
+        {% if nonav is empty %}
+            {% include web_root + "fragments/nav.peb" %}
+        {% endif %}
+        {% block content %}{% endblock %}
+
+        {% include web_root + "fragments/include-js.peb" with {"script": "js/common.js"} %}
+        {% include web_root + "fragments/include-js.peb" with {"script": "js/runtime.js"} %}
+
+        {% set pageApp = "js/react/" + view + ".js" %}
+        {% if assets[pageApp] is not empty %}
+            {% include web_root + "fragments/include-js.peb" with {"script": pageApp} %}
+        {% endif %}
+        {% if dev is not empty %}
+            {% include web_root + "fragments/include-js.peb" with {"script": "js/dev.js"} %}
+        {% endif %}
+
+        {% if scripts is not empty %}
+            {% for script in scripts %}
+                    {% include web_root + "fragments/include-js.peb" with {"script": script} %}
+                {% endfor %}
+        {% endif %}
+    </body>
+</html>

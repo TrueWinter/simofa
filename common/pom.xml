@@ -6,13 +6,11 @@
 
     <parent>
         <groupId>dev.truewinter.simofa</groupId>
-        <artifactId>SimofaProject</artifactId>
+        <artifactId>simofa</artifactId>
         <version>0.1.5</version>
     </parent>
 
-    <groupId>dev.truewinter.simofa.common</groupId>
     <artifactId>common</artifactId>
-    <version>1.5-SNAPSHOT</version>
 
     <dependencies>
         <dependency>

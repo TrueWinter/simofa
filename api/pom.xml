@@ -2,35 +2,26 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-    <parent>
-        <artifactId>SimofaProject</artifactId>
-        <groupId>dev.truewinter.simofa</groupId>
-        <version>0.1.5</version>
-    </parent>
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>SimofaAPI</artifactId>
-    <version>${parent.version}</version>
+    <parent>
+        <groupId>dev.truewinter.simofa</groupId>
+        <artifactId>simofa</artifactId>
+        <version>0.1.5</version>
+    </parent>
 
-    <repositories>
-        <repository>
-            <id>jitpack.io</id>
-            <url>https://jitpack.io</url>
-        </repository>
-    </repositories>
+    <artifactId>api</artifactId>
 
     <dependencies>
         <dependency>
             <groupId>dev.truewinter</groupId>
             <artifactId>PluginManager</artifactId>
-            <version>0.0.7</version>
-            <!--<scope>system</scope>
-            <systemPath>${basedir}/../../PluginManager/target/PluginManager-0.0.5.jar</systemPath>-->
+            <version>0.0.8</version>
         </dependency>
         <dependency>
-            <groupId>dev.truewinter.simofa.common</groupId>
+            <groupId>dev.truewinter.simofa</groupId>
             <artifactId>common</artifactId>
-            <version>1.5-SNAPSHOT</version>
+            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>org.jetbrains</groupId>

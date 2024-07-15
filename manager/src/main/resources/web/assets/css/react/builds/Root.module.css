@@ -1,0 +1,57 @@
+.sidebar {
+	background-color: #444;
+	padding: 8px;
+	width: 20%;
+	float: left;
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+	height: 100%;
+	align-items: center;
+}
+
+.nav-link {
+	background-color: var(--secondary-bg-color);
+	padding: 4px 8px;
+	cursor: pointer;
+	width: 100%;
+}
+
+:global(#app), :global(body), :global(html) {
+	margin-left: 0 !important;
+	margin-right: 0 !important;
+	height: 100%;
+}
+
+.content {
+	padding: 8px;
+	margin-left: 20%;
+}
+
+.heading {
+	margin: 0;
+	text-align: 'center';
+}
+
+.active {
+	filter: brightness(1.15);
+}
+
+@media only screen and (max-width: 600px) {
+	.nav-link {
+		width: fit-content;
+		padding: 8px;
+	}
+
+    .sidebar {
+        flex-direction: row;
+		height: max-content;
+		width: 100%;
+		overflow-x: auto;
+		float: unset;
+    }
+
+	.content {
+		margin-left: unset;
+	}
+}
