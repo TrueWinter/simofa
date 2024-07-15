@@ -5,7 +5,8 @@ target
 /config.yml
 /deploy-config.yml
 /migrator.yml
-simofa/src/main/resources/web/assets/build
-simofa/src/main/resources/web/assets/css/**/*.d.ts
-simofa/src/main/resources/web/assets/js/java.d.ts
+manager/src/main/resources/web/assets/build
+manager/src/main/resources/web/assets/css/**/*.d.ts
+manager/src/main/resources/web/assets/js/java.d.ts
+manager/node
 plugins
