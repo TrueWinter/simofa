@@ -2,26 +2,26 @@ SET DEFAULT_STORAGE_ENGINE = INNODB;
 SET FOREIGN_KEY_CHECKS = 1;
 
 CREATE TABLE IF NOT EXISTS `users` (
-    `id` char(36) NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    `id` char(36) NOT NULL PRIMARY KEY,
     `username` varchar(20) NOT NULL,
     `password` char(60) NOT NULL
 ) CHARACTER SET utf8 COLLATE utf8_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS `deployment_servers` (
-    `id` char(36) NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    `id` char(36) NOT NULL PRIMARY KEY,
     `name` varchar(20) NOT NULL,
     `url` varchar(256) NOT NULL,
     `key` varchar(60) NOT NULL
 ) CHARACTER SET utf8 COLLATE utf8_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS `git` (
-    `id` char(36) NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    `id` char(36) NOT NULL PRIMARY KEY,
     `username` varchar(40) NOT NULL,
     `password` char(80) NOT NULL
 ) CHARACTER SET utf8 COLLATE utf8_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS `websites` (
-    `id` char(36) NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    `id` char(36) NOT NULL PRIMARY KEY,
     `name` varchar(40) NOT NULL,
     `docker_image` varchar(40) NOT NULL,
     `memory` int(6) NOT NULL,
@@ -46,7 +46,7 @@ CREATE TABLE IF NOT EXISTS `websites` (
 ) CHARACTER SET utf8 COLLATE utf8_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS `templates` (
-    `id` char(36) NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    `id` char(36) NOT NULL PRIMARY KEY,
     `name` varchar(40) NOT NULL,
     `template` varchar(4000) NOT NULL
 ) CHARACTER SET utf8 COLLATE utf8_unicode_ci;
