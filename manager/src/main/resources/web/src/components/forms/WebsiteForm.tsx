@@ -146,6 +146,7 @@ export default function WebsiteForm({ website }: Props) {
                   required key={form.key('name')} {...form.getInputProps('name')} />
 
                 <TextInput label="Docker Image" name="dockerImage" required
+                  description="It is recommended to use a specific tag instead of the latest image"
                   key={form.key('dockerImage')} {...form.getInputProps('dockerImage')} />
 
                 <NumberInput label="Memory (MB)" name="memory" step={64}
