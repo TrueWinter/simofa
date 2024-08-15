@@ -1,4 +1,4 @@
-package dev.truewinter.simofa.routes.api;
+package dev.truewinter.simofa.routes;
 
 import dev.truewinter.simofa.RouteLoader;
 import dev.truewinter.simofa.Simofa;
@@ -15,7 +15,6 @@ import java.sql.SQLException;
         verifyLogin = false
 )
 public class DeployHookRoute extends Route {
-    // TODO: Test
     @RouteLoader.RouteInfo(
             url = "/public-api/deploy-hook",
             method = HandlerType.POST

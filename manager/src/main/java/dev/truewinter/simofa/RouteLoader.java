@@ -51,9 +51,6 @@ public class RouteLoader {
 
                     RouteInfo routeInfo = method.getAnnotation(RouteInfo.class);
 
-                    // TODO: Remove this
-                    if (!routeInfo.url().startsWith("/api") && !routeInfo.url().startsWith("/public-api")) continue;
-
                     if (!registeredBefore) {
                         if (routeClass.verifyLogin()) {
                             server.before(routeInfo.url(), ctx -> {

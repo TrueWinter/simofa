@@ -1,4 +1,4 @@
-package dev.truewinter.simofa.routes.api;
+package dev.truewinter.simofa.routes;
 
 import dev.truewinter.simofa.RouteLoader;
 import dev.truewinter.simofa.common.Util;

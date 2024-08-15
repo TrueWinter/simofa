@@ -1,44 +1,31 @@
-package dev.truewinter.simofa.routes.api;
+package dev.truewinter.simofa.routes;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.truewinter.simofa.RouteLoader;
 import dev.truewinter.simofa.Simofa;
 import dev.truewinter.simofa.Template;
-import dev.truewinter.simofa.common.Util;
 import dev.truewinter.simofa.routes.Route;
-import io.javalin.http.BadRequestResponse;
 import io.javalin.http.Context;
 import io.javalin.http.HandlerType;
 import io.javalin.http.InternalServerErrorResponse;
 
 import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 @SuppressWarnings("unused")
 @RouteLoader.RouteClass()
-public class TemplatesAPIRoute extends Route {
+public class TemplatesRoute extends Route {
     @RouteLoader.RouteInfo(
             url = "/api/templates"
     )
     public void get(Context ctx) {
-        Map<String, Object> resp = new HashMap<>();
-        resp.put("success", true);
-        resp.put("templates", new ArrayList<>());
-
         try {
-            List<Template> templates = getDatabase().getTemplatesDatabase().getTemplates();
-            resp.put("templates", templates);
+            ctx.json(getDatabase().getTemplatesDatabase().getTemplates());
         } catch (SQLException e) {
-            e.printStackTrace();
-            resp.put("success", false);
+            Simofa.getLogger().error("Failed to get templates", e);
+            throw new InternalServerErrorResponse("Failed to get templates");
         }
-
-        ctx.json(resp);
     }
 
     @RouteLoader.RouteInfo(

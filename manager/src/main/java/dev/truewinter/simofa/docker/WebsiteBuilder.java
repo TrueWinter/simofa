@@ -14,7 +14,7 @@ import dev.truewinter.simofa.common.LogType;
 import dev.truewinter.simofa.common.SimofaLog;
 import dev.truewinter.simofa.common.Util;
 import dev.truewinter.simofa.config.Config;
-import dev.truewinter.simofa.routes.api.ingest.IngestRouteUtil;
+import dev.truewinter.simofa.routes.ingest.IngestRouteUtil;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;

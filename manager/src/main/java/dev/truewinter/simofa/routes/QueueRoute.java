@@ -1,4 +1,4 @@
-package dev.truewinter.simofa.routes.api;
+package dev.truewinter.simofa.routes;
 
 import dev.truewinter.simofa.RouteLoader;
 import dev.truewinter.simofa.Simofa;
@@ -12,7 +12,7 @@ import java.util.*;
 
 @SuppressWarnings("unused")
 @RouteLoader.RouteClass()
-public class QueueAPIRoute extends Route {
+public class QueueRoute extends Route {
     // Shared between `/websites/{id}/logs` and `/builds/queue`
     @RouteLoader.RouteInfo(
             url = "/api/queue"

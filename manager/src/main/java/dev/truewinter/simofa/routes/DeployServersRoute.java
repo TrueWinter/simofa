@@ -1,9 +1,8 @@
-package dev.truewinter.simofa.routes.api;
+package dev.truewinter.simofa.routes;
 
 import dev.truewinter.simofa.Simofa;
 import dev.truewinter.simofa.RouteLoader;
 import dev.truewinter.simofa.api.DeployServer;
-import dev.truewinter.simofa.api.Website;
 import dev.truewinter.simofa.routes.Route;
 import io.javalin.http.*;
 
@@ -12,7 +11,7 @@ import java.util.*;
 
 @SuppressWarnings("unused")
 @RouteLoader.RouteClass()
-public class DeployServersAPIRoute extends Route {
+public class DeployServersRoute extends Route {
     @RouteLoader.RouteInfo(
             url = "/api/deploy-servers"
     )

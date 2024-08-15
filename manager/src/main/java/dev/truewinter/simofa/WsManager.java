@@ -1,10 +1,8 @@
 package dev.truewinter.simofa;
 
-import dev.truewinter.simofa.api.internal.WsRegistry;
 import dev.truewinter.simofa.common.Util;
 
 import dev.truewinter.simofa.routes.WsRoute;
-import dev.truewinter.simofa.routes.api.BuildLogsWsRoute;
 import io.javalin.websocket.WsConfig;
 import io.javalin.websocket.WsContext;
 import io.javalin.websocket.WsMessageContext;

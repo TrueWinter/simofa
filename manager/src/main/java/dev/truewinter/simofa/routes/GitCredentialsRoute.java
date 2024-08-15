@@ -1,53 +1,54 @@
-package dev.truewinter.simofa.routes.api;
+package dev.truewinter.simofa.routes;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
-import dev.truewinter.simofa.Account;
-import dev.truewinter.simofa.RouteLoader;
 import dev.truewinter.simofa.Simofa;
+import dev.truewinter.simofa.RouteLoader;
+import dev.truewinter.simofa.api.GitCredential;
 import dev.truewinter.simofa.common.Util;
 import dev.truewinter.simofa.routes.Route;
 import io.javalin.http.*;
 
 import java.sql.SQLException;
-import java.util.*;
+import java.util.HashMap;
+import java.util.Optional;
 
 @SuppressWarnings("unused")
 @RouteLoader.RouteClass()
-public class AccountsAPIRoute extends Route {
+public class GitCredentialsRoute extends Route {
     @RouteLoader.RouteInfo(
-            url = "/api/accounts"
+            url = "/api/git-credentials"
     )
-    public void getAllAccounts(Context ctx) {
+    public void get(Context ctx) {
         try {
-            ctx.json(getDatabase().getAccountDatabase().getAccounts());
+            ctx.json(getDatabase().getGitDatabase().getGitCredentials());
         } catch (SQLException e) {
-            Simofa.getLogger().error("Failed to get accounts", e);
-            throw new InternalServerErrorResponse("Failed to get accounts");
+            Simofa.getLogger().error("Failed to get Git credentials", e);
+            throw new InternalServerErrorResponse("Failed to get Git credentials");
         }
     }
 
     @RouteLoader.RouteInfo(
-            url = "/api/accounts/{id}"
+            url = "/api/git-credentials/{id}"
     )
-    public void getOneAccount(Context ctx) {
+    public void getOneGitCredential(Context ctx) {
         String id = ctx.pathParam("id");
 
         try {
-            getDatabase().getAccountDatabase().getAccountById(id).ifPresentOrElse(ctx::json, () -> {
-                throw new NotFoundResponse("Account not found");
+            getDatabase().getGitDatabase().getGitCredential(id).ifPresentOrElse(ctx::json, () -> {
+                throw new NotFoundResponse("Git credential not found");
             });
         } catch (SQLException e) {
-            Simofa.getLogger().error("Failed to get account", e);
-            throw new InternalServerErrorResponse("Failed to get account");
+            Simofa.getLogger().error("Failed to get Git credentials", e);
+            throw new InternalServerErrorResponse("Failed to get Git credentials");
         }
     }
 
     @RouteLoader.RouteInfo(
-            url = "/api/accounts",
+            url = "/api/git-credentials",
             method = HandlerType.POST
     )
-    public void addAccount(Context ctx) throws JsonProcessingException {
+    public void addGitCredential(Context ctx) throws JsonProcessingException {
         JsonNode json = toJson(ctx);
         if (!(json.hasNonNull("username") && json.hasNonNull("password") &&
                 json.hasNonNull("confirmPassword"))) {
@@ -63,19 +64,20 @@ public class AccountsAPIRoute extends Route {
         }
 
         try {
-            String id = getDatabase().getAccountDatabase().addAccount(username, password);
+            GitCredential gitCredential = new GitCredential(null, username, password);
+            String id = getDatabase().getGitDatabase().addGitCredential(gitCredential);
 
             HashMap<String, String> resp = new HashMap<>();
             resp.put("id", id);
             ctx.json(resp);
         } catch (SQLException e) {
-            Simofa.getLogger().error("Failed to add account", e);
-            throw new InternalServerErrorResponse("Failed to add account");
+            Simofa.getLogger().error("Failed to add git credential", e);
+            throw new InternalServerErrorResponse("Failed to add git credential");
         }
     }
 
     @RouteLoader.RouteInfo(
-            url = "/api/accounts/{id}",
+            url = "/api/git-credentials/{id}",
             method = HandlerType.PUT
     )
     public void editAccount(Context ctx) throws JsonProcessingException {
@@ -110,38 +112,38 @@ public class AccountsAPIRoute extends Route {
         }
 
         try {
-            Optional<Account> a = getDatabase().getAccountDatabase().getAccountById(id);
-            if (a.isPresent()) {
-                Account editedAccount;
+            Optional<GitCredential> g = getDatabase().getGitDatabase().getGitCredential(id);
+            if (g.isPresent()) {
+                GitCredential editedCredential;
 
                 if (password == null) {
-                    editedAccount = new Account(id, username, a.get().getPasswordHash());
+                    editedCredential = new GitCredential(id, username, g.get().getPassword());
                 } else {
-                    editedAccount = new Account(id, username, Account.createHash(password));
+                    editedCredential = new GitCredential(id, username, password);
                 }
 
-                getDatabase().getAccountDatabase().editAccount(editedAccount);
+                getDatabase().getGitDatabase().editGitCredential(editedCredential);
             } else {
-                throw new NotFoundResponse("Account not found");
+                throw new NotFoundResponse("Git credential not found");
             }
         } catch (SQLException e) {
-            Simofa.getLogger().error("Failed to edit account", e);
-            throw new InternalServerErrorResponse("Failed to edit account");
+            Simofa.getLogger().error("Failed to edit git credential", e);
+            throw new InternalServerErrorResponse("Failed to edit git credential");
         }
     }
 
     @RouteLoader.RouteInfo(
-            url = "/api/accounts/{id}",
+            url = "/api/git-credentials/{id}",
             method = HandlerType.DELETE
     )
     public void deleteAccount(Context ctx) {
         String id = ctx.pathParam("id");
 
         try {
-            getDatabase().getAccountDatabase().deleteAccount(id);
+            getDatabase().getGitDatabase().deleteGitCredential(id);
         } catch (SQLException e) {
-            Simofa.getLogger().error("Failed to delete account", e);
-            throw new InternalServerErrorResponse("Failed to delete account");
+            Simofa.getLogger().error("Failed to delete git credential", e);
+            throw new InternalServerErrorResponse("Failed to delete git credential");
         }
     }
 }

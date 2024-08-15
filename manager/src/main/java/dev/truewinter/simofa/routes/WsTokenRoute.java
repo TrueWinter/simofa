@@ -1,4 +1,4 @@
-package dev.truewinter.simofa.routes.api;
+package dev.truewinter.simofa.routes;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -14,7 +14,7 @@ import java.util.HashMap;
 
 @SuppressWarnings("unused")
 @RouteLoader.RouteClass
-public class WsTokenAPIRoute extends Route {
+public class WsTokenRoute extends Route {
     @RouteLoader.RouteInfo(
             url = "/api/login/ws",
             method = HandlerType.POST

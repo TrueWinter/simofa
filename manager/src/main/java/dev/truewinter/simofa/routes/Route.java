@@ -19,8 +19,6 @@ import java.util.Objects;
 import java.util.Optional;
 
 abstract public class Route {
-    private static String WEB_ROOT = "web/html/";
-    private static final String EXTENSION = ".peb";
     private static Database database;
 
     public static boolean verifyLogin(Context ctx) {
@@ -44,74 +42,12 @@ abstract public class Route {
         return new ObjectMapper().treeToValue(json, t);
     }
 
-    @Deprecated
-    private static void addDefaultModelValues(Context ctx, String view, HashMap<String, Object> model) {
-        Optional<LoginToken> cookie = getLoginCookie(ctx);
-        if (cookie.isPresent()) {
-            model.put("user_id", String.valueOf(cookie.get().getUserId()));
-        }
-
-        model.put("view", view);
-        model.put("web_root", WEB_ROOT);
-
-        try {
-            model.put("SimofaVersion", Util.getVersion());
-        } catch (IOException e) {
-            e.printStackTrace();
-            model.put("SimofaVersion", "x.x.x");
-        }
-    }
-
-    @Deprecated
-    public static final void render(Context ctx, String path) {
-        render(ctx, path, new HashMap<>());
-    }
-
-    @Deprecated
-    public static final void render(Context ctx, String path, HashMap<String, Object> model) {
-        addDefaultModelValues(ctx, path, model);
-        ctx.render(getPath(path), model);
-    }
-
-    @Deprecated
-    public static final void renderError(Context ctx, String path, String error) {
-        renderError(ctx, path, error, new HashMap<>());
-    }
-
-    @Deprecated
-    public static final void renderError(Context ctx, String path, String error, HashMap<String, Object> model) {
-        addDefaultModelValues(ctx, path, model);
-        model.put("error", error);
-        ctx.render(getPath(path), model);
-    }
-
-    @Deprecated
-    public static final void renderSuccess(Context ctx, String path, String success) {
-        renderSuccess(ctx, path, success, new HashMap<>());
-    }
-
-    @Deprecated
-    public static final void renderSuccess(Context ctx, String path, String success, HashMap<String, Object> model) {
-        addDefaultModelValues(ctx, path, model);
-        model.put("success", success);
-        ctx.render(getPath(path), model);
-    }
-
-    @Deprecated
-    public static void redirect(Context ctx, String path) {
-        ctx.redirect(path);
-    }
-
     public static void setDatabaseInstance(Database database) {
         Route.database = database;
     }
 
     public static Database getDatabase() {
         return database;
-    }
-
-    public static String getPath(String file) {
-        return WEB_ROOT + file + EXTENSION;
     }
 
     @SuppressWarnings("BooleanMethodIsAlwaysInverted")

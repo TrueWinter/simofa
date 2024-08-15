@@ -1,11 +1,10 @@
-package dev.truewinter.simofa.routes.api;
+package dev.truewinter.simofa.routes;
 
 import dev.truewinter.simofa.Simofa;
 import dev.truewinter.simofa.api.WebsiteBuild;
 import dev.truewinter.simofa.api.internal.WsRegistry;
 import dev.truewinter.simofa.common.SimofaLog;
 import dev.truewinter.simofa.common.Util;
-import dev.truewinter.simofa.routes.WsRoute;
 import io.javalin.websocket.WsContext;
 
 import java.util.*;
@@ -43,7 +42,7 @@ public class BuildLogsWsRoute extends WsRoute {
         }
 
         if (!Util.isBlank(after)) {
-            sendEvent("logs", BuildLogsAPIRoute.getLogs(websiteId, buildId, after));
+            sendEvent("logs", BuildLogsRoute.getLogs(websiteId, buildId, after));
         }
     }
 
@@ -71,7 +70,7 @@ public class BuildLogsWsRoute extends WsRoute {
 
         List<SimofaLog> logs = List.of(log);
         clients.forEach((id, handler) -> {
-            handler.sendEvent("logs", BuildLogsAPIRoute.successResponse(build, logs));
+            handler.sendEvent("logs", BuildLogsRoute.successResponse(build, logs));
 
             if (!lastStatus.containsKey(room)) {
                 lastStatus.put(room, new ConcurrentHashMap<>());

@@ -1,4 +1,4 @@
-package dev.truewinter.simofa.routes.api;
+package dev.truewinter.simofa.routes;
 
 import dev.truewinter.simofa.RouteLoader;
 import dev.truewinter.simofa.Template;
@@ -13,7 +13,7 @@ import java.util.Optional;
 
 @SuppressWarnings("unused")
 @RouteLoader.RouteClass()
-public class DeleteTemplateAPIRoute extends Route {
+public class DeleteTemplateRoute extends Route {
     @RouteLoader.RouteInfo(
             url = "/api/templates/{id}/delete",
             method = HandlerType.POST

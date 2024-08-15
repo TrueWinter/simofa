@@ -25,13 +25,13 @@ export default function Templates({
   function loadTemplates() {
     setLoading(true);
 
-    get('/api/templates').then((d) => {
-      if (d.status !== 200) {
+    get<Template[]>('/api/templates').then((d) => {
+      if (d.success === false) {
         setError(d.body.title || 'An error occurred');
         return;
       }
 
-      setTemplates(d.body.templates);
+      setTemplates(d.body);
       setLoading(false);
     });
   }

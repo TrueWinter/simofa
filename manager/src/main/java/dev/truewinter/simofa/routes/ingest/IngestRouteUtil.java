@@ -1,4 +1,4 @@
-package dev.truewinter.simofa.routes.api.ingest;
+package dev.truewinter.simofa.routes.ingest;
 
 import dev.truewinter.simofa.WsToken;
 import dev.truewinter.simofa.api.internal.WsRegistry;

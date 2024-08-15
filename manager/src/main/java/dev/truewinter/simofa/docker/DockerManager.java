@@ -58,19 +58,6 @@ public class DockerManager {
                 .build();
 
         dockerClient = DockerClientImpl.getInstance(clientConfig, httpClient);
-
-        List<dev.truewinter.simofa.docker.Image> imageList = getImages();
-        if (imageList.isEmpty()) {
-            Simofa.getLogger().error("No Docker images available");
-        } else {
-            Simofa.getLogger().info("Docker images found:");
-            imageList.forEach(i -> {
-                Simofa.getLogger().info(String.format("\t- %s (%s)",
-                        String.join(",", i.getName()),
-                        i.getSize())
-                );
-            });
-        }
     }
 
     public static DockerManager getInstance(Config config) {
@@ -83,7 +70,6 @@ public class DockerManager {
     public void shutdown() throws IOException {
         Simofa.getLogger().info("Removing running containers");
         getContainers().forEach(c -> {
-            System.out.println(c.getName());
             Simofa.getLogger().info(String.format("Removing container %s", c.getId()));
             try {
                 deleteContainer(c.getId());
@@ -92,22 +78,6 @@ public class DockerManager {
             }
         });
         dockerClient.close();
-    }
-
-    public List<dev.truewinter.simofa.docker.Image> getImages() {
-        List<com.github.dockerjava.api.model.Image> imageList =  dockerClient.listImagesCmd().exec();
-        List<dev.truewinter.simofa.docker.Image> images = new ArrayList<>();
-        imageList.forEach(i -> {
-            for (String img : i.getRepoTags()) {
-                if (!img.toLowerCase().startsWith("simofa-")) continue;
-                images.add(new dev.truewinter.simofa.docker.Image(
-                        img,
-                        String.format("%dM", i.getSize() / 1000 / 1000)
-                ));
-            }
-        });
-
-        return images;
     }
 
     public List<dev.truewinter.simofa.docker.Container> getContainers() {

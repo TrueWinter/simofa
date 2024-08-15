@@ -60,13 +60,6 @@ public class Simofa {
         dockerManager = DockerManager.getInstance(config);
         logger.info("Connected to Docker");
 
-        List<Image> dockerImages = dockerManager.getImages();
-        database.getWebsiteDatabase().getWebsites().forEach(w -> {
-            if (dockerImages.stream().noneMatch(i -> i.getName().equals(w.getDockerImage()))) {
-                logger.warn(String.format("Website %s uses non-existent Docker image %s", w.getName(), w.getDockerImage()));
-            }
-        });
-
         logger.info("Starting web server");
         webServer = new WebServer(config, database);
         webServer.start();

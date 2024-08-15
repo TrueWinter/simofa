@@ -1,10 +1,9 @@
-package dev.truewinter.simofa.routes.api;
+package dev.truewinter.simofa.routes;
 
 import dev.truewinter.simofa.Simofa;
 import dev.truewinter.simofa.api.WebsiteBuild;
 import dev.truewinter.simofa.api.internal.WsRegistry;
 import dev.truewinter.simofa.common.Util;
-import dev.truewinter.simofa.routes.WsRoute;
 import io.javalin.websocket.WsContext;
 import org.jetbrains.annotations.Nullable;
 
@@ -60,8 +59,7 @@ public class QueueWsRoute extends WsRoute {
         }
 
         List<WebsiteBuild> copiedList = new ArrayList<>(builds);
-        QueueAPIRoute.sort(copiedList);
-        System.out.println(copiedList);
+        QueueRoute.sort(copiedList);
         return copiedList;
     }
 
