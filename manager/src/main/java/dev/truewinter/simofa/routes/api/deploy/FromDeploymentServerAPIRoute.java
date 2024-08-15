@@ -1,6 +1,6 @@
 package dev.truewinter.simofa.routes.api.deploy;
 
-import dev.truewinter.simofa.api.DeploymentServer;
+import dev.truewinter.simofa.api.DeployServer;
 import dev.truewinter.simofa.Simofa;
 import dev.truewinter.simofa.common.Util;
 import dev.truewinter.simofa.api.WebsiteBuild;
@@ -36,8 +36,8 @@ public abstract class FromDeploymentServerAPIRoute extends Route {
     }
 
     public boolean isAuthorized(WebsiteBuild websiteBuild, String key) throws Exception {
-        Optional<DeploymentServer> deploymentServer = getDatabase().getDeploymentServerDatabase()
-                .getDeploymentServer(websiteBuild.getWebsite().getDeploymentServer());
+        Optional<DeployServer> deploymentServer = getDatabase().getDeployServerDatabase()
+                .getDeployServer(websiteBuild.getWebsite().getDeployServer());
         if (deploymentServer.isEmpty()) {
             throw new Exception("Deployment server not found");
         }

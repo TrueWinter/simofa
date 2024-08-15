@@ -36,9 +36,12 @@ public class Config {
     @YamlKey("secret")
     private String secret = "simofa";
 
-    @YamlComment("Simofa URL, must be reachable from deployment servers")
-    @YamlKey("url")
-    private String url = "http://localhost:8808";
+    @YamlComment("Domain (or IP and port), must be reachable from deploy servers")
+    @YamlKey("remote_url.domain")
+    private String remoteUrlDomain = "http://localhost:8808";
+
+    @YamlKey("remote_url.secure")
+    private boolean remoteUrlSecure = false;
 
     @YamlKey("concurrent_builds")
     private int concurrentBuilds = 2;
@@ -68,12 +71,6 @@ public class Config {
     @YamlComment("Directory where website cache data will be stored, must be absolute and exclusively usable by Simofa")
     @YamlKey("cache_directory")
     private String cacheDir;
-
-    @YamlComment("Do not touch this if you're not a developer")
-    @YamlKey("simofa_internals")
-    private Map<String, Object> simofaInternals = Map.of(
-            "dev", false
-    );
 
     public int getPort() {
         return port;
@@ -107,8 +104,12 @@ public class Config {
         return secret;
     }
 
-    public String getUrl() {
-        return url;
+    public String getRemoteUrlDomain() {
+        return remoteUrlDomain;
+    }
+
+    public boolean isRemoteUrlSecure() {
+        return remoteUrlSecure;
     }
 
     public int getConcurrentBuilds() {
@@ -149,9 +150,5 @@ public class Config {
 
     public void disableCache() {
         cacheDir = null;
-    }
-
-    public boolean isDevMode() {
-        return (boolean) simofaInternals.get("dev");
     }
 }

@@ -128,11 +128,12 @@
                     <classes>
                         <class>dev.truewinter.simofa.Account</class>
                         <class>dev.truewinter.simofa.api.Website</class>
+                        <class>dev.truewinter.simofa.api.GitCredential</class>
+                        <class>dev.truewinter.simofa.api.DeployServer</class>
+                        <class>dev.truewinter.simofa.common.SimofaLog</class>
                         <class>dev.truewinter.simofa.Template</class>
-                        <class>dev.truewinter.simofa.docker.Container</class>
-                        <class>dev.truewinter.simofa.docker.Image</class>
                     </classes>
-                    <outputFile>src/main/resources/web/assets/js/java.d.ts</outputFile>
+                    <outputFile>src/main/resources/web/src/types/java.d.ts</outputFile>
                     <outputKind>module</outputKind>
                 </configuration>
             </plugin>
@@ -262,9 +263,7 @@
                     <include>**/*</include>
                 </includes>
                 <excludes>
-                    <exclude>web/assets/js/**</exclude>
-                    <exclude>web/assets/css/**</exclude>
-                    <exclude>web/assets/img/**</exclude>
+                    <exclude>web/src/**</exclude>
                 </excludes>
             </resource>
         </resources>

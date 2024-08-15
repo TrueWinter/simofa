@@ -1,7 +1,6 @@
 package dev.truewinter.simofa.database;
 
 import com.zaxxer.hikari.HikariDataSource;
-import dev.truewinter.simofa.api.GitCredential;
 import dev.truewinter.simofa.api.Website;
 import dev.truewinter.simofa.common.Util;
 
@@ -24,15 +23,6 @@ public class WebsiteDatabase {
             ResultSet rs = statement.executeQuery();
 
             if (rs.next()) {
-                GitCredential gitCredential = null;
-                if (!Util.isBlank(rs.getString("username"))) {
-                    gitCredential = new GitCredential(
-                            rs.getString("gitId"),
-                            rs.getString("username"),
-                            rs.getString("password")
-                    );
-                }
-
                 Website website = new Website(
                         rs.getString("id"),
                         rs.getString("name"),
@@ -41,7 +31,7 @@ public class WebsiteDatabase {
                         rs.getDouble("cpu"),
                         rs.getString("git_url"),
                         rs.getString("git_branch"),
-                        gitCredential,
+                        rs.getString("git_credential"),
                         rs.getString("build_command"),
                         rs.getString("deployment_command"),
                         rs.getString("deployment_failed_command"),
@@ -55,27 +45,31 @@ public class WebsiteDatabase {
         }
     }
 
-    public void addWebsite(Website website) throws SQLException {
+    public String addWebsite(Website website) throws SQLException {
         try (Connection connection = ds.getConnection()) {
+            String id = Util.createv7UUID().toString();
+
             PreparedStatement statement = connection.prepareStatement("INSERT INTO websites (id, name, docker_image, memory, cpu, git_url, git_branch, git_credential, build_command, deployment_command, deployment_failed_command, deployment_server, deploy_token) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);");
-            statement.setString(1, Util.createv7UUID().toString());
+            statement.setString(1, id);
             statement.setString(2, website.getName());
             statement.setString(3, website.getDockerImage());
             statement.setInt(4, website.getMemory());
             statement.setDouble(5, website.getCpu());
             statement.setString(6, website.getGitUrl());
             statement.setString(7, website.getGitBranch());
-            if (website.getGitCredential() == null) {
+            if (website.getGitCredentials() == null) {
                 statement.setNull(8, Types.CHAR);
             } else {
-                statement.setString(8, website.getGitCredential().getId());
+                statement.setString(8, website.getGitCredentials());
             }
             statement.setString(9, website.getBuildCommand());
-            statement.setString(10, website.getDeploymentCommand());
-            statement.setString(11, website.getDeploymentFailedCommand());
-            statement.setString(12, website.getDeploymentServer());
+            statement.setString(10, website.getDeployCommand());
+            statement.setString(11, website.getDeployFailedCommand());
+            statement.setString(12, website.getDeployServer());
             statement.setString(13, website.getDeployToken());
             statement.execute();
+
+            return id;
         }
     }
 
@@ -103,15 +97,15 @@ public class WebsiteDatabase {
             statement.setDouble(4, website.getCpu());
             statement.setString(5, website.getGitUrl());
             statement.setString(6, website.getGitBranch());
-            if (website.getGitCredential() == null) {
+            if (website.getGitCredentials() == null) {
                 statement.setNull(7, Types.INTEGER);
             } else {
-                statement.setString(7, website.getGitCredential().getId());
+                statement.setString(7, website.getGitCredentials());
             }
             statement.setString(8, website.getBuildCommand());
-            statement.setString(9, website.getDeploymentCommand());
-            statement.setString(10, website.getDeploymentFailedCommand());
-            statement.setString(11, website.getDeploymentServer());
+            statement.setString(9, website.getDeployCommand());
+            statement.setString(10, website.getDeployFailedCommand());
+            statement.setString(11, website.getDeployServer());
             statement.setString(12, website.getDeployToken());
             statement.setString(13, website.getId());
             statement.execute();
@@ -126,15 +120,6 @@ public class WebsiteDatabase {
             ResultSet rs = statement.executeQuery();
 
             while (rs.next()) {
-                GitCredential gitCredential = null;
-                if (!Util.isBlank(rs.getString("username"))) {
-                    gitCredential = new GitCredential(
-                            rs.getString("gitId"),
-                            rs.getString("username"),
-                            rs.getString("password")
-                    );
-                }
-
                 Website website = new Website(
                         rs.getString("id"),
                         rs.getString("name"),
@@ -143,7 +128,7 @@ public class WebsiteDatabase {
                         rs.getDouble("cpu"),
                         rs.getString("git_url"),
                         rs.getString("git_branch"),
-                        gitCredential,
+                        rs.getString("git_credential"),
                         rs.getString("build_command"),
                         rs.getString("deployment_command"),
                         rs.getString("deployment_failed_command"),

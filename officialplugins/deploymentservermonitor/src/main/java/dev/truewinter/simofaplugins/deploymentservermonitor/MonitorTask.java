@@ -2,7 +2,7 @@ package dev.truewinter.simofaplugins.deploymentservermonitor;
 
 import dev.truewinter.PluginManager.Logger;
 import dev.truewinter.PluginManager.Plugin;
-import dev.truewinter.simofa.api.DeploymentServer;
+import dev.truewinter.simofa.api.DeployServer;
 import dev.truewinter.simofa.api.SimofaAPI;
 import dev.truewinter.simofaplugins.pushover.PushoverPlugin;
 
@@ -26,18 +26,18 @@ public class MonitorTask extends TimerTask {
         this.api = api;
     }
 
-    private boolean isOnline(DeploymentServer deploymentServer, int attempt) throws IOException {
+    private boolean isOnline(DeployServer deployServer, int attempt) throws IOException {
         if (attempt == 3) return false;
 
-        URL url = new URL(deploymentServer.getUrl() +
-                (deploymentServer.getUrl().endsWith("/") ? "" : "/") + "status");
+        URL url = new URL(deployServer.getUrl() +
+                (deployServer.getUrl().endsWith("/") ? "" : "/") + "status");
         HttpURLConnection con = (HttpURLConnection) url.openConnection();
         con.setConnectTimeout(5000);
         con.setReadTimeout(5000);
         int status = con.getResponseCode();
         if (status != 200) {
             con.disconnect();
-            return isOnline(deploymentServer, attempt + 1);
+            return isOnline(deployServer, attempt + 1);
         }
 
         con.disconnect();
@@ -47,20 +47,20 @@ public class MonitorTask extends TimerTask {
     @Override
     public void run() {
         try {
-            List<DeploymentServer> deploymentServers = api.getDeploymentServers();
-            HashMap<DeploymentServer, String> offlineDeploymentServers = new HashMap<>();
+            List<DeployServer> deployServers = api.getDeploymentServers();
+            HashMap<DeployServer, String> offlineDeploymentServers = new HashMap<>();
 
-            for (DeploymentServer deploymentServer : deploymentServers) {
+            for (DeployServer deployServer : deployServers) {
                 try {
-                    if (!isOnline(deploymentServer, 0)) {
+                    if (!isOnline(deployServer, 0)) {
                         throw new Exception("Non-200 status");
                     } else {
-                        previouslyOfflineDeploymentServers.remove(deploymentServer.getId());
+                        previouslyOfflineDeploymentServers.remove(deployServer.getId());
                     }
                 } catch (Exception e) {
-                    if (!previouslyOfflineDeploymentServers.contains(deploymentServer.getId())) {
-                        offlineDeploymentServers.put(deploymentServer, e.getMessage());
-                        previouslyOfflineDeploymentServers.add(deploymentServer.getId());
+                    if (!previouslyOfflineDeploymentServers.contains(deployServer.getId())) {
+                        offlineDeploymentServers.put(deployServer, e.getMessage());
+                        previouslyOfflineDeploymentServers.add(deployServer.getId());
                     }
                 }
             }

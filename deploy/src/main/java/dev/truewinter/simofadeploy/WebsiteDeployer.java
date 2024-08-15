@@ -15,8 +15,9 @@ import java.util.concurrent.TimeUnit;
 
 public class WebsiteDeployer extends Thread {
     private final WebsiteDeployment websiteDeployment;
-    private final LogSubmitter logSubmitter;
-    private final StatusSubmitter statusSubmitter;
+    //private final LogSubmitter logSubmitter;
+    //private final StatusSubmitter statusSubmitter;
+    private final WsSubmitter submitter;
     private boolean submitting = false;
     private boolean errored = false;
     private Process deployProcess = null;
@@ -25,13 +26,14 @@ public class WebsiteDeployer extends Thread {
     public WebsiteDeployer(WebsiteDeployment websiteDeployment) {
         this.websiteDeployment = websiteDeployment;
 
-        BuildServer buildServer = new BuildServer(
+        /*BuildServer buildServer = new BuildServer(
                 websiteDeployment.getBuildUrl(),
                 websiteDeployment.getKey()
-        );
+        );*/
 
-        this.logSubmitter = new LogSubmitter(buildServer);
-        this.statusSubmitter = new StatusSubmitter(buildServer);
+        this.submitter = new WsSubmitter(websiteDeployment);
+        //this.logSubmitter = new LogSubmitter(buildServer);
+        //this.statusSubmitter = new StatusSubmitter(buildServer);
     }
 
     private void rollback(Exception e, ScriptExecutor.ScriptExecutionCallback callback) {
@@ -59,7 +61,7 @@ public class WebsiteDeployer extends Thread {
 
     @Override
     public void run() {
-        timer = new Timer();
+        /*timer = new Timer();
         timer.scheduleAtFixedRate(new TimerTask() {
             @Override
             public void run() {
@@ -122,13 +124,13 @@ public class WebsiteDeployer extends Thread {
                                         SimofaDeploy.getDeployQueueManager().getDeployQueue().done(websiteDeployment);
                                         logSubmitter.submit(websiteDeployment.getQueuedLogs(), new Submitter.NoopSubmitterCallback());
                                         statusSubmitter.submit(websiteDeployment.getStatus(), new Submitter.NoopSubmitterCallback());
-                                    }*/
+                                    }*\/
                                 });
                             }
                         }
                 );
             }
-        }, 5000, 5000);
+        }, 5000, 5000);*/
 
         ScriptExecutor.run(websiteDeployment, WebsiteDeployment.DEPLOY_CMD_NAME, new ScriptExecutor.ScriptExecutionCallback() {
             @Override
@@ -168,13 +170,14 @@ public class WebsiteDeployer extends Thread {
     }
 
     private void cleanup() {
+        submitter.disconnect();
         deployProcess = null;
         SimofaDeploy.getDeployQueueManager().getDeployQueue().done(websiteDeployment);
         if (timer != null) {
             timer.cancel();
         }
-        logSubmitter.submit(websiteDeployment.getQueuedLogs(), new Submitter.NoopSubmitterCallback());
-        statusSubmitter.submit(websiteDeployment.getStatus(), new Submitter.NoopSubmitterCallback());
+        //logSubmitter.submit(websiteDeployment.getQueuedLogs(), new Submitter.NoopSubmitterCallback());
+        //statusSubmitter.submit(websiteDeployment.getStatus(), new Submitter.NoopSubmitterCallback());
 
         if (websiteDeployment.getTmpDir().exists()) {
             try {

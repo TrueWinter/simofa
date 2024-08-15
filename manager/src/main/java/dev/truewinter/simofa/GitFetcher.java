@@ -14,20 +14,20 @@ import java.io.File;
 import java.io.IOException;
 
 public class GitFetcher {
-    public static void fetch(WebsiteBuild build, File tmpInDir, File websiteCacheDir) throws GitAPIException, IOException {
+    public static void fetch(WebsiteBuild build, GitCredential gitCredential, File tmpInDir,
+                             File websiteCacheDir) throws GitAPIException, IOException {
         File gitCacheDir = new File(websiteCacheDir, "git");
 
         if (gitCacheDir.exists()) {
             build.addLog(new SimofaLog(LogType.INFO, "Using git cache"));
-            pull(build, tmpInDir, websiteCacheDir);
+            pull(build, gitCredential, tmpInDir, websiteCacheDir);
         } else {
-            clone(build, tmpInDir, websiteCacheDir);
+            clone(build, gitCredential, tmpInDir, websiteCacheDir);
         }
     }
 
     @SuppressWarnings("rawtypes")
-    private static void setCredentials(WebsiteBuild build, TransportCommand cloneCommand) {
-        GitCredential gitCredential = build.getWebsite().getGitCredential();
+    private static void setCredentials(GitCredential gitCredential, TransportCommand cloneCommand) {
         if (gitCredential != null) {
             cloneCommand.setCredentialsProvider(new UsernamePasswordCredentialsProvider(
                     gitCredential.getUsername(),
@@ -36,7 +36,8 @@ public class GitFetcher {
         }
     }
 
-    private static void clone(WebsiteBuild build, File tmpInDir, File websiteCacheDir) throws GitAPIException, IOException {
+    private static void clone(WebsiteBuild build, GitCredential gitCredential, File tmpInDir,
+                              File websiteCacheDir) throws GitAPIException, IOException {
         CloneCommand cloneCommand = Git.cloneRepository()
                 .setURI(build.getWebsite().getGitUrl())
                 .setBranch(build.getWebsite().getGitBranch())
@@ -44,7 +45,7 @@ public class GitFetcher {
                 .setDepth(1)
                 .setDirectory(tmpInDir);
 
-        setCredentials(build, cloneCommand);
+        setCredentials(gitCredential, cloneCommand);
         cloneCommand.call().close();
 
         if (!Util.isBlank(build.getCacheDir())) {
@@ -61,11 +62,12 @@ public class GitFetcher {
         }
     }
 
-    private static void pull(WebsiteBuild build, File tmpInDir, File websiteCacheDir) throws IOException, GitAPIException {
+    private static void pull(WebsiteBuild build, GitCredential gitCredential, File tmpInDir,
+                             File websiteCacheDir) throws IOException, GitAPIException {
         File gitCacheDir = new File(websiteCacheDir, "git");
         try (Git git = Git.open(gitCacheDir)) {
             PullCommand pullCommand = git.pull();
-            setCredentials(build, pullCommand);
+            setCredentials(gitCredential, pullCommand);
             pullCommand.call();
 
             FileUtils.copyDirectory(gitCacheDir, tmpInDir);

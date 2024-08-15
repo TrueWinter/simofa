@@ -8,8 +8,6 @@ import dev.truewinter.simofa.config.Config;
 import java.io.IOException;
 import java.io.InputStream;
 import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Objects;
 import java.util.Properties;
@@ -18,7 +16,7 @@ public class Database {
     private HikariDataSource ds;
     private AccountDatabase accountDatabase;
     private WebsiteDatabase websiteDatabase;
-    private DeploymentServerDatabase deploymentServerDatabase;
+    private DeployServerDatabase deployServerDatabase;
     private TemplatesDatabase templatesDatabase;
     private GitDatabase gitDatabase;
 
@@ -62,7 +60,7 @@ public class Database {
 
         this.accountDatabase = new AccountDatabase(ds);
         this.websiteDatabase = new WebsiteDatabase(ds);
-        this.deploymentServerDatabase = new DeploymentServerDatabase(ds);
+        this.deployServerDatabase = new DeployServerDatabase(ds);
         this.templatesDatabase = new TemplatesDatabase(ds);
         this.gitDatabase = new GitDatabase(ds);
 
@@ -108,8 +106,8 @@ public class Database {
         return websiteDatabase;
     }
 
-    public DeploymentServerDatabase getDeploymentServerDatabase() {
-        return deploymentServerDatabase;
+    public DeployServerDatabase getDeployServerDatabase() {
+        return deployServerDatabase;
     }
 
     public TemplatesDatabase getTemplatesDatabase() {

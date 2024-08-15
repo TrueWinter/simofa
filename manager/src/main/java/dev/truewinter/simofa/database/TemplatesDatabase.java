@@ -38,14 +38,17 @@ public class TemplatesDatabase {
         }
     }
 
-    public void addTemplate(Template template) throws SQLException {
+    public String addTemplate(Template template) throws SQLException {
+        String id = Util.createv7UUID().toString();
         try (Connection connection = ds.getConnection()) {
             PreparedStatement statement = connection.prepareStatement("INSERT INTO templates (id, name, template) VALUES (?, ?, ?);");
-            statement.setString(1, Util.createv7UUID().toString());
+            statement.setString(1, id);
             statement.setString(2, template.getName());
             statement.setString(3, template.getTemplate());
             statement.execute();
         }
+
+        return id;
     }
 
     public void editTemplate(Template template) throws SQLException {

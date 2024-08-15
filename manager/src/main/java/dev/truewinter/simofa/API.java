@@ -1,7 +1,7 @@
 package dev.truewinter.simofa;
 
 import dev.truewinter.PluginManager.Plugin;
-import dev.truewinter.simofa.api.DeploymentServer;
+import dev.truewinter.simofa.api.DeployServer;
 import dev.truewinter.simofa.api.SimofaAPI;
 import dev.truewinter.simofa.api.Website;
 import dev.truewinter.simofa.api.WebsiteBuild;
@@ -32,8 +32,8 @@ public class API implements SimofaAPI {
     }
 
     @Override
-    public void addWebsite(Website website) throws SQLException {
-        database.getWebsiteDatabase().addWebsite(website);
+    public String addWebsite(Website website) throws SQLException {
+        return database.getWebsiteDatabase().addWebsite(website);
     }
 
     @Override
@@ -70,18 +70,18 @@ public class API implements SimofaAPI {
     }
 
     @Override
-    public List<DeploymentServer> getDeploymentServers() throws SQLException {
-        return database.getDeploymentServerDatabase().getDeploymentServers();
+    public List<DeployServer> getDeploymentServers() throws SQLException {
+        return database.getDeployServerDatabase().getDeployServers();
     }
 
     @Override
-    public void addDeploymentServer(DeploymentServer deploymentServer) throws SQLException {
-        database.getDeploymentServerDatabase().addDeploymentServer(deploymentServer);
+    public void addDeploymentServer(DeployServer deployServer) throws SQLException {
+        database.getDeployServerDatabase().addDeployServer(deployServer);
     }
 
     @Override
-    public void editDeploymentServer(DeploymentServer deploymentServer) throws SQLException {
-        database.getDeploymentServerDatabase().editDeploymentServer(deploymentServer);
+    public void editDeploymentServer(DeployServer deployServer) throws SQLException {
+        database.getDeployServerDatabase().editDeployServer(deployServer);
     }
 
     @Override

@@ -1,6 +1,6 @@
 package dev.truewinter.simofa.routes;
 
-import dev.truewinter.simofa.api.DeploymentServer;
+import dev.truewinter.simofa.api.DeployServer;
 import dev.truewinter.simofa.RouteLoader;
 import io.javalin.http.Context;
 import io.javalin.http.HandlerType;
@@ -18,9 +18,9 @@ public class DeleteDeploymentServerRoute extends Route {
         String id = ctx.pathParam("id");
 
         try {
-            Optional<DeploymentServer> w = getDatabase().getDeploymentServerDatabase().getDeploymentServer(id);
+            Optional<DeployServer> w = getDatabase().getDeployServerDatabase().getDeployServer(id);
             if (w.isPresent()) {
-                getDatabase().getDeploymentServerDatabase().deleteDeploymentServer(id);
+                getDatabase().getDeployServerDatabase().deleteDeployServer(id);
                 redirect(ctx,"/deployment-servers");
             } else {
                 ctx.status(404).result("Deployment server does not exist");

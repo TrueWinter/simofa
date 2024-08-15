@@ -1,6 +1,6 @@
 package dev.truewinter.simofa.routes;
 
-import dev.truewinter.simofa.api.DeploymentServer;
+import dev.truewinter.simofa.api.DeployServer;
 import dev.truewinter.simofa.RouteLoader;
 import dev.truewinter.simofa.common.Util;
 import dev.truewinter.simofa.formvalidators.AddEditDeploymentServerValidator;
@@ -11,9 +11,7 @@ import java.sql.SQLException;
 import java.util.Optional;
 
 @SuppressWarnings("unused")
-@RouteLoader.RouteClass(
-        csrfErrorPage = "deployment-servers/add"
-)
+@RouteLoader.RouteClass
 public class AddDeploymentServerRoute extends Route {
     @RouteLoader.RouteInfo(
             url = "/deployment-servers/add"
@@ -37,9 +35,9 @@ public class AddDeploymentServerRoute extends Route {
             return;
         }
 
-        DeploymentServer deploymentServer = new DeploymentServer(Util.createv7UUID().toString(), name, url, key);
+        DeployServer deployServer = new DeployServer(Util.createv7UUID().toString(), name, url, key);
         try {
-            getDatabase().getDeploymentServerDatabase().addDeploymentServer(deploymentServer);
+            getDatabase().getDeployServerDatabase().addDeployServer(deployServer);
             redirect(ctx, "/deployment-servers");
         } catch (SQLException e) {
             e.printStackTrace();

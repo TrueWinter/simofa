@@ -2,10 +2,8 @@ package dev.truewinter.simofa.routes;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import dev.truewinter.simofa.api.GitCredential;
 import dev.truewinter.simofa.RouteLoader;
 import dev.truewinter.simofa.api.Website;
-import dev.truewinter.simofa.formvalidators.AddEditWebsiteValidator;
 import io.javalin.http.Context;
 import io.javalin.http.HandlerType;
 
@@ -57,7 +55,7 @@ public class EditWebsiteRoute extends Route {
             method = HandlerType.POST
     )
     public void post(Context ctx) {
-        String id = ctx.pathParam("id");
+       /* String id = ctx.pathParam("id");
         try {
             Optional<Website> w = getDatabase().getWebsiteDatabase().getWebsiteById(id);
             if (w.isEmpty()) {
@@ -132,6 +130,6 @@ public class EditWebsiteRoute extends Route {
         } catch(Exception e) {
             e.printStackTrace();
             ctx.result("Failed to edit website");
-        }
+        }*/
     }
 }

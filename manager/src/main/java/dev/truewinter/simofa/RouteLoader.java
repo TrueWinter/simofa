@@ -5,6 +5,7 @@ import dev.truewinter.simofa.routes.Route;
 import io.javalin.Javalin;
 import io.javalin.http.Context;
 import io.javalin.http.HandlerType;
+import io.javalin.http.HttpResponseException;
 
 import java.io.BufferedReader;
 import java.io.InputStream;
@@ -13,6 +14,7 @@ import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.URL;
 import java.net.URLClassLoader;
@@ -49,17 +51,14 @@ public class RouteLoader {
 
                     RouteInfo routeInfo = method.getAnnotation(RouteInfo.class);
 
+                    // TODO: Remove this
+                    if (!routeInfo.url().startsWith("/api") && !routeInfo.url().startsWith("/public-api")) continue;
+
                     if (!registeredBefore) {
-                        if (routeClass.verifyLogin() || routeClass.verifyCsrf()) {
+                        if (routeClass.verifyLogin()) {
                             server.before(routeInfo.url(), ctx -> {
                                 if (routeClass.verifyLogin()) {
                                     if (!Route.verifyLogin(ctx)) {
-                                        throw new RouteLoaderException();
-                                    }
-                                }
-
-                                if (routeClass.verifyCsrf() && ctx.method() != HandlerType.GET) {
-                                    if (!Route.verifyCSRF(ctx, routeClass.csrfErrorPage())) {
                                         throw new RouteLoaderException();
                                     }
                                 }
@@ -70,7 +69,15 @@ public class RouteLoader {
                     }
 
                     server.addHandler(routeInfo.method(), routeInfo.url(), ctx -> {
+                        try {
                             method.invoke(routeInstance, ctx);
+                        } catch (InvocationTargetException e) {
+                            if (e.getTargetException() instanceof HttpResponseException) {
+                                throw (HttpResponseException) e.getTargetException();
+                            }
+
+                            throw e;
+                        }
                     });
 
                     Simofa.getLogger().info(
@@ -141,9 +148,7 @@ public class RouteLoader {
                 );
                 Class<? extends Route> route = getPluginAsSubclass(urlClassLoader, routesLocation + "." + routeName);
                 routes.add(route);
-            } catch (Exception e) {
-                Simofa.getLogger().error("Failed to load route", e);
-            }
+            } catch (Exception ignored) {}
         }
 
         return routes;
@@ -164,8 +169,6 @@ public class RouteLoader {
     @Target({ElementType.TYPE})
     public @interface RouteClass {
         boolean verifyLogin() default true;
-        boolean verifyCsrf() default true;
-        String csrfErrorPage() default "error";
     }
 
     private static class RouteLoaderException extends Exception {}

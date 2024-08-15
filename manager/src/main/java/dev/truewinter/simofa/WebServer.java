@@ -1,29 +1,26 @@
 package dev.truewinter.simofa;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mitchellbosecke.pebble.PebbleEngine;
-import com.mitchellbosecke.pebble.loader.FileLoader;
+import com.mitchellbosecke.pebble.loader.ClasspathLoader;
+import com.mitchellbosecke.pebble.loader.Loader;
 import dev.truewinter.simofa.api.SimofaPluginManager;
 import dev.truewinter.simofa.api.events.WebServerStartedEvent;
+import dev.truewinter.simofa.api.internal.WsRegistry;
 import dev.truewinter.simofa.common.Util;
 import dev.truewinter.simofa.config.Config;
 import dev.truewinter.simofa.database.Database;
 import dev.truewinter.simofa.pebble.SimofaPebbleExtension;
-import dev.truewinter.simofa.routes.LoginRoute;
 import dev.truewinter.simofa.routes.Route;
-import dev.truewinter.simofa.routes.SseRoute;
-import dev.truewinter.simofa.routes.api.BuildLogsSseRoute;
+import dev.truewinter.simofa.routes.api.BuildLogsWsRoute;
+import dev.truewinter.simofa.routes.api.QueueWsRoute;
+import dev.truewinter.simofa.routes.api.ingest.DeployServerIngestWsRoute;
 import dev.truewinter.simofa.routes.webhook.GithubWebhookRoute;
 import io.javalin.Javalin;
 import io.javalin.http.Handler;
 import io.javalin.http.HandlerType;
 import io.javalin.http.Header;
-import io.javalin.http.staticfiles.Location;
 import io.javalin.rendering.template.JavalinPebble;
 import io.javalin.util.JavalinLogger;
-
-import java.io.FileInputStream;
-import java.util.Map;
 
 public class WebServer extends Thread {
     private final Config config;
@@ -33,48 +30,30 @@ public class WebServer extends Thread {
         this.config = config;
 
         Route.setDatabaseInstance(database);
-        Route.setConfig(config);
-        loadAssetManifest();
-    }
-
-    private void loadAssetManifest() {
-        try {
-            ObjectMapper objectMapper = new ObjectMapper();
-
-            @SuppressWarnings("unchecked")
-            Map<String, String> json = objectMapper.readValue(config.isDevMode() ?
-                            new FileInputStream("simofa/src/main/resources/web/assets/build/assets-manifest.json") :
-                            getClass().getClassLoader().getResourceAsStream("web/assets/build/assets-manifest.json"),
-                    Map.class);
-            Route.setAssetManifest(json);
-        } catch (Exception e) {
-            Simofa.getLogger().error("Failed to load asset manifest", e);
-        }
     }
 
     @Override
     public void run() {
         PebbleEngine.Builder pebbleEngine = new PebbleEngine.Builder()
                 .extension(new SimofaPebbleExtension());
-
-        if (config.isDevMode()) {
-            pebbleEngine.cacheActive(false)
-                .templateCache(null)
-                .tagCache(null)
-                .loader(new FileLoader());
-        }
-
-        JavalinPebble.init(pebbleEngine.build());
+        Loader<String> loader = new ClasspathLoader();
+        loader.setPrefix("web/html");
+        loader.setSuffix(".peb");
+        pebbleEngine.loader(loader);
         JavalinLogger.startupInfo = false;
 
         server = Javalin.create(c -> {
             c.showJavalinBanner = false;
-            c.staticFiles.add(staticFileConfig -> {
-                staticFileConfig.hostedPath = "/assets";
-                staticFileConfig.directory = config.isDevMode() ?
-                        "simofa/src/main/resources/web/assets" : "web/assets";
-                staticFileConfig.location = config.isDevMode() ?
-                        Location.EXTERNAL : Location.CLASSPATH;
+            // In development, the dist folder is empty which prevents it from being included as a resource
+            if (getClass().getResource("/web/dist") != null) {
+                c.staticFiles.add(s -> {
+                    s.hostedPath = "/assets";
+                    s.directory = "/web/dist";
+                });
+            }
+            c.fileRenderer(new JavalinPebble(pebbleEngine.build()));
+            c.spaRoot.addHandler("/", ctx -> {
+                ctx.render("index");
             });
         }).start(config.getPort());
 
@@ -92,41 +71,11 @@ public class WebServer extends Thread {
             }
         });
 
-        // A small selection of routes are registered here.
-        // The rest are automatically loaded from the `routes`
-        // package and registered by the RouteLoader.
-
-        server.get("/", ctx -> {
-            if (!Route.isLoggedIn(ctx)) {
-                ctx.redirect("/login");
-                return;
-            }
-
-            ctx.redirect("/websites");
-        });
-
-        server.get("/login", ctx -> {
-           if (Route.isLoggedIn(ctx)) {
-               String redirectTo = ctx.queryParam("redirectTo");
-               if (Util.isBlank(redirectTo)) {
-                   redirectTo = "/websites";
-               }
-
-               ctx.redirect(redirectTo);
-               return;
-           }
-
-            new LoginRoute().get(ctx);
-        });
-
-        server.post("/login", ctx -> {
-            if (Route.isLoggedIn(ctx)) {
-                ctx.redirect("/");
-                return;
-            }
-
-            new LoginRoute().post(ctx);
-        });
+        /*
+            A small selection of routes are registered here.
+            The rest are automatically loaded from the `routes`
+            package and registered by the RouteLoader.
+         */
 
         RouteLoader routeLoader = new RouteLoader();
         try {
@@ -135,24 +84,21 @@ public class WebServer extends Thread {
             Simofa.getLogger().error("Failed to register routes", e);
         }
 
-        server.get("/builds", ctx -> {
-            Route.redirect(ctx, "/builds/");
-        });
-
         server.post("/public-api/deploy/website/{id}/github", ctx -> {
             new GithubWebhookRoute().post(ctx);
         });
 
-        SseRoute.init();
-        server.sse("/api/sse/websites/{wid}/build/{bid}/logs",
-                client -> SseRoute.handle(client, BuildLogsSseRoute::sse));
+        server.ws("/api/ws/websites/{websiteId}/builds/{buildId}/logs", ws -> {
+            WsRegistry.registerWsConsumer(WsRegistry.Instances.WEBSITE_LOGS, BuildLogsWsRoute::sendNewLog);
+            WsManager.init(ws, BuildLogsWsRoute.class);
+        });
 
-        if (config.isDevMode()) {
-            server.get("/_dev/reload", ctx -> {
-                loadAssetManifest();
-                ctx.result("OK");
-            });
-        }
+        server.ws("/api/ws/queue", ws -> {
+            WsRegistry.registerWsConsumer(WsRegistry.Instances.BUILD_QUEUE, QueueWsRoute::sendUpdate);
+            WsManager.init(ws, QueueWsRoute.class);
+        });
+
+        server.ws("/api/ws/ingest/deploy", ws -> WsManager.init(ws, DeployServerIngestWsRoute.class));
     }
 
     public void registerRoute(HandlerType method, String path, Handler handler) {

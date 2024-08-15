@@ -9,8 +9,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 
 public class SimofaDeploy {
-    private static Logger logger = LoggerFactory.getLogger(SimofaDeploy.class);
-    private static Config config;
+    private static final Logger logger = LoggerFactory.getLogger(SimofaDeploy.class);
     private static WebServer server;
     private static DeployQueueManager deployQueueManager;
 
@@ -22,7 +21,7 @@ public class SimofaDeploy {
         }
 
         logger.info("Loading config");
-        config = Annotaml.create(
+        Config config = Annotaml.create(
                 Path.of(Util.getInstallPath(), "deploy-config.yml").toFile(),
                 Config.class).get();
         logger.info("Loaded config");

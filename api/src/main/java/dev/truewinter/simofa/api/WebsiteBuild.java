@@ -3,7 +3,7 @@ package dev.truewinter.simofa.api;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import dev.truewinter.simofa.api.events.BuildQueuedEvent;
 import dev.truewinter.simofa.api.events.BuildStatusChangedEvent;
-import dev.truewinter.simofa.api.internal.SseRegistry;
+import dev.truewinter.simofa.api.internal.WsRegistry;
 import dev.truewinter.simofa.common.BuildStatus;
 import dev.truewinter.simofa.common.LogType;
 import dev.truewinter.simofa.common.SimofaLog;
@@ -48,6 +48,7 @@ public class WebsiteBuild {
         addLog(new SimofaLog(LogType.INFO, "Build queued"));
 
         SimofaPluginManager.getInstance().getPluginManager().fireEvent(new BuildQueuedEvent(this));
+        WsRegistry.accept(WsRegistry.Instances.BUILD_QUEUE, website.getId(), null);
     }
 
     public String getId() {
@@ -81,6 +82,7 @@ public class WebsiteBuild {
 
         addLog(new SimofaLog(LogType.INFO, "Build status changed to " + status.toString().toLowerCase()));
         SimofaPluginManager.getInstance().getPluginManager().fireEvent(new BuildStatusChangedEvent(this));
+        WsRegistry.accept(WsRegistry.Instances.BUILD_QUEUE, website.getId(), null);
     }
 
     @Nullable
@@ -98,7 +100,7 @@ public class WebsiteBuild {
 
     public void addLog(SimofaLog log) {
         logs.add(log);
-        SseRegistry.accept(SseRegistry.Instances.WEBSITE_LOGS, this, log);
+        WsRegistry.accept(WsRegistry.Instances.WEBSITE_LOGS, this, log);
     }
 
     public long getStartTime() {

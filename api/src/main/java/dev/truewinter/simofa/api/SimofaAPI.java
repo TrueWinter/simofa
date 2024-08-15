@@ -23,8 +23,9 @@ public interface SimofaAPI {
 
     /**
      * Adds a website to the database. The website ID will be ignored.
+     * @return Generated website ID
      */
-    void addWebsite(Website website) throws SQLException;
+    String addWebsite(Website website) throws SQLException;
 
     /**
      * Edits a website with the given ID, editing all database fields
@@ -57,18 +58,18 @@ public interface SimofaAPI {
     /**
      * Returns a list of deployment servers
      */
-    List<DeploymentServer> getDeploymentServers() throws SQLException;
+    List<DeployServer> getDeploymentServers() throws SQLException;
 
     /**
      * Adds a deployment server. The ID will be ignored.
      */
-    void addDeploymentServer(DeploymentServer deploymentServer) throws SQLException;
+    void addDeploymentServer(DeployServer deployServer) throws SQLException;
 
     /**
      * Edits a deployment server with the given ID, editing all database fields
      * to match the passed DeploymentServer.
      */
-    void editDeploymentServer(DeploymentServer deploymentServer) throws SQLException;
+    void editDeploymentServer(DeployServer deployServer) throws SQLException;
 
     /**
      * Registers a route at /c/{plugin_name}/{path}. Only call this method after the

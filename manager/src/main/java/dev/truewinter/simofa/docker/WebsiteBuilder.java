@@ -3,14 +3,18 @@ package dev.truewinter.simofa.docker;
 import com.github.dockerjava.api.model.Frame;
 import com.github.dockerjava.api.model.StreamType;
 import com.github.dockerjava.api.model.WaitResponse;
-import dev.truewinter.simofa.api.DeploymentServer;
+import dev.truewinter.simofa.api.DeployServer;
 import dev.truewinter.simofa.GitFetcher;
 import dev.truewinter.simofa.Simofa;
+import dev.truewinter.simofa.api.GitCredential;
 import dev.truewinter.simofa.api.WebsiteBuild;
+import dev.truewinter.simofa.api.internal.WsRegistry;
 import dev.truewinter.simofa.common.BuildStatus;
 import dev.truewinter.simofa.common.LogType;
 import dev.truewinter.simofa.common.SimofaLog;
 import dev.truewinter.simofa.common.Util;
+import dev.truewinter.simofa.config.Config;
+import dev.truewinter.simofa.routes.api.ingest.IngestRouteUtil;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
@@ -43,7 +47,19 @@ public class WebsiteBuilder extends Thread {
             File tmpCacheDir = new File(tmpDir, "cache");
             File websiteCacheDir = new File(build.getCacheDir(), "website-" + build.getWebsite().getId());
 
-            GitFetcher.fetch(build, tmpInDir, websiteCacheDir);
+            GitCredential gitCredential = null;
+            String gitCredentials = build.getWebsite().getGitCredentials();
+            if (!Util.isBlank(gitCredentials)) {
+                Optional<GitCredential> g = BuildQueueManager.getDatabase().getGitDatabase()
+                        .getGitCredential(gitCredentials);
+                if (g.isPresent()) {
+                    gitCredential = g.get();
+                } else {
+                    Simofa.getLogger().warn(String.format("Website %s refers to non-existant git credentials %s",
+                            build.getWebsite().getId(), gitCredentials));
+                }
+            }
+            GitFetcher.fetch(build, gitCredential, tmpInDir, websiteCacheDir);
 
             File tmpScriptDir = new File(tmpDir, "scripts");
             FileOutputStream fileOutputStream = new FileOutputStream(new File(tmpScriptDir, "build.sh"));
@@ -118,9 +134,9 @@ public class WebsiteBuilder extends Thread {
                                 build.addLog(new SimofaLog(LogType.WARN, e.getMessage()));
                             }
 
-                            Optional<DeploymentServer> deploymentServer = BuildQueueManager.getDatabase()
-                                    .getDeploymentServerDatabase().getDeploymentServer(
-                                            build.getWebsite().getDeploymentServer()
+                            Optional<DeployServer> deploymentServer = BuildQueueManager.getDatabase()
+                                    .getDeployServerDatabase().getDeployServer(
+                                            build.getWebsite().getDeployServer()
                                     );
 
                             if (deploymentServer.isEmpty()) {
@@ -132,19 +148,23 @@ public class WebsiteBuilder extends Thread {
                                 siteHash = DigestUtils.md5Hex(siteFileReadBack);
                             }
 
+                            Config config = BuildQueueManager.getConfig();
+                            String wsDeployUrl = IngestRouteUtil.createWsUrl(
+                                    config.isRemoteUrlSecure(),
+                                    config.getRemoteUrlDomain(),
+                                    WsRegistry.IngestInstances.DEPLOY_INGEST,
+                                    build.getWebsite().getId(),
+                                    build.getId()
+                            );
+
                             HttpPost request = new HttpPost(createDeploymentServerUrl(deploymentServer.get().getUrl()));
 
                             MultipartEntityBuilder builder = MultipartEntityBuilder.create();
                             builder.addTextBody("key", deploymentServer.get().getKey());
                             builder.addTextBody("site_hash", siteHash);
-                            builder.addTextBody("build_url", String.format(
-                                    "%s/api/websites/%s/build/%s",
-                                    BuildQueueManager.getConfig().getUrl(),
-                                    build.getWebsite().getId(),
-                                    build.getId()
-                            ));
-                            builder.addTextBody("deployment_command", Util.base64Encode(build.getWebsite().getDeploymentCommand()));
-                            builder.addTextBody("deployment_failed_command", Util.base64Encode(build.getWebsite().getDeploymentFailedCommand()));
+                            builder.addTextBody("ws_deploy_url", wsDeployUrl);
+                            builder.addTextBody("deployment_command", Util.base64Encode(build.getWebsite().getDeployCommand()));
+                            builder.addTextBody("deployment_failed_command", Util.base64Encode(build.getWebsite().getDeployFailedCommand()));
                             builder.addTextBody("build_id", build.getId());
                             builder.addBinaryBody("site", new File(tempDir, "site.zip"));
 

@@ -47,11 +47,13 @@ public class ScriptExecutor {
             }
         }).start();
 
-        // While process.waitFor() would be better in most cases,
-        // we need the ability to stop the Process from outside
-        // the ScriptExecutor at any time. waitFor() blocks the thread,
-        // so by the time the Process is returned to the caller of the run()
-        // method, the Process is already done.
+        /*
+            While process.waitFor() would be better in most cases,
+            we need the ability to stop the Process from outside
+            the ScriptExecutor at any time. waitFor() blocks the thread,
+            so by the time the Process is returned to the caller of the run()
+            method, the Process is already done.
+         */
         Timer timer = new Timer();
         timer.scheduleAtFixedRate(new TimerTask() {
             @Override
@@ -75,19 +77,7 @@ public class ScriptExecutor {
                     }
                 }
             }
-        }, 0, 10);
-
-        /*if (process.waitFor(5, TimeUnit.MINUTES)) {
-            int exitCode = process.exitValue();
-            if (exitCode != 0) {
-                throw new Exception("Exited with non-zero error code " + exitCode);
-            }
-        } else {
-            if (!process.destroyForcibly().waitFor(30, TimeUnit.SECONDS)) {
-                websiteDeployment.addLog(new SimofaLog(LogType.ERROR, "Failed to stop script after 30 seconds"));
-            }
-            throw new Exception("Script took longer than 5 minutes to complete");
-        }*/
+        }, 0, 1000);
     }
 
     public abstract static class ScriptExecutionCallback {

@@ -17,7 +17,8 @@ public class WebsiteDeployment {
     private final String key;
     private final File tmpDir;
     private final List<SimofaLog> logs;
-    private final List<SimofaLog> queuedLogs;
+    //private final List<SimofaLog> queuedLogs;
+    private WsSubmitter submitter;
 
     private BuildStatus status = BuildStatus.DEPLOYING;
 
@@ -28,7 +29,7 @@ public class WebsiteDeployment {
         this.tmpDir = tmpDir;
 
         logs = new ArrayList<>();
-        queuedLogs = new ArrayList<>();
+        //queuedLogs = new ArrayList<>();
     }
 
     public String getBuildId() {
@@ -59,22 +60,34 @@ public class WebsiteDeployment {
         return logs;
     }
 
-    public synchronized List<SimofaLog> getQueuedLogs() {
+    /*public synchronized List<SimofaLog> getQueuedLogs() {
         List<SimofaLog> queuedLogsCopy = new ArrayList<>(queuedLogs);
         queuedLogs.clear();
         return queuedLogsCopy;
-    }
+    }*/
 
     public synchronized void addLog(SimofaLog log) {
         logs.add(log);
-        queuedLogs.add(log);
+        //queuedLogs.add(log);
+
+        if (submitter != null) {
+            submitter.submitLog(log);
+        }
     }
 
     public void setBuildStatus(BuildStatus status) {
         this.status = status;
+
+        if (submitter != null) {
+            submitter.submitStatus(status);
+        }
     }
 
     public BuildStatus getStatus() {
         return status;
+    }
+
+    public void setSubmitter(WsSubmitter submitter) {
+        this.submitter = submitter;
     }
 }

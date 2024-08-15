@@ -4,24 +4,26 @@ import dev.truewinter.simofa.common.Util;
 import org.jetbrains.annotations.Nullable;
 
 public class Website {
-    private final String id;
-    private final String name;
-    private final String dockerImage;
-    private final int memory;
-    private final double cpu;
-    private final String gitUrl;
-    private final String gitBranch;
-    private final GitCredential gitCredential;
-    private final String buildCommand;
-    private final String deploymentCommand;
-    private final String deploymentFailedCommand;
-    private final String deploymentServer;
-    private final String deployToken;
+    private String id;
+    private String name;
+    private String dockerImage;
+    private int memory;
+    private double cpu;
+    private String gitUrl;
+    private String gitBranch;
+    private String gitCredentials;
+    private String buildCommand;
+    private String deployCommand;
+    private String deployFailedCommand;
+    private String deployServer;
+    private String deployToken;
+
+    public Website() {}
 
     public Website(String id, String name, String dockerImage, int memory,
-                   double cpu, String gitUrl, String gitBranch, GitCredential gitCredential,
-                   String buildCommand, String deploymentCommand, String deploymentFailedCommand,
-                   String deploymentServer, String deployToken) {
+                   double cpu, String gitUrl, String gitBranch, String gitCredentials,
+                   String buildCommand, String deployCommand, String deployFailedCommand,
+                   String deployServer, String deployToken) {
         this.id = id;
         this.name = name;
         this.dockerImage = dockerImage;
@@ -29,11 +31,11 @@ public class Website {
         this.cpu = cpu;
         this.gitUrl = gitUrl;
         this.gitBranch = gitBranch;
-        this.gitCredential = gitCredential;
+        this.gitCredentials = gitCredentials;
         this.buildCommand = Util.dos2unix(buildCommand);
-        this.deploymentCommand = Util.dos2unix(deploymentCommand);
-        this.deploymentFailedCommand = Util.dos2unix(deploymentFailedCommand);
-        this.deploymentServer = deploymentServer;
+        this.deployCommand = Util.dos2unix(deployCommand);
+        this.deployFailedCommand = Util.dos2unix(deployFailedCommand);
+        this.deployServer = deployServer;
         this.deployToken = deployToken;
     }
 
@@ -66,24 +68,24 @@ public class Website {
     }
 
     @Nullable
-    public GitCredential getGitCredential() {
-        return gitCredential;
+    public String getGitCredentials() {
+        return gitCredentials;
     }
 
     public String getBuildCommand() {
         return buildCommand;
     }
 
-    public String getDeploymentCommand() {
-        return deploymentCommand;
+    public String getDeployCommand() {
+        return deployCommand;
     }
 
-    public String getDeploymentFailedCommand() {
-        return deploymentFailedCommand;
+    public String getDeployFailedCommand() {
+        return deployFailedCommand;
     }
 
-    public String getDeploymentServer() {
-        return deploymentServer;
+    public String getDeployServer() {
+        return deployServer;
     }
 
     public String getDeployToken() {

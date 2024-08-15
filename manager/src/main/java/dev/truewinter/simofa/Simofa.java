@@ -41,10 +41,6 @@ public class Simofa {
                 Config.class).get();
         logger.info("Loaded config");
 
-        if (config.isDevMode()) {
-            logger.warn("Running in dev mode");
-        }
-
         secret = config.getSecret();
 
         logger.info("Loading migration config");
@@ -80,8 +76,8 @@ public class Simofa {
             logger.warn("Using default secret, please change this in the config file.");
         }
 
-        if (config.getUrl().equals("http://localhost:8808")) {
-            logger.warn("Using default URL, please change this in the config file.");
+        if (config.getRemoteUrlDomain().equals("localhost:8808")) {
+            logger.warn("Using default remote domain, please change this in the config file.");
         }
 
         if (config.getConcurrentBuilds() == 0) {

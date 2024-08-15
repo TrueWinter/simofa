@@ -19,14 +19,16 @@ public class AccountDatabase {
         this.ds = ds;
     }
 
-    public void addAccount(String username, String password) throws SQLException {
+    public String addAccount(String username, String password) throws SQLException {
+        String uuid = Util.createv7UUID().toString();
         try (Connection connection = ds.getConnection()) {
             PreparedStatement statement = connection.prepareStatement("INSERT INTO users (id, username, password) VALUES (?, ?, ?);");
-            statement.setString(1, Util.createv7UUID().toString());
+            statement.setString(1, uuid);
             statement.setString(2, username);
             statement.setString(3, Account.createHash(password));
             statement.execute();
         }
+        return uuid;
     }
 
     public Optional<Account> getAccountByUsername(String username) throws SQLException {

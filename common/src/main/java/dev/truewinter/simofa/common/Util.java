@@ -2,11 +2,13 @@ package dev.truewinter.simofa.common;
 
 import com.github.f4b6a3.uuid.UuidCreator;
 import org.apache.commons.io.FileUtils;
+import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
-import java.io.FilenameFilter;
 import java.io.IOException;
+import java.lang.reflect.Method;
+import java.net.URI;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
@@ -33,12 +35,16 @@ public class Util {
         byte[] bytes = new byte[length];
         random.nextBytes(bytes);
         Base64.Encoder encoder = Base64.getUrlEncoder().withoutPadding();
-        return encoder.encodeToString(bytes);
+        return encoder.encodeToString(bytes).substring(0, length);
     }
 
-    public static boolean isBlank(@Nullable String string) {
-        if (string == null) return true;
-        return string.isBlank();
+    public static boolean isBlank(@Nullable String... string) {
+        for (String s : string) {
+            if (s == null) return true;
+            if (s.isBlank()) return true;
+        }
+
+        return false;
     }
 
     // https://security.stackexchange.com/a/83671
@@ -60,6 +66,15 @@ public class Util {
         }
 
         return result == 0;
+    }
+
+    public static boolean isValidUri(String uri) {
+        try {
+            new URI(uri);
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
     }
 
     public static boolean isValidUrl(String url) {

@@ -9,9 +9,7 @@ import java.sql.SQLException;
 import java.util.Optional;
 
 @SuppressWarnings("unused")
-@RouteLoader.RouteClass(
-        csrfErrorPage = "accounts/add"
-)
+@RouteLoader.RouteClass
 public class AddAccountRoute extends Route {
     @RouteLoader.RouteInfo(
             url = "/accounts/add"

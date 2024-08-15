@@ -38,14 +38,16 @@ public class GitDatabase {
         }
     }
 
-    public void addGitCredential(GitCredential gitCredential) throws SQLException {
+    public String addGitCredential(GitCredential gitCredential) throws SQLException {
+        String uuid = Util.createv7UUID().toString();
         try (Connection connection = ds.getConnection()) {
             PreparedStatement statement = connection.prepareStatement("INSERT INTO `git` (id, username, password) VALUES (?, ?, ?);");
-            statement.setString(1, Util.createv7UUID().toString());
+            statement.setString(1, uuid);
             statement.setString(2, gitCredential.getUsername());
             statement.setString(3, gitCredential.getPassword());
             statement.execute();
         }
+        return uuid;
     }
 
     public void editGitCredential(GitCredential gitCredential) throws SQLException {

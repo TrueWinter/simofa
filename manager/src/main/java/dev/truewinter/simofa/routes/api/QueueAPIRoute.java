@@ -51,7 +51,7 @@ public class QueueAPIRoute extends Route {
         ctx.json(map);
     }
 
-    private void sort(List<WebsiteBuild> list) {
+    protected static void sort(List<WebsiteBuild> list) {
         list.sort(Comparator.comparing(WebsiteBuild::getId));
         Collections.reverse(list);
     }

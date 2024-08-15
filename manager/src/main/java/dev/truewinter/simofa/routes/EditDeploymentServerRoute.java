@@ -4,7 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.json.JsonMapper;
-import dev.truewinter.simofa.api.DeploymentServer;
+import dev.truewinter.simofa.api.DeployServer;
 import dev.truewinter.simofa.RouteLoader;
 import dev.truewinter.simofa.formvalidators.AddEditDeploymentServerValidator;
 import io.javalin.http.Context;
@@ -17,7 +17,7 @@ import java.util.Optional;
 @SuppressWarnings("unused")
 @RouteLoader.RouteClass()
 public class EditDeploymentServerRoute extends Route {
-    private HashMap<String, Object> getDeploymentServerDataForModel(DeploymentServer d) throws JsonProcessingException {
+    private HashMap<String, Object> getDeploymentServerDataForModel(DeployServer d) throws JsonProcessingException {
         // This configuration makes it easier to get the
         // relevant data in the Pebble template.
         HashMap<String, Object> containerMap = new HashMap<>();
@@ -39,7 +39,7 @@ public class EditDeploymentServerRoute extends Route {
     public void get(Context ctx) {
         String id = ctx.pathParam("id");
         try {
-            Optional<DeploymentServer> deploymentServer = getDatabase().getDeploymentServerDatabase().getDeploymentServer(id);
+            Optional<DeployServer> deploymentServer = getDatabase().getDeployServerDatabase().getDeployServer(id);
             deploymentServer.ifPresentOrElse(d -> {
                 try {
                     render(ctx, "deployment-servers/edit", getDeploymentServerDataForModel(d));
@@ -64,7 +64,7 @@ public class EditDeploymentServerRoute extends Route {
         String id = ctx.pathParam("id");
 
         try {
-            Optional<DeploymentServer> deploymentServer = getDatabase().getDeploymentServerDatabase().getDeploymentServer(id);
+            Optional<DeployServer> deploymentServer = getDatabase().getDeployServerDatabase().getDeployServer(id);
             if (deploymentServer.isEmpty()) {
                 ctx.status(404).result("Deployment server does not exist");
                 return;
@@ -81,11 +81,11 @@ public class EditDeploymentServerRoute extends Route {
                 return;
             }
 
-            DeploymentServer deploymentServer1 = new DeploymentServer(id, name, url, key);
-            getDatabase().getDeploymentServerDatabase().editDeploymentServer(deploymentServer1);
+            DeployServer deployServer1 = new DeployServer(id, name, url, key);
+            getDatabase().getDeployServerDatabase().editDeployServer(deployServer1);
             renderSuccess(ctx, "deployment-servers/edit", "Edited deployment server",
-                    getDeploymentServerDataForModel(getDatabase().getDeploymentServerDatabase()
-                            .getDeploymentServer(id).get()));
+                    getDeploymentServerDataForModel(getDatabase().getDeployServerDatabase()
+                            .getDeployServer(id).get()));
         } catch (Exception e) {
             e.printStackTrace();
             ctx.status(500).result("Failed to edit deployment server");

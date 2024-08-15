@@ -11,8 +11,7 @@ import java.util.HashMap;
 
 @SuppressWarnings("unused")
 @RouteLoader.RouteClass(
-        verifyLogin = false,
-        verifyCsrf = false
+        verifyLogin = false
 )
 public class StatusReceiverAPIRoute extends FromDeploymentServerAPIRoute {
     @RouteLoader.RouteInfo(

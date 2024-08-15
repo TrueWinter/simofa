@@ -46,7 +46,7 @@ public class WebServer extends Thread {
 
         server.post("/deploy", ctx -> {
             String key = ctx.formParam("key");
-            String buildUrl = ctx.formParam("build_url");
+            String buildUrl = ctx.formParam("ws_deploy_url");
             String buildId = ctx.formParam("build_id");
             String deployCmd = ctx.formParam("deployment_command");
             String deployFailedCmd = ctx.formParam("deployment_failed_command");
@@ -64,8 +64,8 @@ public class WebServer extends Thread {
                 return;
             }
 
-            if (!Util.isValidUrl(buildUrl)) {
-                ctx.status(400).result("build_url is not a valid URL");
+            if (!Util.isValidUri(buildUrl)) {
+                ctx.status(400).result("ws_deploy_url is not a valid URL");
                 return;
             }
 

@@ -8,5 +8,7 @@ target
 manager/src/main/resources/web/assets/build
 manager/src/main/resources/web/assets/css/**/*.d.ts
 manager/src/main/resources/web/assets/js/java.d.ts
+manager/src/main/resources/web/dist
 manager/node
 plugins
+INDEV-CHANGELOG.md

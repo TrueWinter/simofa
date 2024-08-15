@@ -1,9 +1,11 @@
 package dev.truewinter.simofa;
 
 public class Template {
-    private final String id;
-    private final String name;
-    private final String template;
+    private String id;
+    private String name;
+    private String template;
+
+    public Template() {}
 
     public Template(String id, String name, String template) {
         this.id = id;
