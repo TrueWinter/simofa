@@ -1,6 +1,7 @@
 package dev.truewinter.simofa.docker;
 
 import com.github.dockerjava.api.DockerClient;
+import com.github.dockerjava.api.async.ResultCallback;
 import com.github.dockerjava.api.command.*;
 import com.github.dockerjava.api.model.*;
 import com.github.dockerjava.core.DefaultDockerClientConfig;
@@ -18,11 +19,9 @@ import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
 import org.apache.commons.io.IOUtils;
 
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.time.Duration;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class DockerManager {
     private static DockerManager dockerManager;
@@ -80,6 +79,21 @@ public class DockerManager {
         dockerClient.close();
     }
 
+    public List<dev.truewinter.simofa.docker.Image> getImages() {
+        List<com.github.dockerjava.api.model.Image> imageList =  dockerClient.listImagesCmd().exec();
+        List<dev.truewinter.simofa.docker.Image> images = new ArrayList<>();
+        imageList.forEach(i -> {
+            for (String img : i.getRepoTags()) {
+                images.add(new dev.truewinter.simofa.docker.Image(
+                        img,
+                        String.format("%dM", i.getSize() / 1000 / 1000)
+                ));
+            }
+        });
+
+        return images;
+    }
+
     public List<dev.truewinter.simofa.docker.Container> getContainers() {
         List<com.github.dockerjava.api.model.Container> containerList = dockerClient.listContainersCmd().withShowAll(true).exec();
         List<dev.truewinter.simofa.docker.Container> containers = new ArrayList<>();
@@ -123,6 +137,18 @@ public class DockerManager {
                 .withMemory(website.getMemory() * 1000 * 1000L);
 
         String buildScript = "/simofa/scripts/build.sh";
+
+        Optional<Image> image = getImages().stream().filter(i -> i.getName()
+                .equals(website.getDockerImage()) || i.getName().equals(website.getDockerImage() + ":latest"))
+                .findFirst();
+        if (image.isEmpty()) {
+            Simofa.getLogger().info("Pulling image " + website.getDockerImage());
+            PullImageCmd pullImageCmd = dockerClient.pullImageCmd(website.getDockerImage());
+            pullImageCmd.start().awaitCompletion();
+            dockerCallback.onNext(new Frame(StreamType.STDOUT,
+                    ("Pulling image " + website.getDockerImage()).getBytes(StandardCharsets.UTF_8)
+            ));
+        }
 
         CreateContainerCmd createContainerCmd = dockerClient.createContainerCmd(website.getDockerImage())
                 .withHostConfig(hostConfig)
