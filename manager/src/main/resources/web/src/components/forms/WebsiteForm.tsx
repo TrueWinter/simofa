@@ -205,7 +205,9 @@ export default function WebsiteForm({ website }: Props) {
                         `${location.host}/public-api/deploy-hook` +
                         `?website=${website.id}&token=${form.getValues().deployToken}`}
                         onClick={(e) => e.preventDefault()}>the deploy hook</Anchor> to trigger
-                      a build
+                      a build. This token is also used as the secret for
+                      the <Anchor href={`${location.protocol}//${location.host}/public-api/` +
+                      `deploy/website/${website.id}/github`}>GitHub webhook endpoint</Anchor>.
                     </>
                   ) : 'Save website to view deploy hook URL'}
                   </Text>
