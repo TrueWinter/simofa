@@ -30,6 +30,12 @@ type Request = RequestWithData | RequestWithoutData
 
 const SUCCESS_STATUS_CODES = [200, 204];
 
+/*
+  To check if a response is an error response, check
+  `if (resp.success === false) {}`. Yes, you did read
+  that right. Due to a weird TypeScript issue,
+  `!resp.success` will not work.
+ */
 interface ErrorResponse {
   status: number
   success: false

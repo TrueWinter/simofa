@@ -69,6 +69,10 @@ public class Simofa {
             logger.warn("Using default secret, please change this in the config file.");
         }
 
+        if (config.getGithubAppSecret().equals("simofa")) {
+            logger.warn("Using default GitHub App secret, please change this in the config file.");
+        }
+
         if (config.getRemoteUrlDomain().equals("localhost:8808")) {
             logger.warn("Using default remote domain, please change this in the config file.");
         }

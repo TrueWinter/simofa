@@ -2,11 +2,11 @@ import { useActionData, useNavigate } from 'react-router-dom';
 import { useEffect } from 'react';
 import { notifications } from '@mantine/notifications';
 import { Text } from '@mantine/core';
-import { HttpResponse, post } from '../../util/api';
-import { scrollToTop } from '../../util/scroll';
-import Page from '../../components/Page';
-import { requestBodyToJson } from '../../util/forms';
-import GitCredentialsForm from '../../components/forms/GitCredentialsForm';
+import { HttpResponse, post } from '../../../util/api';
+import { scrollToTop } from '../../../util/scroll';
+import Page from '../../../components/Page';
+import { requestBodyToJson } from '../../../util/forms';
+import GitCredentialsForm from '../../../components/forms/GitCredentialsForm';
 
 export function Component() {
   const navigate = useNavigate();
@@ -18,7 +18,7 @@ export function Component() {
         notifications.show({
           message: 'Git credentials created'
         });
-        navigate(`/git-credentials/${data.body.id}/edit`);
+        navigate(`/git/credentials/${data.body.id}/edit`);
       } else {
         scrollToTop();
       }

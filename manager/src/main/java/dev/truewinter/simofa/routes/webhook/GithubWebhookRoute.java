@@ -1,6 +1,7 @@
 package dev.truewinter.simofa.routes.webhook;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import dev.truewinter.simofa.RouteLoader;
 import dev.truewinter.simofa.SignatureVerification;
 import dev.truewinter.simofa.Simofa;
 import dev.truewinter.simofa.api.Website;
@@ -13,7 +14,15 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Optional;
 
+@SuppressWarnings("unused")
+@RouteLoader.RouteClass(
+        verifyLogin = false
+)
 public class GithubWebhookRoute extends Route {
+    @RouteLoader.RouteInfo(
+            url = "/public-api/deploy/website/{id}/github",
+            method = HandlerType.POST
+    )
     public void post(Context ctx) {
         String websiteId = ctx.pathParam("id");
         HashMap<String, Object> resp = new HashMap<>();

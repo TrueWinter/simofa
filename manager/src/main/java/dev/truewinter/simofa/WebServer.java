@@ -14,7 +14,6 @@ import dev.truewinter.simofa.routes.Route;
 import dev.truewinter.simofa.routes.BuildLogsWsRoute;
 import dev.truewinter.simofa.routes.QueueWsRoute;
 import dev.truewinter.simofa.routes.ingest.DeployServerIngestWsRoute;
-import dev.truewinter.simofa.routes.webhook.GithubWebhookRoute;
 import io.javalin.Javalin;
 import io.javalin.http.Handler;
 import io.javalin.http.HandlerType;
@@ -29,7 +28,7 @@ public class WebServer extends Thread {
     public WebServer (Config config, Database database) {
         this.config = config;
 
-        Route.setDatabaseInstance(database);
+        Route.init(config, database);
     }
 
     @Override
@@ -83,10 +82,6 @@ public class WebServer extends Thread {
         } catch (Exception e) {
             Simofa.getLogger().error("Failed to register routes", e);
         }
-
-        server.post("/public-api/deploy/website/{id}/github", ctx -> {
-            new GithubWebhookRoute().post(ctx);
-        });
 
         server.ws("/api/ws/websites/{websiteId}/builds/{buildId}/logs", ws -> {
             WsRegistry.registerWsConsumer(WsRegistry.Instances.WEBSITE_LOGS, BuildLogsWsRoute::sendNewLog);

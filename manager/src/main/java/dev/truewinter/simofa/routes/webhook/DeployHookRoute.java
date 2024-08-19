@@ -1,4 +1,4 @@
-package dev.truewinter.simofa.routes;
+package dev.truewinter.simofa.routes.webhook;
 
 import dev.truewinter.simofa.RouteLoader;
 import dev.truewinter.simofa.Simofa;

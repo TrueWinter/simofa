@@ -1,15 +1,15 @@
 import { useEffect, useState } from 'react';
 import { Group, Table } from '@mantine/core';
-import HeaderWithAddButton from '../../components/HeaderWithAddButton';
-import Page from '../../components/Page';
-import TableSkeleton from '../../components/TableSkeleton';
-import ShortUuid from '../../components/ShortUuid';
-import DeleteButton from '../../components/icons/DeleteButton';
-import { get } from '../../util/api';
-import Error from '../../components/Error';
-import EditButton from '../../components/icons/EditButton';
-import useRefresh from '../../util/refresh';
-import type { GitCredential } from '../../types/java';
+import HeaderWithAddButton from '../../../components/HeaderWithAddButton';
+import Page from '../../../components/Page';
+import TableSkeleton from '../../../components/TableSkeleton';
+import ShortUuid from '../../../components/ShortUuid';
+import DeleteButton from '../../../components/icons/DeleteButton';
+import { get } from '../../../util/api';
+import Error from '../../../components/Error';
+import EditButton from '../../../components/icons/EditButton';
+import useRefresh from '../../../util/refresh';
+import type { GitCredential } from '../../../types/java';
 
 export function Component() {
   const [credentials, setCredentials] = useState<GitCredential[]>([]);
@@ -34,7 +34,7 @@ export function Component() {
 
   return (
     <Page title="Git Credentials">
-      <HeaderWithAddButton title="Git Credentials" url="/git-credentials/add" />
+      <HeaderWithAddButton title="Git Credentials" url="/git/credentials/add" />
       {error ? <Error>{error}</Error> : (
         <Table.ScrollContainer minWidth={500}>
           <Table>
@@ -52,7 +52,7 @@ export function Component() {
                   <Table.Td>{e.username}</Table.Td>
                   <Table.Td>
                     <Group gap="xs" justify="center">
-                      <EditButton to={`/git-credentials/${e.id}/edit`} />
+                      <EditButton to={`/git/credentials/${e.id}/edit`} />
                       <DeleteButton opts={{
                         url: `/api/git-credentials/${e.id}`,
                         uuid: e.id,

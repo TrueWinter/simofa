@@ -54,13 +54,16 @@ export const router = createBrowserRouter([{
     path: '/builds',
     lazy: () => import('./pages/builds/Builds')
   }, {
-    path: '/git-credentials',
-    lazy: () => import('./pages/git-credentials/GitCredentials')
+    path: '/git/credentials',
+    lazy: () => import('./pages/git/credentials/GitCredentials')
   }, {
-    path: '/git-credentials/add',
-    lazy: () => import('./pages/git-credentials/AddGitCredentials')
+    path: '/git/credentials/add',
+    lazy: () => import('./pages/git/credentials/AddGitCredentials')
   }, {
-    path: '/git-credentials/:id/edit',
-    lazy: () => import('./pages/git-credentials/EditGitCredentials')
+    path: '/git/credentials/:id/edit',
+    lazy: () => import('./pages/git/credentials/EditGitCredentials')
+  }, {
+    path: '/git/github-app',
+    lazy: () => import('./pages/git/github-app/GitHubApp')
   }]
 }]);

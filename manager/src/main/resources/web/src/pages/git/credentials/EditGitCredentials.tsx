@@ -2,15 +2,15 @@ import { useEffect, useState } from 'react';
 import { useActionData, useParams } from 'react-router-dom';
 import { Text, Title } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
-import FormSkeleton from '../../components/FormSkeleton';
-import Error from '../../components/Error';
-import { HttpResponse, get, put } from '../../util/api';
-import Page from '../../components/Page';
-import useRefresh from '../../util/refresh';
-import { scrollToTop } from '../../util/scroll';
-import { requestBodyToJson } from '../../util/forms';
-import type { GitCredential } from '../../types/java';
-import GitCredentialsForm from '../../components/forms/GitCredentialsForm';
+import FormSkeleton from '../../../components/FormSkeleton';
+import Error from '../../../components/Error';
+import { HttpResponse, get, put } from '../../../util/api';
+import Page from '../../../components/Page';
+import useRefresh from '../../../util/refresh';
+import { scrollToTop } from '../../../util/scroll';
+import { requestBodyToJson } from '../../../util/forms';
+import type { GitCredential } from '../../../types/java';
+import GitCredentialsForm from '../../../components/forms/GitCredentialsForm';
 
 export function Component() {
   const { id } = useParams();

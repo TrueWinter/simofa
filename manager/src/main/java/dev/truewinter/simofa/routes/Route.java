@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import dev.truewinter.simofa.api.Website;
 import dev.truewinter.simofa.common.Util;
+import dev.truewinter.simofa.config.Config;
 import dev.truewinter.simofa.database.Database;
 import dev.truewinter.simofa.LoginToken;
 import io.javalin.http.BadRequestResponse;
@@ -19,6 +20,7 @@ import java.util.Objects;
 import java.util.Optional;
 
 abstract public class Route {
+    private static Config config;
     private static Database database;
 
     public static boolean verifyLogin(Context ctx) {
@@ -42,12 +44,17 @@ abstract public class Route {
         return new ObjectMapper().treeToValue(json, t);
     }
 
-    public static void setDatabaseInstance(Database database) {
+    public static void init(Config config, Database database) {
+        Route.config = config;
         Route.database = database;
     }
 
-    public static Database getDatabase() {
+    protected static Database getDatabase() {
         return database;
+    }
+
+    protected static Config getConfig() {
+        return config;
     }
 
     @SuppressWarnings("BooleanMethodIsAlwaysInverted")

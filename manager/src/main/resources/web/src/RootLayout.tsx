@@ -21,8 +21,15 @@ const links: NLink[] = [{
   label: 'Builds',
   to: '/builds'
 }, {
-  label: 'Git Credentials',
-  to: '/git-credentials'
+  label: 'Git',
+  to: '/git',
+  links: [{
+    label: 'Git Credentials',
+    to: '/git/credentials'
+  }, {
+    label: 'GitHub App',
+    to: '/git/github-app'
+  }]
 }];
 
 interface MainContentProps {

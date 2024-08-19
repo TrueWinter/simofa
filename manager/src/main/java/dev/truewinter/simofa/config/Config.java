@@ -36,7 +36,11 @@ public class Config {
     @YamlKey("secret")
     private String secret = "simofa";
 
-    @YamlComment("Domain (or IP and port), must be reachable from deploy servers")
+    @YamlComment("GitHub App secret")
+    @YamlKey("github_app_secret")
+    private String githubAppSecret = "simofa";
+
+    @YamlComment("Domain (or IP and port), must be reachable from the internet")
     @YamlKey("remote_url.domain")
     private String remoteUrlDomain = "http://localhost:8808";
 
@@ -102,6 +106,10 @@ public class Config {
 
     public String getSecret() {
         return secret;
+    }
+
+    public String getGithubAppSecret() {
+        return githubAppSecret;
     }
 
     public String getRemoteUrlDomain() {
