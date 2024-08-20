@@ -42,7 +42,7 @@ public class Config {
 
     @YamlComment("Domain (or IP and port), must be reachable from the internet")
     @YamlKey("remote_url.domain")
-    private String remoteUrlDomain = "http://localhost:8808";
+    private String remoteUrlDomain = "localhost:8808";
 
     @YamlKey("remote_url.secure")
     private boolean remoteUrlSecure = false;

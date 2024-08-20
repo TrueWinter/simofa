@@ -5,9 +5,7 @@ target
 /config.yml
 /deploy-config.yml
 /migrator.yml
-manager/src/main/resources/web/assets/build
-manager/src/main/resources/web/assets/css/**/*.d.ts
-manager/src/main/resources/web/assets/js/java.d.ts
+manager/src/main/resources/web/src/types/java.d.ts
 manager/src/main/resources/web/dist
 manager/node
 plugins
