@@ -1,5 +1,6 @@
 package dev.truewinter.simofa.routes.webhook;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.truewinter.simofa.RouteLoader;
 import dev.truewinter.simofa.SignatureVerification;
@@ -9,10 +10,7 @@ import dev.truewinter.simofa.common.Util;
 import dev.truewinter.simofa.routes.Route;
 import io.javalin.http.*;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.Optional;
+import java.util.*;
 
 @SuppressWarnings("unused")
 @RouteLoader.RouteClass(
@@ -24,53 +22,54 @@ public class GithubWebhookRoute extends Route {
             method = HandlerType.POST
     )
     public void post(Context ctx) {
-        String websiteId = ctx.pathParam("id");
-        HashMap<String, Object> resp = new HashMap<>();
-        resp.put("success", true);
+        String id = ctx.pathParam("id");
 
         try {
-            Optional<Website> website = getDatabase().getWebsiteDatabase().getWebsiteById(websiteId);
+            Optional<Website> website = getDatabase().getWebsiteDatabase().getWebsiteById(id);
+            if (website.isEmpty()) return;
+
             String signature = ctx.header("X-Hub-Signature-256");
+            String event = ctx.header("X-GitHub-Event");
 
             if (Util.isBlank(signature)) {
                 throw new ForbiddenResponse("Signature missing");
             }
 
-            if (website.isPresent()) {
-                String json = ctx.body();
-                ObjectMapper objectMapper = new ObjectMapper();
+            String json = ctx.body();
+            if (!SignatureVerification.verifyHmacSha256(json, signature, website.get().getDeployToken())) {
+                throw new ForbiddenResponse("Invalid signature");
+            }
 
-                @SuppressWarnings("unchecked")
-                HashMap<String, Object> data = objectMapper.readValue(json, HashMap.class);
-                String ref = (String) data.get("ref");
-                if (Util.isBlank(ref) || !ref.startsWith("refs/heads/")) {
-                    throw new BadRequestResponse("Not a branch");
-                }
+            switch (Objects.requireNonNull(event)) {
+                case "push":
+                    if (!isCorrectBranch(website.get(), json)) return;
 
-                String branch = ref.replace("refs/heads/", "");
-                if (!website.get().getGitBranch().equals(branch)) {
-                    throw new BadRequestResponse("Website is not configured for this branch");
-                }
-
-                if (!SignatureVerification.verifyHmacSha256(json, signature, website.get().getDeployToken())) {
-                    throw new ForbiddenResponse("Invalid signature");
-                }
-
-                String commit = "<unknown>";
-                @SuppressWarnings("unchecked")
-                ArrayList<LinkedHashMap<String, Object>> commits = (ArrayList<LinkedHashMap<String, Object>>) data.get("commits");
-                if (!commits.isEmpty()) {
-                    commit = (String) commits.get(0).get("message");
-                }
-
-                Simofa.getBuildQueueManager().getBuildQueue().queue(website.get(), commit);
-                ctx.json(resp);
-            } else {
-                throw new NotFoundResponse("Website not found");
+                    GithubAppWebhookRoute.handlePush(json, w ->
+                            w.getId().equals(id) && w.getBuildOn().equals(Website.BUILD_ON.COMMIT)
+                    );
+                    break;
+                case "create":
+                    GithubAppWebhookRoute.handleTag(json, w ->
+                            w.getId().equals(id) && w.getBuildOn().equals(Website.BUILD_ON.TAG));
+                    break;
+                case "release":
+                    GithubAppWebhookRoute.handleRelease(json, w ->
+                            w.getId().equals(id) && w.getBuildOn().equals(Website.BUILD_ON.RELEASE));
+                    break;
             }
         } catch (Exception e) {
             Simofa.getLogger().error("An error occurred while processing GitHub webhook", e);
             throw new InternalServerErrorResponse("An error occurred");
         }
+    }
+
+    private boolean isCorrectBranch(Website website, String json) throws JsonProcessingException {
+        HashMap<String, Object> data = GithubAppWebhookRoute.getData(json);
+
+        String ref = (String) data.get("ref");
+        if (Util.isBlank(ref) || !ref.startsWith("refs/heads/")) return false;
+
+        String branch = ref.replace("refs/heads/", "");
+        return branch.equals(website.getGitBranch());
     }
 }

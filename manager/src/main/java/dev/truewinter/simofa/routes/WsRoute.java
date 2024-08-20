@@ -32,7 +32,9 @@ public abstract class WsRoute {
     }
 
     public void ping() {
-        ctx.sendPing();
+        try {
+            ctx.sendPing();
+        } catch (Exception ignored) {}
     }
 
     @Nullable

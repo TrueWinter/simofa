@@ -12,6 +12,7 @@ public class Website {
     private String gitUrl;
     private String gitBranch;
     private String gitCredentials;
+    private BUILD_ON buildOn;
     private String buildCommand;
     private String deployCommand;
     private String deployFailedCommand;
@@ -22,8 +23,8 @@ public class Website {
 
     public Website(String id, String name, String dockerImage, int memory,
                    double cpu, String gitUrl, String gitBranch, String gitCredentials,
-                   String buildCommand, String deployCommand, String deployFailedCommand,
-                   String deployServer, String deployToken) {
+                   BUILD_ON buildOn, String buildCommand, String deployCommand,
+                   String deployFailedCommand, String deployServer, String deployToken) {
         this.id = id;
         this.name = name;
         this.dockerImage = dockerImage;
@@ -32,6 +33,7 @@ public class Website {
         this.gitUrl = gitUrl;
         this.gitBranch = gitBranch;
         this.gitCredentials = gitCredentials;
+        this.buildOn = buildOn;
         this.buildCommand = Util.dos2unix(buildCommand);
         this.deployCommand = Util.dos2unix(deployCommand);
         this.deployFailedCommand = Util.dos2unix(deployFailedCommand);
@@ -72,6 +74,10 @@ public class Website {
         return gitCredentials;
     }
 
+    public BUILD_ON getBuildOn() {
+        return buildOn;
+    }
+
     public String getBuildCommand() {
         return buildCommand;
     }
@@ -90,5 +96,11 @@ public class Website {
 
     public String getDeployToken() {
         return deployToken;
+    }
+
+    public enum BUILD_ON {
+        COMMIT,
+        TAG,
+        RELEASE
     }
 }

@@ -24,7 +24,11 @@ const createParams = (random: string, webhookUrl: string) => ({
   public: 'false',
   webhook_active: 'true',
   webhook_url: webhookUrl,
-  'events[]': 'push',
+  events: [
+    'push',
+    'create',
+    'release'
+  ],
   contents: 'read'
 });
 
@@ -35,7 +39,11 @@ export default function CreateAppButton({ config, organization, disabled }: Prop
     ORGANIZATION_BASE_URL.replace('ORGANIZATION', organization) : USER_BASE_URL);
   const btnUrlParams = createParams(config.random, webhook);
   Object.entries(btnUrlParams).forEach(([key, value]) => {
-    btnUrl.searchParams.append(key, value);
+    if (typeof value === 'string') {
+      btnUrl.searchParams.append(key, value);
+    } else if (Array.isArray(value)) {
+      value.forEach((v) => btnUrl.searchParams.append(`${key}[]`, v));
+    }
   });
 
   return (

@@ -18,7 +18,7 @@ public class WebsiteDatabase {
 
     public Optional<Website> getWebsiteById(String id) throws SQLException {
         try (Connection connection = ds.getConnection()) {
-            PreparedStatement statement = connection.prepareStatement("SELECT w.id, w.name, w.docker_image, w.memory, w.cpu, w.git_url, w.git_branch, w.git_credential, w.build_command, w.deployment_command, w.deployment_failed_command, w.deployment_server, w.deploy_token, git.id as gitId, git.username, git.password FROM `websites` AS w LEFT JOIN git ON w.git_credential = git.id WHERE w.id = ?;");
+            PreparedStatement statement = connection.prepareStatement("SELECT w.id, w.name, w.docker_image, w.memory, w.cpu, w.git_url, w.git_branch, w.git_credential, w.build_on, w.build_command, w.deployment_command, w.deployment_failed_command, w.deployment_server, w.deploy_token, git.id as gitId, git.username, git.password FROM `websites` AS w LEFT JOIN git ON w.git_credential = git.id WHERE w.id = ?;");
             statement.setString(1, id);
             ResultSet rs = statement.executeQuery();
 
@@ -32,6 +32,7 @@ public class WebsiteDatabase {
                         rs.getString("git_url"),
                         rs.getString("git_branch"),
                         rs.getString("git_credential"),
+                        Website.BUILD_ON.valueOf(rs.getString("build_on")),
                         rs.getString("build_command"),
                         rs.getString("deployment_command"),
                         rs.getString("deployment_failed_command"),
@@ -49,7 +50,7 @@ public class WebsiteDatabase {
         try (Connection connection = ds.getConnection()) {
             String id = Util.createv7UUID().toString();
 
-            PreparedStatement statement = connection.prepareStatement("INSERT INTO websites (id, name, docker_image, memory, cpu, git_url, git_branch, git_credential, build_command, deployment_command, deployment_failed_command, deployment_server, deploy_token) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);");
+            PreparedStatement statement = connection.prepareStatement("INSERT INTO websites (id, name, docker_image, memory, cpu, git_url, git_branch, git_credential, build_on, build_command, deployment_command, deployment_failed_command, deployment_server, deploy_token) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);");
             statement.setString(1, id);
             statement.setString(2, website.getName());
             statement.setString(3, website.getDockerImage());
@@ -62,11 +63,12 @@ public class WebsiteDatabase {
             } else {
                 statement.setString(8, website.getGitCredentials());
             }
-            statement.setString(9, website.getBuildCommand());
-            statement.setString(10, website.getDeployCommand());
-            statement.setString(11, website.getDeployFailedCommand());
-            statement.setString(12, website.getDeployServer());
-            statement.setString(13, website.getDeployToken());
+            statement.setString(9, website.getBuildOn().toString());
+            statement.setString(10, website.getBuildCommand());
+            statement.setString(11, website.getDeployCommand());
+            statement.setString(12, website.getDeployFailedCommand());
+            statement.setString(13, website.getDeployServer());
+            statement.setString(14, website.getDeployToken());
             statement.execute();
 
             return id;
@@ -83,6 +85,7 @@ public class WebsiteDatabase {
                     "git_url = ?, " +
                     "git_branch = ?, " +
                     "git_credential = ?, " +
+                    "build_on = ?, " +
                     "build_command = ?, " +
                     "deployment_command = ?, " +
                     "deployment_failed_command = ?, " +
@@ -102,12 +105,13 @@ public class WebsiteDatabase {
             } else {
                 statement.setString(7, website.getGitCredentials());
             }
-            statement.setString(8, website.getBuildCommand());
-            statement.setString(9, website.getDeployCommand());
-            statement.setString(10, website.getDeployFailedCommand());
-            statement.setString(11, website.getDeployServer());
-            statement.setString(12, website.getDeployToken());
-            statement.setString(13, website.getId());
+            statement.setString(8, website.getBuildOn().toString());
+            statement.setString(9, website.getBuildCommand());
+            statement.setString(10, website.getDeployCommand());
+            statement.setString(11, website.getDeployFailedCommand());
+            statement.setString(12, website.getDeployServer());
+            statement.setString(13, website.getDeployToken());
+            statement.setString(14, website.getId());
             statement.execute();
         }
     }
@@ -116,7 +120,7 @@ public class WebsiteDatabase {
         List<Website> websites = new ArrayList<>();
 
         try (Connection connection = ds.getConnection()) {
-            PreparedStatement statement = connection.prepareStatement("SELECT w.id, w.name, w.docker_image, w.memory, w.cpu, w.git_url, w.git_branch, w.git_credential, w.build_command, w.deployment_command, w.deployment_failed_command, w.deployment_server, w.deploy_token, git.id as gitId, git.username, git.password FROM `websites` AS w LEFT JOIN git ON w.git_credential = git.id;");
+            PreparedStatement statement = connection.prepareStatement("SELECT w.id, w.name, w.docker_image, w.memory, w.cpu, w.git_url, w.git_branch, w.git_credential, w.build_on, w.build_command, w.deployment_command, w.deployment_failed_command, w.deployment_server, w.deploy_token, git.id as gitId, git.username, git.password FROM `websites` AS w LEFT JOIN git ON w.git_credential = git.id;");
             ResultSet rs = statement.executeQuery();
 
             while (rs.next()) {
@@ -129,6 +133,7 @@ public class WebsiteDatabase {
                         rs.getString("git_url"),
                         rs.getString("git_branch"),
                         rs.getString("git_credential"),
+                        Website.BUILD_ON.valueOf(rs.getString("build_on")),
                         rs.getString("build_command"),
                         rs.getString("deployment_command"),
                         rs.getString("deployment_failed_command"),

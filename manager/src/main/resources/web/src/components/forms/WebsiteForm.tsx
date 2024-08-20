@@ -55,6 +55,7 @@ export default function WebsiteForm({ website }: Props) {
       gitUrl: website?.gitUrl || '',
       gitBranch: website?.gitBranch || '',
       gitCredentials: website?.gitCredentials || 'anonymous',
+      buildOn: website?.buildOn || 'COMMIT',
       buildCommand: website?.buildCommand || DEFAULT_SCRIPT,
       deployCommand: website?.deployCommand || DEFAULT_SCRIPT,
       deployFailedCommand: website?.deployFailedCommand || DEFAULT_SCRIPT,
@@ -171,6 +172,18 @@ export default function WebsiteForm({ website }: Props) {
                   value: g.id
                 }))]} required renderOption={formatSelectOption}
                   key={form.key('gitCredentials')} {...form.getInputProps('gitCredentials')} />
+
+                <Select label="Build On" name="buildOn" data={[{
+                  label: 'Commit',
+                  value: 'COMMIT'
+                }, {
+                  label: 'Tag',
+                  value: 'TAG'
+                }, {
+                  label: 'Release',
+                  value: 'RELEASE'
+                }]} required key={form.key('buildOn')} {...form.getInputProps('buildOn')}
+                  description="Select the GitHub event should trigger a build" />
 
                 <LimitedLengthTextArea label="Build Command" name="buildCommand" maxLength={512}
                   rows={8} autosize required spellCheck={false} key={form.key('buildCommand')}

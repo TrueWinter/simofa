@@ -1,6 +1,6 @@
 /* tslint:disable */
 /* eslint-disable */
-// Generated using typescript-generator version 3.2.1263 on 2024-08-15 19:31:22.
+// Generated using typescript-generator version 3.2.1263 on 2024-08-19 22:10:16.
 
 export interface Account {
     id: string;
@@ -16,6 +16,7 @@ export interface Website {
     gitUrl: string;
     gitBranch: string;
     gitCredentials: string;
+    buildOn: BUILD_ON;
     buildCommand: string;
     deployCommand: string;
     deployFailedCommand: string;
@@ -47,3 +48,5 @@ export interface Template {
     name: string;
     template: string;
 }
+
+export type BUILD_ON = "COMMIT" | "TAG" | "RELEASE";

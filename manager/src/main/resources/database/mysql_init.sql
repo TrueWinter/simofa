@@ -29,6 +29,7 @@ CREATE TABLE IF NOT EXISTS `websites` (
     `git_url` varchar(255) NOT NULL,
     `git_branch` varchar(40) NOT NULL,
     `git_credential` char(36),
+    `build_on` varchar(32) NOT NULL,
     -- The command run to build the site
     `build_command` varchar(512) NOT NULL,
     -- The command run on the deployment server.
