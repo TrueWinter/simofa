@@ -201,7 +201,7 @@ export default function WebsiteForm({ website }: Props) {
                 <Select label="Deploy Server" name="deployServer" data={servers.map((s) => ({
                   label: s.name,
                   value: s.id
-                }))} required renderOption={formatSelectOption}
+                }))} renderOption={formatSelectOption}
                   key={form.key('deployServer')} {...form.getInputProps('deployServer')} />
 
                 <Box>
@@ -240,6 +240,10 @@ export async function getBody(request: Request) {
   const body = await requestBodyToJson(request);
   if (body.gitCredentials === 'anonymous') {
     body.gitCredentials = null;
+  }
+
+  if (!body.deployServer) {
+    body.deployServer = null;
   }
 
   return body;

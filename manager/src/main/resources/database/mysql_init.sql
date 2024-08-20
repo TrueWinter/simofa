@@ -40,7 +40,7 @@ CREATE TABLE IF NOT EXISTS `websites` (
     -- the deployment command fails. Use this to clean
     -- up files and move the original site back into place.
     `deployment_failed_command` varchar(512) NOT NULL,
-    `deployment_server` char(36) NOT NULL,
+    `deployment_server` char(36),
     `deploy_token` VARCHAR(36) NOT NULL,
     FOREIGN KEY (`deployment_server`) REFERENCES `deployment_servers` (`id`),
     FOREIGN KEY (`git_credential`) REFERENCES `git` (`id`)

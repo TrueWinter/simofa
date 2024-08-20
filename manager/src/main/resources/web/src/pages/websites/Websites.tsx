@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Group, Table } from '@mantine/core';
+import { Group, Table, Text } from '@mantine/core';
 import { IconTrash } from '@tabler/icons-react';
 import type { Website, DeployServer } from '../../types/java';
 import { get } from '../../util/api';
@@ -64,8 +64,12 @@ export function Component() {
                   <Table.Td><ShortUuid uuid={e.id} /></Table.Td>
                   <Table.Td>{e.name}</Table.Td>
                   <Table.Td>
-                    <ShortUuid uuid={e.deployServer} brackets />&nbsp;
-                    {servers.get(e.deployServer)?.name}
+                    {e.deployServer ? (
+                      <>
+                        <ShortUuid uuid={e.deployServer} brackets />&nbsp;
+                        {servers.get(e.deployServer)?.name}
+                      </>
+                    ) : <Text>None</Text>}
                   </Table.Td>
                   <Table.Td>
                     <Group justify="center" gap="xs" wrap="nowrap">

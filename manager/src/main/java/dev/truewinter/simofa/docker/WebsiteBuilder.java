@@ -103,7 +103,8 @@ public class WebsiteBuilder extends Thread {
 
                     if (waitResponse.getStatusCode() == 0) {
                         build.addLog(new SimofaLog(LogType.INFO, exitMsg));
-                        build.setStatus(BuildStatus.DEPLOYING);
+                        build.setStatus(build.getWebsite().getDeployServer() == null ?
+                                BuildStatus.DEPLOYED : BuildStatus.DEPLOYING);
                     } else {
                         build.addLog(new SimofaLog(LogType.ERROR, exitMsg));
                         build.setStatus(BuildStatus.ERROR);
@@ -140,6 +141,7 @@ public class WebsiteBuilder extends Thread {
                                     );
 
                             if (deploymentServer.isEmpty()) {
+                                if (build.getWebsite().getDeployServer() == null) return;
                                 throw new Exception("Deployment server not found");
                             }
 
