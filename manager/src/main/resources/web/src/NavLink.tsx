@@ -1,7 +1,7 @@
 import { NavLink as MantineLink } from '@mantine/core';
 import { Link, useLocation } from 'react-router-dom';
-import { useEffect } from 'react';
-import { useClickOutside, useDisclosure } from '@mantine/hooks';
+import { useEffect, useRef } from 'react';
+import { useClickOutside, useDisclosure, useId } from '@mantine/hooks';
 import { useIsMobile } from './util/mobile';
 
 export interface NLink {
@@ -19,8 +19,13 @@ export default function NavLink({ link }: Props) {
   const isActive = location.pathname.startsWith(link.to);
   const isMobile = useIsMobile();
   const [opened, { close, toggle }] = useDisclosure(false);
-  const dropdownRef = useClickOutside<HTMLAnchorElement>(() => setTimeout(close, 50));
-  const dropdownCoords = dropdownRef.current?.getBoundingClientRect();
+  const linkRef = useRef<HTMLAnchorElement>(null);
+  const dropdownCoords = linkRef.current?.getBoundingClientRect();
+  const id = useId();
+
+  useClickOutside(close,
+    ['mousedown', 'touchstart'],
+    [linkRef.current, document.querySelector(`.${id}`)]);
 
   useEffect(() => {
     close();
@@ -28,7 +33,9 @@ export default function NavLink({ link }: Props) {
 
   return link.links ? (
     <MantineLink w="fit-content" component={Link} label={link.label}
-      to="#" active={isActive} opened={opened} onChange={toggle} ref={dropdownRef}
+      to="#" active={isActive} opened={opened} onChange={toggle} ref={linkRef} classNames={{
+        collapse: id
+      }}
       styles={!isMobile && {
         collapse: {
           background: 'var(--mantine-color-dark-9)',
