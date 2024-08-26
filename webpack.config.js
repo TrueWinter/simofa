@@ -69,6 +69,18 @@ module.exports = {
     ]
   },
   optimization: {
+    splitChunks: {
+      cacheGroups: {
+        vendor: {
+          test: /[\\/]node_modules[\\/]/,
+          enforce: true,
+          name: 'vendor',
+          reuseExistingChunk: true,
+          chunks: 'all'
+        }
+      },
+      maxSize: 50000
+    },
     minimizer: [
       new TerserPlugin(),
       new CssMinimizerPlugin()

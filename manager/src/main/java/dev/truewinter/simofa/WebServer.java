@@ -48,6 +48,8 @@ public class WebServer extends Thread {
                 c.staticFiles.add(s -> {
                     s.hostedPath = "/assets";
                     s.directory = "/web/dist";
+                    // Javalin ignores the cache headers in the before handler if the header exists here
+                    s.headers.remove(Header.CACHE_CONTROL);
                 });
             }
             c.fileRenderer(new JavalinPebble(pebbleEngine.build()));
@@ -60,8 +62,14 @@ public class WebServer extends Thread {
 
         server.before(ctx -> {
             ctx.header("X-Robots-Tag", "noindex");
-            ctx.header(Header.CACHE_CONTROL, "no-cache, no-store, must-revalidate");
-            ctx.header(Header.EXPIRES, "0");
+
+            String path = ctx.path();
+            if (path.startsWith("/assets/") && !path.equals("/assets/main.js")) {
+                ctx.header(Header.CACHE_CONTROL, "public, max-age=604800, immutable");
+            } else {
+                ctx.header(Header.CACHE_CONTROL, "no-cache, no-store, must-revalidate");
+                ctx.header(Header.EXPIRES, "0");
+            }
 
             try {
                 ctx.header("X-Powered-By", "Simofa/" + Util.getVersion());
