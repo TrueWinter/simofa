@@ -93,7 +93,9 @@ async function _request(opts: Request): Promise<HttpResponse> {
     return {
       status: 401,
       success: false,
-      body: null
+      body: {
+        title: 'Unauthorized'
+      }
     };
   }
 
@@ -167,13 +169,6 @@ export async function ws(route: string, room: string, opts?: Opts) {
   url.searchParams.set('token', token);
 
   return new WebSocket(url.href.replace(DUMMY_URL, ''));
-}
-
-/**
- * Only use this on pages that do not request data from the server on load
- */
-export async function ensureUserIsLoggedIn(): Promise<HttpResponse> {
-  return get('/api/is-logged-in');
 }
 
 function getJWT(): Record<string, any> | null {
