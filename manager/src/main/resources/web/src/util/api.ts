@@ -160,13 +160,17 @@ export async function del<T = any>(route: string, opts?: Opts) {
 }
 
 export async function ws(route: string, room: string, opts?: Opts) {
-  const { token } = (await post('/api/login/ws', {
+  const resp = await post('/api/login/ws', {
     roomId: room
-  }, opts)).body;
+  }, opts);
+
+  if (resp.success === false) {
+    return;
+  }
 
   const DUMMY_URL = 'http://dummy';
   const url = new URL(route, DUMMY_URL);
-  url.searchParams.set('token', token);
+  url.searchParams.set('token', resp.body.token);
 
   return new WebSocket(url.href.replace(DUMMY_URL, ''));
 }
