@@ -182,7 +182,9 @@ export function Component() {
         <Divider />
         {error ? <Error>{error}</Error> : (
           <ScrollArea viewportRef={logRef} scrollbars="y" p="xs"
-            onScrollPositionChange={handleScroll}>
+            onScrollPositionChange={handleScroll} style={{
+              wordBreak: 'break-word'
+            }}>
             {loading ? (
               <Stack gap="xs">
                 {new Array(10).fill(0).map((_, i) => (
