@@ -2,11 +2,12 @@ import { Link, Outlet, useLocation, useNavigation } from 'react-router-dom';
 import { Paper, Container, Group, NavLink as MantineNavLink,
   Burger, Flex, Anchor, Divider } from '@mantine/core';
 import { nprogress } from '@mantine/nprogress';
-import { useDisclosure, useMediaQuery } from '@mantine/hooks';
+import { useDisclosure } from '@mantine/hooks';
 import { useEffect, type ReactNode } from 'react';
 import NavLink, { type NLink } from './NavLink';
 import { usePathPattern } from './util/path';
 import { getUserId } from './util/api';
+import { useIsMobile } from './util/mobile';
 
 const links: NLink[] = [{
   label: 'Websites',
@@ -54,7 +55,7 @@ export function Component() {
   const location = useLocation();
   const navigation = useNavigation();
   const [opened, { close, toggle }] = useDisclosure(false);
-  const mobile = useMediaQuery('(max-width: 576px)');
+  const mobile = useIsMobile();
   const path = usePathPattern();
 
   if (!mobile && !opened) {
@@ -102,14 +103,13 @@ export function Component() {
 
   const home = <Anchor component={Link} fw={700} size="lg" c="white" to="/">Simofa</Anchor>;
 
-  // TODO: Find solution for button on edit/add website pages being hidden on mobile until the address bar is hidden
   return (
     <Flex direction="column" h={hideOverflow && '100dvh'} mih="100dvh" align="center">
       {!['/login', '/logout', '/refresh'].includes(location.pathname) && (
         <Paper p="md" w="100%" radius={0} bg="dark.9" c="white">
-          <Group justify="space-between" hiddenFrom="md">
+          <Group justify="space-between" hiddenFrom="sm">
             {home}
-            <Burger opened={opened} onClick={toggle} hidden={!mobile} />
+            <Burger opened={opened} onClick={toggle} />
           </Group>
           {opened && (
             <Flex justify="space-between" direction={mobile ? 'column' : 'row'}>
