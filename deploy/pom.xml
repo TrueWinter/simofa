@@ -94,7 +94,7 @@
                             <transformers>
                                 <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
                                     <manifestEntries>
-                                        <Main-Class>dev.truewinter.simofadeploy.SimofaDeploy</Main-Class>
+                                        <Main-Class>dev.truewinter.simofa.deploy.SimofaDeploy</Main-Class>
                                     </manifestEntries>
                                 </transformer>
                             </transformers>

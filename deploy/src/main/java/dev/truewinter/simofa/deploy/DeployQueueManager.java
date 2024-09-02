@@ -1,4 +1,4 @@
-package dev.truewinter.simofadeploy;
+package dev.truewinter.simofa.deploy;
 
 import java.util.Timer;
 import java.util.TimerTask;

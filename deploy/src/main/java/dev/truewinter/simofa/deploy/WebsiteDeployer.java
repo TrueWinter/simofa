@@ -1,16 +1,11 @@
-package dev.truewinter.simofadeploy;
+package dev.truewinter.simofa.deploy;
 
 import dev.truewinter.simofa.common.BuildStatus;
 import dev.truewinter.simofa.common.LogType;
 import dev.truewinter.simofa.common.SimofaLog;
 import org.apache.commons.io.FileUtils;
 
-import java.util.List;
 import java.util.Timer;
-import java.util.TimerTask;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.FutureTask;
 import java.util.concurrent.TimeUnit;
 
 public class WebsiteDeployer extends Thread {

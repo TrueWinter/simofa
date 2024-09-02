@@ -1,4 +1,4 @@
-package dev.truewinter.simofadeploy;
+package dev.truewinter.simofa.deploy;
 
 import net.william278.annotaml.YamlFile;
 import net.william278.annotaml.YamlKey;

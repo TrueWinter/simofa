@@ -1,4 +1,4 @@
-package dev.truewinter.simofadeploy;
+package dev.truewinter.simofa.deploy;
 
 import dev.truewinter.simofa.common.Util;
 import net.william278.annotaml.Annotaml;

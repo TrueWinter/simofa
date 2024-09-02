@@ -1,4 +1,4 @@
-package dev.truewinter.simofadeploy;
+package dev.truewinter.simofa.deploy;
 
 import org.jetbrains.annotations.Nullable;
 

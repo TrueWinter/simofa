@@ -1,21 +1,15 @@
-package dev.truewinter.simofadeploy;
+package dev.truewinter.simofa.deploy;
 
 import dev.truewinter.simofa.common.Util;
 import io.javalin.Javalin;
 import io.javalin.http.Header;
 import io.javalin.http.UploadedFile;
-import io.javalin.jetty.JavalinJettyServlet;
-import io.javalin.jetty.JettyUtil;
 import io.javalin.util.JavalinLogger;
-import org.apache.commons.codec.cli.Digest;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
-import org.jetbrains.annotations.Nullable;
 
 import java.io.*;
-import java.util.Base64;
-import java.util.Objects;
 
 public class WebServer extends Thread {
     private final Config config;
