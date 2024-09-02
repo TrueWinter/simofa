@@ -70,13 +70,14 @@ module.exports = {
   },
   optimization: {
     splitChunks: {
+      hidePathInfo: true,
       cacheGroups: {
         vendor: {
           test: /[\\/]node_modules[\\/]/,
           enforce: true,
-          filename: 'vendor-[name].[contenthash].js',
-          reuseExistingChunk: true,
-          chunks: 'all'
+          name: 'vendor',
+          filename: '[name].[contenthash].js',
+          reuseExistingChunk: true
         }
       },
       maxSize: 50000
