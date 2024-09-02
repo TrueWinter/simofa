@@ -7,7 +7,7 @@
     <parent>
         <groupId>dev.truewinter.simofa</groupId>
         <artifactId>simofa</artifactId>
-        <version>0.2.2</version>
+        <version>0.2.3</version>
     </parent>
 
     <artifactId>api</artifactId>
@@ -67,7 +67,7 @@
                             <goal>shade</goal>
                         </goals>
                         <configuration>
-                            <outputFile>../build/${project.version}/${project.artifactId}-${project.version}.jar</outputFile>
+                            <outputFile>../dist/${project.version}/${project.artifactId}-${project.version}.jar</outputFile>
                             <createDependencyReducedPom>false</createDependencyReducedPom>
                             <shadedArtifactAttached>false</shadedArtifactAttached>
                             <minimizeJar>false</minimizeJar>
