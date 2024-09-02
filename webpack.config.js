@@ -74,7 +74,7 @@ module.exports = {
         vendor: {
           test: /[\\/]node_modules[\\/]/,
           enforce: true,
-          name: 'vendor',
+          filename: 'vendor-[name].[contenthash].js',
           reuseExistingChunk: true,
           chunks: 'all'
         }
