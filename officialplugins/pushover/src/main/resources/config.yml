@@ -2,5 +2,5 @@ app_key: ''
 user_key: ''
 title: Build failed
 statuses:
-  - stopped
-  - error
+  - STOPPED
+  - ERROR
