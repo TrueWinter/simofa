@@ -10,6 +10,7 @@ import dev.truewinter.simofa.common.SimofaLog;
 import dev.truewinter.simofa.common.Util;
 import org.jetbrains.annotations.Nullable;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
@@ -126,11 +127,12 @@ public class WebsiteBuild {
     }
 
     @Nullable
-    public String getCacheDir() {
-        if (commit.toLowerCase().contains("[no cache]")) {
-            return null;
-        }
+    public File getCacheDir() {
+        if (cacheDir == null) return null;
+        return new File(cacheDir, "website-" + getWebsite().getId());
+    }
 
-        return cacheDir;
+    public boolean useCache() {
+        return !commit.toLowerCase().contains("[no cache]");
     }
 }

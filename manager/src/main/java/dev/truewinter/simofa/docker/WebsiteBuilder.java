@@ -43,9 +43,7 @@ public class WebsiteBuilder extends Thread {
         try {
             File tmpDir = Util.createTempDir(build.getId());
             File tmpInDir = new File(tmpDir, "in");
-
             File tmpCacheDir = new File(tmpDir, "cache");
-            File websiteCacheDir = new File(build.getCacheDir(), "website-" + build.getWebsite().getId());
 
             GitCredential gitCredential = null;
             String gitCredentials = build.getWebsite().getGitCredentials();
@@ -59,15 +57,16 @@ public class WebsiteBuilder extends Thread {
                             build.getWebsite().getId(), gitCredentials));
                 }
             }
-            GitFetcher.fetch(build, gitCredential, tmpInDir, websiteCacheDir);
+            GitFetcher.fetch(build, gitCredential, tmpInDir);
 
             File tmpScriptDir = new File(tmpDir, "scripts");
             FileOutputStream fileOutputStream = new FileOutputStream(new File(tmpScriptDir, "build.sh"));
             fileOutputStream.write(build.getWebsite().getBuildCommand().getBytes());
             fileOutputStream.close();
 
+            File websiteCacheDir = build.getCacheDir();
             File websiteCache = new File(websiteCacheDir, "cache.zip");
-            if (websiteCache.exists()) {
+            if (build.useCache() && websiteCacheDir != null && websiteCache.exists()) {
                 FileInputStream fileInputStream = new FileInputStream(websiteCache);
                 FileOutputStream cacheFileOutputStream = new FileOutputStream(new File(tmpCacheDir, "cache.zip"));
                 IOUtils.copy(fileInputStream, cacheFileOutputStream);
@@ -122,10 +121,9 @@ public class WebsiteBuilder extends Thread {
                             Simofa.getDockerManager().copySiteZip(build, tempDir);
 
                             try {
-                                String cacheDir = build.getCacheDir();
-                                File outputDir = new File(cacheDir, "website-" + build.getWebsite().getId());
+                                File outputDir = build.getCacheDir();
 
-                                if (!Util.isBlank(cacheDir) && !outputDir.exists() && !outputDir.mkdir()) {
+                                if (outputDir == null || (!outputDir.exists() && !outputDir.mkdir())) {
                                     throw new IOException("Failed to create output directory for cache");
                                 }
 
