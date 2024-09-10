@@ -7,7 +7,7 @@
     <parent>
         <groupId>dev.truewinter.simofa</groupId>
         <artifactId>simofa</artifactId>
-        <version>0.2.5</version>
+        <version>0.2.6</version>
     </parent>
 
     <artifactId>common</artifactId>
