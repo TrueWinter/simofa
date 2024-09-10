@@ -168,11 +168,11 @@ export async function ws(route: string, room: string, opts?: Opts) {
     return;
   }
 
-  const DUMMY_URL = 'http://dummy';
-  const url = new URL(route, DUMMY_URL);
+  // Some browsers don't fully support relative URLs in WebSockets.
+  const host = `${location.protocol === 'http:' ? 'ws:' : 'wss:'}//${location.host}`;
+  const url = new URL(route, host);
   url.searchParams.set('token', resp.body.token);
-
-  return new WebSocket(url.href.replace(DUMMY_URL, ''));
+  return new WebSocket(url.href);
 }
 
 function getJWT(): Record<string, any> | null {
