@@ -3,6 +3,8 @@ package dev.truewinter.simofa.docker;
 import dev.truewinter.simofa.Simofa;
 import dev.truewinter.simofa.api.WebsiteBuild;
 import dev.truewinter.simofa.common.BuildStatus;
+import dev.truewinter.simofa.common.LogType;
+import dev.truewinter.simofa.common.SimofaLog;
 import dev.truewinter.simofa.config.Config;
 import dev.truewinter.simofa.database.Database;
 
@@ -56,12 +58,24 @@ public class BuildQueueManager {
                     });
                 }
 
+                long TWENTY_MINUTES = 20 * 60 * 1000;
+
+                // Loop through a snapshot of the list
                 for (WebsiteBuild w : new ArrayList<>(buildQueue.getCurrentBuilds())) {
                     if (w.getStatus().equals(BuildStatus.BUILDING) && w.getContainerId() != null) {
-                        long TWENTY_MINUTES = 20 * 60 * 1000;
                         if (w.getRunTime() > TWENTY_MINUTES) {
                             buildQueue.remove(w.getWebsite());
-                            System.out.printf("%s [%s]: %s %d%n", w.getId(), w.getContainerId(), w.getStatus(), w.getRunTime());
+                            w.addLog(new SimofaLog(LogType.ERROR, "Build duration has exceeded 20 minutes"));
+                        }
+                    }
+                }
+
+                for (WebsiteBuild w : new ArrayList<>(buildQueue.getBuildQueue())) {
+                    if (w.getStatus().equals(BuildStatus.QUEUED)) {
+                        if (System.currentTimeMillis() - w.getQueuedAt() > TWENTY_MINUTES) {
+                            w.setStatus(BuildStatus.ERROR);
+                            w.addLog(new SimofaLog(LogType.ERROR, "Build has been queued for longer than 20 minutes"));
+                            buildQueue.remove(w.getWebsite());
                         }
                     }
                 }

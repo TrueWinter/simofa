@@ -26,6 +26,8 @@ public class WebsiteBuild {
     @JsonIgnore
     private String containerId;
     @JsonIgnore
+    private long queuedAt;
+    @JsonIgnore
     private long startTime;
     @JsonIgnore
     private long endTime;
@@ -44,6 +46,7 @@ public class WebsiteBuild {
         this.commit = commit;
         this.status = BuildStatus.QUEUED;
         this.logs = new ArrayList<>();
+        this.queuedAt = System.currentTimeMillis();
         this.cacheDir = cacheDir;
 
         addLog(new SimofaLog(LogType.INFO, "Build queued"));
@@ -93,6 +96,10 @@ public class WebsiteBuild {
 
     public void setContainerId(String containerId) {
         this.containerId = containerId;
+    }
+
+    public long getQueuedAt() {
+        return queuedAt;
     }
 
     public ArrayList<SimofaLog> getLogs() {
