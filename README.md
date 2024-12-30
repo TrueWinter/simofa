@@ -14,20 +14,28 @@ All other aspects of website building/deployment (such as SSL certificates and w
 
 ## Requirements
 
+### Manager server
+- Java 16+
+- MySQL 8+
+- Reverse proxy with WebSocket support
+  - Your reverse proxy should be configured to support large enough POST bodies (recommended: 100MB) for the build output and cache files
+- Linux recommended
+- 1 CPU core
+- 1GB memory (recommended)
+- 20GB disk space (minimum). You should have enough disk space for:
+  - All git repositories (once they are cloned, they are saved to `config.cache_directory` for future builds)
+  - Build cache files
+- Modern web browser (Chrome 92+/Firefox 95+)
+
 ### Build server
 - Docker 19.03+
 - Java 16+
-- MySQL 8+
-- Reverse proxy with WebSocket support and SSL configured for Simofa domain
 - Linux recommended
 - 2 CPU cores (minimum, recommended: ceil(`config.concurrent_builds` \* \[average configured build CPU (default 0.5)\]) + 1)
 - 2GB memory (minimum, recommended: ceil(`config.concurrent_builds` \* \[average configured build memory (default 256MB)\]) + 1GB)
 - 20GB disk space (minimum). You should have enough disk space for:
   - All containers and build data
-  - All git repositories (once they are cloned, they are saved to `config.cache_directory` for future builds)
-  - Build cache files
-  - Processing files (copying, zipping, etc.)
-- Modern web browser (Chrome 92+/Firefox 95+)
+  - Processing files (copying, zipping, storing temporary files, etc.)
 
 ### Deploy server
 - Java 16+
@@ -52,6 +60,10 @@ When Simofa is first started, it will create a user with the username `admin` an
 ### Git
 
 Your website repositories should be hosted on GitHub. Only user/pass authentication is accepted at the moment. The git repository is cloned to a temporary directory before being copied to the Docker container, so the container never receives your git credentials.
+
+When adding a website in Simofa, you can choose whether to build on each commit, tag, or release.
+
+Add `[no ci]` to a commit message to skip the build for that commit.
 
 There are multiple ways to trigger builds:
 

@@ -37,7 +37,7 @@ public class RouteLoader {
             if (!route.isAnnotationPresent(RouteClass.class)) continue;
             RouteClass routeClass = route.getAnnotation(RouteClass.class);
             Route routeInstance = route.getDeclaredConstructor().newInstance();
-            boolean registeredBefore = false;
+            Set<String> registeredBefore = new HashSet<>();
 
             for (Method method : route.getMethods()) {
                 if (!method.isAnnotationPresent(RouteInfo.class)) continue;
@@ -51,18 +51,14 @@ public class RouteLoader {
 
                     RouteInfo routeInfo = method.getAnnotation(RouteInfo.class);
 
-                    if (!registeredBefore) {
-                        if (routeClass.verifyLogin()) {
-                            server.before(routeInfo.url(), ctx -> {
-                                if (routeClass.verifyLogin()) {
-                                    if (!Route.verifyLogin(ctx)) {
-                                        throw new RouteLoaderException();
-                                    }
-                                }
-                            });
-                        }
+                    if (!registeredBefore.contains(routeInfo.url()) && routeClass.verifyLogin()) {
+                        server.before(routeInfo.url(), ctx -> {
+                            if (!Route.verifyLogin(ctx)) {
+                                throw new RouteLoaderException();
+                            }
+                        });
 
-                        registeredBefore = true;
+                        registeredBefore.add(routeInfo.url());
                     }
 
                     server.addHandler(routeInfo.method(), routeInfo.url(), ctx -> {
