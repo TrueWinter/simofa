@@ -1,5 +1,5 @@
 FROM alpine:3.18.2
-ENV NODE_PACKAGE_URL https://unofficial-builds.nodejs.org/download/release/v18.16.0/node-v18.16.0-linux-x64-musl.tar.gz
+ENV NODE_PACKAGE_URL https://unofficial-builds.nodejs.org/download/release/v20.18.1/node-v20.18.1-linux-x64-musl.tar.gz
 
 # Required by Node
 RUN apk add libstdc++
