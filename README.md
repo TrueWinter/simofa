@@ -15,29 +15,21 @@ All other aspects of website building/deployment (such as SSL certificates and w
 
 ## Requirements
 
-### Manager server
+### Build server
 - Java 16+
 - MySQL 8+
-- Reverse proxy with WebSocket support
-  - Your reverse proxy should be configured to support large enough POST bodies (recommended: 100MB) for the build output and cache files
-- Linux recommended
-- 1 CPU core
-- 1GB memory (recommended)
-- 20GB disk space (minimum). You should have enough disk space for:
-  - All git repositories (once they are cloned, they are saved to `config.cache_directory` for future builds)
-  - Build cache files
-- Modern web browser (Chrome 92+/Firefox 95+)
-- AWS S3 credentials for artifact storage
-
-### Build server
 - Docker 19.03+
-- Java 16+
+- Reverse proxy with WebSocket support
 - Linux recommended
 - 2 CPU cores (minimum, recommended: ceil(`config.concurrent_builds` \* \[average configured build CPU (default 0.5)\]) + 1)
 - 2GB memory (minimum, recommended: ceil(`config.concurrent_builds` \* \[average configured build memory (default 256MB)\]) + 1GB)
 - 20GB disk space (minimum). You should have enough disk space for:
   - All containers and build data
   - Processing files (copying, zipping, storing temporary files, etc.)
+  - All git repositories (once they are cloned, they are saved to `config.cache_directory` for future builds)
+  - Build cache files
+- Modern web browser (Chrome 92+/Firefox 95+)
+- AWS S3 credentials for artifact storage
 
 ### Deploy server
 - Java 16+
