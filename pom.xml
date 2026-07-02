@@ -18,7 +18,6 @@
         <module>officialplugins</module>
         <module>officialplugins/pushover</module>
         <module>officialplugins/deploymentservermonitor</module>
-        <module>build</module>
     </modules>
 
     <build>
