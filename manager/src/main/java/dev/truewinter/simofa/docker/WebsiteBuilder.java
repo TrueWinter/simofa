@@ -3,6 +3,8 @@ package dev.truewinter.simofa.docker;
 import com.github.dockerjava.api.model.Frame;
 import com.github.dockerjava.api.model.StreamType;
 import com.github.dockerjava.api.model.WaitResponse;
+import dev.truewinter.simofa.s3.S3CleanupTask;
+import dev.truewinter.simofa.s3.S3Service;
 import dev.truewinter.simofa.api.DeployServer;
 import dev.truewinter.simofa.GitFetcher;
 import dev.truewinter.simofa.Simofa;
@@ -30,9 +32,11 @@ import java.util.Optional;
 
 public class WebsiteBuilder extends Thread {
     private final WebsiteBuild build;
+    private final S3Service s3;
 
-    protected WebsiteBuilder(WebsiteBuild build) {
+    protected WebsiteBuilder(WebsiteBuild build, S3Service s3) {
         this.build = build;
+        this.s3 = s3;
     }
 
     @Override
@@ -148,10 +152,22 @@ public class WebsiteBuilder extends Thread {
                                 siteHash = DigestUtils.md5Hex(siteFileReadBack);
                             }
 
+                            String websiteId = build.getWebsite().getId();
+                            String buildId = build.getId();
+                            File siteFile = new File(tempDir, "site.zip");
+                            String s3Path = websiteId + "/" + buildId + "/site.zip";
+
+                            s3.upload(siteFile, s3Path);
+                            S3CleanupTask.addFile(s3Path);
+                            Simofa.getLogger().info("Uploaded site.zip to S3: {}", s3Path);
+
+                            String s3PresignedUrl = s3.getPresignedUrl(s3Path);
+
                             Config config = BuildQueueManager.getConfig();
                             String wsDeployUrl = IngestRouteUtil.createWsUrl(
                                     config.isRemoteUrlSecure(),
-                                    config.getRemoteUrlDomain(),
+                                    config.getRemoteUrlHost(),
+                                    config.getRemoteUrlPort(),
                                     WsRegistry.IngestInstances.DEPLOY_INGEST,
                                     build.getWebsite().getId(),
                                     build.getId()
@@ -161,12 +177,12 @@ public class WebsiteBuilder extends Thread {
 
                             MultipartEntityBuilder builder = MultipartEntityBuilder.create();
                             builder.addTextBody("key", deploymentServer.get().getKey());
+                            builder.addTextBody("s3_presigned_url", s3PresignedUrl);
                             builder.addTextBody("site_hash", siteHash);
                             builder.addTextBody("ws_deploy_url", wsDeployUrl);
                             builder.addTextBody("deployment_command", Util.base64Encode(build.getWebsite().getDeployCommand()));
                             builder.addTextBody("deployment_failed_command", Util.base64Encode(build.getWebsite().getDeployFailedCommand()));
                             builder.addTextBody("build_id", build.getId());
-                            builder.addBinaryBody("site", new File(tempDir, "site.zip"));
 
                             HttpEntity entity = builder.build();
                             request.setEntity(entity);

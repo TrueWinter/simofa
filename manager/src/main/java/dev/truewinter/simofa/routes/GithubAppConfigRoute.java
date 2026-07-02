@@ -21,7 +21,8 @@ public class GithubAppConfigRoute extends Route {
         Config config = getConfig();
         URI uri = new URIBuilder()
                 .setScheme(config.isRemoteUrlSecure() ? "https" : "http")
-                .setHost(config.getRemoteUrlDomain())
+                .setHost(config.getRemoteUrlHost())
+                .setPort(config.getRemoteUrlPort())
                 .setPath("/public-api/deploy/github")
                 .build();
 

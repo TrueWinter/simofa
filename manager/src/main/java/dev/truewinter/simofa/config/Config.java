@@ -40,9 +40,12 @@ public class Config {
     @YamlKey("github_app_secret")
     private String githubAppSecret = "simofa";
 
-    @YamlComment("Domain (or IP and port), must be reachable from the internet")
-    @YamlKey("remote_url.domain")
-    private String remoteUrlDomain = "localhost:8808";
+    @YamlComment("Remote URL must be reachable from the internet")
+    @YamlKey("remote_url.host")
+    private String remoteUrlHost = "localhost";
+
+    @YamlKey("remote_url.port")
+    private int remoteUrlPort = 8808;
 
     @YamlKey("remote_url.secure")
     private boolean remoteUrlSecure = false;
@@ -75,6 +78,23 @@ public class Config {
     @YamlComment("Directory where website cache data will be stored, must be absolute and exclusively usable by Simofa")
     @YamlKey("cache_directory")
     private String cacheDir;
+
+    // S3 Configuration
+    @YamlComment("AWS S3 configuration for artifact storage. Must be exclusively usable by Simofa")
+    @YamlKey("s3.access_key_id")
+    private String s3AccessKeyId = "";
+
+    @YamlKey("s3.secret_access_key")
+    private String s3SecretAccessKey = "";
+
+    @YamlKey("s3.bucket")
+    private String s3Bucket = "";
+
+    @YamlKey("s3.region")
+    private String s3Region = "";
+
+    @YamlKey("s3.endpoint")
+    private String s3Endpoint = "";
 
     public int getPort() {
         return port;
@@ -112,8 +132,12 @@ public class Config {
         return githubAppSecret;
     }
 
-    public String getRemoteUrlDomain() {
-        return remoteUrlDomain;
+    public String getRemoteUrlHost() {
+        return remoteUrlHost;
+    }
+
+    public int getRemoteUrlPort() {
+        return remoteUrlPort;
     }
 
     public boolean isRemoteUrlSecure() {
@@ -158,5 +182,25 @@ public class Config {
 
     public void disableCache() {
         cacheDir = null;
+    }
+
+    public String getS3AccessKeyId() {
+        return s3AccessKeyId;
+    }
+
+    public String getS3SecretAccessKey() {
+        return s3SecretAccessKey;
+    }
+
+    public String getS3Bucket() {
+        return s3Bucket;
+    }
+
+    public String getS3Region() {
+        return s3Region;
+    }
+
+    public String getS3Endpoint() {
+        return s3Endpoint;
     }
 }

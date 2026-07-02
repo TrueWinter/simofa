@@ -5,7 +5,8 @@ Simofa is a tool to help automate static website building and deployment. It is 
 It:
   - awaits GitHub commit webhooks
   - runs user-configured build commands in a secure Docker container
-  - sends the built site to the server where it is to be deployed and runs the user-configured deploy script
+  - uploads the built site to S3 storage
+  - the deploy server downloads the site from S3 and deploys it
   - handles failed builds/deploys
 
 All other aspects of website building/deployment (such as SSL certificates and web server configuration) need to be configured by you. If you are looking for a fully automated solution, something like [staticdeploy.io](https://staticdeploy.io/) (not affiliated) may be better for you.
@@ -14,28 +15,21 @@ All other aspects of website building/deployment (such as SSL certificates and w
 
 ## Requirements
 
-### Manager server
+### Build server
 - Java 16+
 - MySQL 8+
-- Reverse proxy with WebSocket support
-  - Your reverse proxy should be configured to support large enough POST bodies (recommended: 100MB) for the build output and cache files
-- Linux recommended
-- 1 CPU core
-- 1GB memory (recommended)
-- 20GB disk space (minimum). You should have enough disk space for:
-  - All git repositories (once they are cloned, they are saved to `config.cache_directory` for future builds)
-  - Build cache files
-- Modern web browser (Chrome 92+/Firefox 95+)
-
-### Build server
 - Docker 19.03+
-- Java 16+
+- Reverse proxy with WebSocket support
 - Linux recommended
 - 2 CPU cores (minimum, recommended: ceil(`config.concurrent_builds` \* \[average configured build CPU (default 0.5)\]) + 1)
 - 2GB memory (minimum, recommended: ceil(`config.concurrent_builds` \* \[average configured build memory (default 256MB)\]) + 1GB)
 - 20GB disk space (minimum). You should have enough disk space for:
   - All containers and build data
   - Processing files (copying, zipping, storing temporary files, etc.)
+  - All git repositories (once they are cloned, they are saved to `config.cache_directory` for future builds)
+  - Build cache files
+- Modern web browser (Chrome 92+/Firefox 95+)
+- AWS S3 credentials for artifact storage
 
 ### Deploy server
 - Java 16+
@@ -86,10 +80,10 @@ Simofa includes two Docker containers in the `docker` directory in the git repos
 Docker containers must be Linux. The container name can be up to 40 characters long (including the version).
 
 Work is to be done in the `/simofa` directory (`/tmp/simofa-{build_id}` on deploy servers). The following sub-directories are created:
-- in: The git repository (or `site.zip`, on the deploy server) is copied to this directory. It is also the default working directory.
-- scripts: The build script is copied to `build.sh`. On the deploy server, the deploy and deploy failed scripts are copied to `deploy.sh` and `undeploy.sh`. You do not need to run any of these scripts, Simofa will automatically run the appropriate script.
-- out: Your build script should output a compressed folder called `site.zip` here containing the built site. Using this directory is optional on the deploy server, but it is recommended to unzip the site here.
-- cache: Used for build caching. Save a `cache.zip` file in this directory and it will be copied to the same location in future builds. Add `[no cache]` to a commit message to skip the build cache.
+- `in`: The git repository (or `site.zip`, on the deploy server) is copied to this directory. It is also the default working directory.
+- `scripts`: The build script is copied to `build.sh`. On the deploy server, the deploy and deploy failed scripts are copied to `deploy.sh` and `undeploy.sh`. You do not need to run any of these scripts, Simofa will automatically run the appropriate script.
+- `out`: Your build script should output a compressed folder called `site.zip` here containing the built site. Using this directory is optional on the deploy server, but it is recommended to unzip the site here.
+- `cache`: Used for build caching. Save a `cache.zip` file in this directory and it will be copied to the same location in future builds. Add `[no cache]` to a commit message to skip the build cache.
 
 ### Website Configuration
 
@@ -98,9 +92,9 @@ Build scripts must start with `#!/bin/bash` and it is recommended that `set -e` 
 Scripts configured in the Simofa dashboard are limited to 512 characters. If you have a longer build script, include it in the git repository and run that from the script configured in the dashboard. Keep the Docker container's file structure in mind when doing this.
 
 There are multiple scripts that need to be configured:
-- Build: Run on the Docker container to build the site and output it to `/simofa/out/site.zip`
-- Deploy: Run on the deploy server. It should not only handle unzipping and copying the site to the correct location, but also making a backup of the original site.
-- Deploy failed: Run on the deploy server. It should restore the backup made by the deploy script. When writing this script, keep in mind that the deploy can fail at any point in the deploy script so your code should check for the existance of files before attempting to delete/move them. Appending `|| :` to an unimportant command will also prevent an error in that command from forcing the script to exit with a non-zero error code.
+- **Build**: Run on the Docker container to build the site and output it to `/simofa/out/site.zip`. The build artifact is then uploaded to S3 storage.
+- **Deploy**: Run on the deploy server. It should not only handle unzipping and copying the site to the correct location, but also making a backup of the original site. When running, the deploy server will download site.zip from S3.
+- **Deploy failed**: Run on the deploy server. It should restore the backup made by the deploy script. When writing this script, keep in mind that the deploy can fail at any point in the deploy script so your code should check for the existence of files before attempting to delete/move them. Appending `|| :` to an unimportant command will also prevent an error in that command from forcing the script to exit with a non-zero error code.
 
 To save time, a website's configuration can be saved as a template which can be loaded when creating another website. However, websites created from the same template will not have their configurations be kept in sync.
 
@@ -111,7 +105,7 @@ Website builds will be cancelled after 20 minutes, and website deploys will be r
 While the build server can handle multiple concurrent builds, the deploy server can only deploy one website at a time.
 
 The 5 latest build logs for each website are kept in memory and do not persist across restarts.
-	
+
 ## Known Issues
 
 - Stopping the Simofa Deploy server doesn't always roll back the running deploys. This is due to Java instantly killing sub-processes if Simofa Deploy is stopped instead of waiting for them to finish. This also prevents the logs and status from being submitted before shutting down.

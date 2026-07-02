@@ -7,7 +7,6 @@ import dev.truewinter.simofa.config.MigratorConfig;
 import dev.truewinter.simofa.database.Database;
 import dev.truewinter.simofa.docker.BuildQueueManager;
 import dev.truewinter.simofa.docker.DockerManager;
-import dev.truewinter.simofa.docker.Image;
 import dev.truewinter.simofa.migrator.Migrator;
 import net.william278.annotaml.Annotaml;
 import org.slf4j.Logger;
@@ -16,7 +15,6 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.List;
 
 public class Simofa {
     private static Config config;
@@ -73,8 +71,8 @@ public class Simofa {
             logger.warn("Using default GitHub App secret, please change this in the config file.");
         }
 
-        if (config.getRemoteUrlDomain().equals("localhost:8808")) {
-            logger.warn("Using default remote domain, please change this in the config file.");
+        if (config.getRemoteUrlHost().equals("localhost")) {
+            logger.warn("Using default remote host, please change this in the config file.");
         }
 
         if (config.getConcurrentBuilds() == 0) {

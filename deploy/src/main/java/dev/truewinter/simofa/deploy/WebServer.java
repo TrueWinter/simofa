@@ -3,13 +3,15 @@ package dev.truewinter.simofa.deploy;
 import dev.truewinter.simofa.common.Util;
 import io.javalin.Javalin;
 import io.javalin.http.Header;
-import io.javalin.http.UploadedFile;
 import io.javalin.util.JavalinLogger;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.IOUtils;
 
 import java.io.*;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
 
 public class WebServer extends Thread {
     private final Config config;
@@ -45,10 +47,10 @@ public class WebServer extends Thread {
             String deployCmd = ctx.formParam("deployment_command");
             String deployFailedCmd = ctx.formParam("deployment_failed_command");
             String siteHash = ctx.formParam("site_hash");
-            UploadedFile site = ctx.uploadedFile("site");
+            String s3PresignedUrl = ctx.formParam("s3_presigned_url");
 
             if (Util.isBlank(key) || Util.isBlank(buildUrl) || Util.isBlank(buildId) ||
-                    Util.isBlank(deployCmd) || Util.isBlank(deployFailedCmd) || Util.isBlank(siteHash)) {
+                    Util.isBlank(deployCmd) || Util.isBlank(deployFailedCmd) || Util.isBlank(siteHash) || Util.isBlank(s3PresignedUrl)) {
                 ctx.status(403).result("Required fields missing from request");
                 return;
             }
@@ -60,16 +62,6 @@ public class WebServer extends Thread {
 
             if (!Util.isValidUri(buildUrl)) {
                 ctx.status(400).result("ws_deploy_url is not a valid URL");
-                return;
-            }
-
-            if (site == null || site.size() == 0) {
-                ctx.status(400).result("Site is required");
-                return;
-            }
-
-            if (!site.extension().equals(".zip")) {
-                ctx.status(400).result("Simofa Deploy only supports .zip files");
                 return;
             }
 
@@ -86,6 +78,16 @@ public class WebServer extends Thread {
                 return;
             }
 
+            if (siteHash == null) {
+                ctx.status(400).result("site_hash is null");
+                return;
+            }
+
+            if (s3PresignedUrl == null) {
+                ctx.status(400).result("s3_presigned_url is null");
+                return;
+            }
+
             File tmpDir = null;
             try {
                 tmpDir = Util.createTempDir(buildId);
@@ -93,14 +95,15 @@ public class WebServer extends Thread {
                 File tmpScriptsDir = new File(tmpDir, "scripts");
 
                 File siteFile = new File(tmpInDir, WebsiteDeployment.SITE_ZIP_NAME);
-                try (OutputStream outputStream = new FileOutputStream(siteFile)) {
-                    IOUtils.copy(site.content(), outputStream);
-                }
 
-                try (InputStream siteFileReadBack = new FileInputStream(siteFile)) {
-                    if (!siteHash.equals(DigestUtils.md5Hex(siteFileReadBack))) {
-                        throw new Exception("Hashes do not match");
-                    }
+                SimofaDeploy.getLogger().info("Downloading build artifact from S3: {}", s3PresignedUrl);
+                HttpClient client =  HttpClient.newHttpClient();
+                HttpRequest request = HttpRequest.newBuilder().uri(URI.create(s3PresignedUrl)).build();
+                client.send(request, HttpResponse.BodyHandlers.ofFile(siteFile.toPath()));
+
+                // Validate hash
+                if (!siteHash.equals(DigestUtils.md5Hex(new FileInputStream(siteFile)))) {
+                    throw new Exception("Hashes do not match");
                 }
 
                 File deployCmdFile = new File(tmpScriptsDir, WebsiteDeployment.DEPLOY_CMD_NAME);
