@@ -3,12 +3,14 @@ package dev.truewinter.simofa.s3;
 import dev.truewinter.simofa.config.Config;
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
+import software.amazon.awssdk.awscore.client.builder.AwsClientBuilder;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
+import software.amazon.awssdk.services.s3.presigner.S3Presigner;
 import software.amazon.awssdk.services.s3.presigner.model.GetObjectPresignRequest;
 import software.amazon.awssdk.services.s3.presigner.model.PresignedGetObjectRequest;
 
@@ -30,9 +32,7 @@ public class S3Service {
     }
 
     public String getPresignedUrl(String s3Path) {
-        try (software.amazon.awssdk.services.s3.presigner.S3Presigner presigner = software.amazon.awssdk.services.s3.presigner.S3Presigner.builder()
-                .s3Client(getS3Client())
-                .build()) {
+        try (S3Presigner presigner = getS3Presigner()) {
             GetObjectRequest getObjectRequest = GetObjectRequest.builder()
                     .bucket(bucket)
                     .key(s3Path)
@@ -71,11 +71,19 @@ public class S3Service {
         }
     }
 
+    private S3Presigner getS3Presigner() {
+        return S3Presigner.builder()
+                .region(Region.of(region))
+                .endpointOverride(URI.create(endpoint))
+                .credentialsProvider(StaticCredentialsProvider.create(credentials))
+                .build();
+    }
+
     private S3Client getS3Client() {
         return S3Client.builder()
-                .region(Region.of(this.region))
+                .region(Region.of(region))
                 .endpointOverride(URI.create(endpoint))
-                .credentialsProvider(StaticCredentialsProvider.create(this.credentials))
+                .credentialsProvider(StaticCredentialsProvider.create(credentials))
                 .build();
     }
 }

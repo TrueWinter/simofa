@@ -1,5 +1,7 @@
 package dev.truewinter.simofa.s3;
 
+import dev.truewinter.simofa.Simofa;
+
 import java.time.Duration;
 import java.time.Instant;
 import java.util.HashMap;
@@ -16,12 +18,16 @@ public class S3CleanupTask {
 
     public void run() {
         for (Map.Entry<String, Long> entry : fileRegistry.entrySet()) {
-            String s3Path = entry.getKey();
-            long uploadedAt = entry.getValue();
-            long timeElapsed = Instant.now().toEpochMilli() - uploadedAt;
+            try {
+                String s3Path = entry.getKey();
+                long uploadedAt = entry.getValue();
+                long timeElapsed = Instant.now().toEpochMilli() - uploadedAt;
 
-            if (timeElapsed > MAX_OBJECT_LIFETIME) {
-                s3.delete(s3Path);
+                if (timeElapsed > MAX_OBJECT_LIFETIME) {
+                    s3.delete(s3Path);
+                }
+            } catch (Exception e) {
+                Simofa.getLogger().error("Failed to delete artifact from S3", e);
             }
         }
     }

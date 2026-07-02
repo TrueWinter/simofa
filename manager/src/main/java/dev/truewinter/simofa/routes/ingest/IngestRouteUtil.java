@@ -14,8 +14,9 @@ public class IngestRouteUtil {
         put(WsRegistry.IngestInstances.DEPLOY_INGEST, new RouteConfig("deploy", DeployServerIngestWsRoute::getRoom));
     }};
 
-    public static String createWsUrl(boolean secure, String domain, WsRegistry.IngestInstances ingestFrom,
-                                     String websiteId, String buildId) throws URISyntaxException {
+    public static String createWsUrl(
+            boolean secure, String host, int port, WsRegistry.IngestInstances ingestFrom, String websiteId, String buildId
+    ) throws URISyntaxException {
         RouteConfig route = routes.get(ingestFrom);
         if (route == null) {
             throw new IllegalArgumentException("Ingest route not found");
@@ -25,7 +26,8 @@ public class IngestRouteUtil {
 
         URI uri = new URIBuilder()
                 .setScheme(secure ? "wss" : "ws")
-                .setHost(domain)
+                .setHost(host)
+                .setPort(port)
                 .setPath("/api/ws/ingest/" + route.route())
                 .addParameter("website", websiteId)
                 .addParameter("build", buildId)

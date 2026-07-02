@@ -83,11 +83,17 @@ public class DockerManager {
         List<com.github.dockerjava.api.model.Image> imageList =  dockerClient.listImagesCmd().exec();
         List<dev.truewinter.simofa.docker.Image> images = new ArrayList<>();
         imageList.forEach(i -> {
-            for (String img : i.getRepoTags()) {
-                images.add(new dev.truewinter.simofa.docker.Image(
-                        img,
-                        String.format("%dM", i.getSize() / 1000 / 1000)
-                ));
+            String[] tags = i.getRepoTags();
+
+            if (tags != null) {
+                for (String img : i.getRepoTags()) {
+                    images.add(new dev.truewinter.simofa.docker.Image(
+                            img,
+                            String.format("%dM", i.getSize() / 1000 / 1000)
+                    ));
+                }
+            } else {
+                Simofa.getLogger().warn("Untagged image found: {}", i.getId());
             }
         });
 

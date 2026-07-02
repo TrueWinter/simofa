@@ -159,14 +159,15 @@ public class WebsiteBuilder extends Thread {
 
                             s3.upload(siteFile, s3Path);
                             S3CleanupTask.addFile(s3Path);
-                            Simofa.getLogger().info(String.format("Uploaded site.zip to S3: %s", s3Path));
+                            Simofa.getLogger().info("Uploaded site.zip to S3: {}", s3Path);
 
                             String s3PresignedUrl = s3.getPresignedUrl(s3Path);
 
                             Config config = BuildQueueManager.getConfig();
                             String wsDeployUrl = IngestRouteUtil.createWsUrl(
                                     config.isRemoteUrlSecure(),
-                                    config.getRemoteUrlDomain(),
+                                    config.getRemoteUrlHost(),
+                                    config.getRemoteUrlPort(),
                                     WsRegistry.IngestInstances.DEPLOY_INGEST,
                                     build.getWebsite().getId(),
                                     build.getId()

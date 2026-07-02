@@ -95,8 +95,8 @@ public class WebServer extends Thread {
                 File tmpScriptsDir = new File(tmpDir, "scripts");
 
                 File siteFile = new File(tmpInDir, WebsiteDeployment.SITE_ZIP_NAME);
-                
-                // Download from presigned URL using apache HttpClient
+
+                SimofaDeploy.getLogger().info("Downloading build artifact from S3: {}", s3PresignedUrl);
                 HttpClient client =  HttpClient.newHttpClient();
                 HttpRequest request = HttpRequest.newBuilder().uri(URI.create(s3PresignedUrl)).build();
                 client.send(request, HttpResponse.BodyHandlers.ofFile(siteFile.toPath()));

@@ -40,9 +40,12 @@ public class Config {
     @YamlKey("github_app_secret")
     private String githubAppSecret = "simofa";
 
-    @YamlComment("Domain (or IP and port), must be reachable from the internet")
-    @YamlKey("remote_url.domain")
-    private String remoteUrlDomain = "localhost:8808";
+    @YamlComment("Remote URL must be reachable from the internet")
+    @YamlKey("remote_url.host")
+    private String remoteUrlHost = "localhost";
+
+    @YamlKey("remote_url.port")
+    private int remoteUrlPort = 8808;
 
     @YamlKey("remote_url.secure")
     private boolean remoteUrlSecure = false;
@@ -129,8 +132,12 @@ public class Config {
         return githubAppSecret;
     }
 
-    public String getRemoteUrlDomain() {
-        return remoteUrlDomain;
+    public String getRemoteUrlHost() {
+        return remoteUrlHost;
+    }
+
+    public int getRemoteUrlPort() {
+        return remoteUrlPort;
     }
 
     public boolean isRemoteUrlSecure() {

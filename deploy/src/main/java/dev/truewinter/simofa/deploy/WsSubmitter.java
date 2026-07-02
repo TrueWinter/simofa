@@ -34,6 +34,9 @@ public class WsSubmitter {
                 WebSocket.Listener.super.onError(webSocket, error);
                 SimofaDeploy.getLogger().error("WebSocket error", error);
             }
+        }).exceptionally(throwable -> {
+            SimofaDeploy.getLogger().error("Exception while connecting to WebSocket", throwable);
+            return null;
         }).join();
     }
 

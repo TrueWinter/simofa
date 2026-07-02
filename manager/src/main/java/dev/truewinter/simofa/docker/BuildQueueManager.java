@@ -64,6 +64,7 @@ public class BuildQueueManager {
                         });
                     }
 
+                    long FIVE_MINUTES = 5 * 60 * 1000;
                     long TWENTY_MINUTES = 20 * 60 * 1000;
 
                     // Loop through a snapshot of the list
@@ -72,6 +73,14 @@ public class BuildQueueManager {
                             if (w.getRunTime() > TWENTY_MINUTES) {
                                 buildQueue.remove(w.getWebsite());
                                 w.addLog(new SimofaLog(LogType.ERROR, "Build duration has exceeded 20 minutes"));
+                                w.setStatus(BuildStatus.ERROR);
+                            }
+                        }
+
+                        if (w.getStatus().equals(BuildStatus.DEPLOYING) && w.getContainerId() != null) {
+                            if (w.getRunTime() > FIVE_MINUTES) {
+                                buildQueue.remove(w.getWebsite());
+                                w.addLog(new SimofaLog(LogType.ERROR, "Deploy duration has exceeded 5 minutes"));
                             }
                         }
                     }
