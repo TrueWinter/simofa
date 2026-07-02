@@ -76,6 +76,23 @@ public class Config {
     @YamlKey("cache_directory")
     private String cacheDir;
 
+    // S3 Configuration
+    @YamlComment("AWS S3 configuration for artifact storage. Must be exclusively usable by Simofa")
+    @YamlKey("s3.access_key_id")
+    private String s3AccessKeyId = "";
+
+    @YamlKey("s3.secret_access_key")
+    private String s3SecretAccessKey = "";
+
+    @YamlKey("s3.bucket")
+    private String s3Bucket = "";
+
+    @YamlKey("s3.region")
+    private String s3Region = "";
+
+    @YamlKey("s3.endpoint")
+    private String s3Endpoint = "";
+
     public int getPort() {
         return port;
     }
@@ -158,5 +175,25 @@ public class Config {
 
     public void disableCache() {
         cacheDir = null;
+    }
+
+    public String getS3AccessKeyId() {
+        return s3AccessKeyId;
+    }
+
+    public String getS3SecretAccessKey() {
+        return s3SecretAccessKey;
+    }
+
+    public String getS3Bucket() {
+        return s3Bucket;
+    }
+
+    public String getS3Region() {
+        return s3Region;
+    }
+
+    public String getS3Endpoint() {
+        return s3Endpoint;
     }
 }
