@@ -4,3 +4,7 @@ export function upperCaseFirstLetter(str: string) {
 
   return firstLetter + restOfWord;
 }
+
+export function getCommitSubject(commit: string) {
+  return commit.split('\n')[0];
+} 

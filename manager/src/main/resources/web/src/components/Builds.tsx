@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 import { notifications } from '@mantine/notifications';
 import type Build from '../types/Build';
 import { ws as wsocket } from '../util/api';
+import { getCommitSubject } from '../util/text';
 import TableSkeleton from './TableSkeleton';
 import ShortUuid from './ShortUuid';
 import Duration from './Duration';
@@ -90,7 +91,7 @@ export default function Builds({ website }: Props) {
             <Table.Tr key={e.id}>
               <Table.Td><ShortUuid uuid={e.id} /></Table.Td>
               <Table.Td><ShortUuid uuid={e.website.id} brackets /> {e.website.name}</Table.Td>
-              <Table.Td>{e.commit}</Table.Td>
+              <Table.Td>{getCommitSubject(e.commit)}</Table.Td>
               <Table.Td>{e.status.toLowerCase()}</Table.Td>
               <Table.Td><Duration time={e.runTime} status={e.status} /></Table.Td>
               <Table.Td>
