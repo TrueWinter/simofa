@@ -46,6 +46,29 @@ CREATE TABLE IF NOT EXISTS `websites` (
     FOREIGN KEY (`git_credential`) REFERENCES `git` (`id`)
 ) CHARACTER SET utf8 COLLATE utf8_unicode_ci;
 
+CREATE TABLE IF NOT EXISTS `builds` (
+    `id` char(36) NOT NULL PRIMARY KEY,
+    `website_id` char(36) NOT NULL,
+    `commit_message` text NOT NULL,
+    `status` varchar(16) NOT NULL,
+    `queued_at` bigint NOT NULL,
+    `start_time` bigint NOT NULL DEFAULT 0,
+    `end_time` bigint NOT NULL DEFAULT 0,
+    FOREIGN KEY (`website_id`) REFERENCES `websites` (`id`) ON DELETE CASCADE,
+    INDEX `idx_builds_website_id` (`website_id`, `id`)
+) CHARACTER SET utf8 COLLATE utf8_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS `build_logs` (
+    `id` bigint NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    `build_id` char(36) NOT NULL,
+    `type` varchar(10) NOT NULL,
+    `message` mediumtext NOT NULL,
+    `uuid` char(36) NOT NULL,
+    `timestamp` bigint NOT NULL,
+    FOREIGN KEY (`build_id`) REFERENCES `builds` (`id`) ON DELETE CASCADE,
+    INDEX `idx_build_logs_build_time` (`build_id`, `timestamp`)
+) CHARACTER SET utf8 COLLATE utf8_unicode_ci;
+
 CREATE TABLE IF NOT EXISTS `templates` (
     `id` char(36) NOT NULL PRIMARY KEY,
     `name` varchar(40) NOT NULL,

@@ -8,12 +8,15 @@ import dev.truewinter.simofa.common.LogType;
 import dev.truewinter.simofa.common.SimofaLog;
 import dev.truewinter.simofa.common.Util;
 import dev.truewinter.simofa.config.Config;
+import dev.truewinter.simofa.database.Database;
 
+import java.sql.SQLException;
 import java.util.*;
 
 public class BuildQueue {
     private static BuildQueue buildQueue;
     private final Config config;
+    private final Database database;
     // all builds
     private final HashMap<String, List<WebsiteBuild>> websiteBuildList = new HashMap<>();
     // builds that are queued
@@ -23,16 +26,58 @@ public class BuildQueue {
     // builds that are currently running
     private final List<WebsiteBuild> beingBuiltList = new ArrayList<>();
 
-    private BuildQueue(Config config) {
+    private BuildQueue(Config config, Database database) {
         this.config = config;
+        this.database = database;
     }
 
-    protected static BuildQueue getInstance(Config config) {
+    protected static BuildQueue getInstance(Config config, Database database) {
         if (buildQueue == null) {
-            buildQueue = new BuildQueue(config);
+            buildQueue = new BuildQueue(config, database);
         }
 
         return buildQueue;
+    }
+
+    public synchronized void loadBuilds() {
+        websiteBuildList.clear();
+
+        try {
+            for (WebsiteBuild build : database.getBuildDatabase().getRecentBuilds(5)) {
+                attachPersistenceListener(build);
+
+                if (!WebsiteBuild.END_STATUSES.contains(build.getStatus())) {
+                    build.restoreAsError("Build interrupted by server restart");
+                }
+
+                websiteBuildList.computeIfAbsent(build.getWebsite().getId(), k -> new ArrayList<>())
+                        .add(build);
+            }
+        } catch (SQLException e) {
+            Simofa.getLogger().error("Failed to load builds from database", e);
+        }
+    }
+
+    private void attachPersistenceListener(WebsiteBuild build) {
+        build.setPersistenceListener(new WebsiteBuild.PersistenceListener() {
+            @Override
+            public void onStatusChanged(WebsiteBuild build) {
+                updateBuild(build);
+            }
+
+            @Override
+            public void onLogAdded(WebsiteBuild build, SimofaLog log) {
+                database.getBuildDatabase().queueLog(build.getId(), log);
+            }
+        });
+    }
+
+    private void updateBuild(WebsiteBuild build) {
+        try {
+            database.getBuildDatabase().updateBuild(build);
+        } catch (SQLException e) {
+            Simofa.getLogger().error("Failed to update build in database", e);
+        }
     }
 
     public boolean canRunMoreConcurrentBuilds() {
@@ -48,16 +93,40 @@ public class BuildQueue {
 
         remove(website);
         WebsiteBuild websiteBuild = new WebsiteBuild(website, commit, config.getCacheDir());
-        websiteBuildQueue.add(websiteBuild);
 
-        if (!websiteBuildList.containsKey(websiteBuild.getWebsite().getId())) {
-            websiteBuildList.put(websiteBuild.getWebsite().getId(), new ArrayList<>());
+        boolean persisted = false;
+        try {
+            database.getBuildDatabase().addBuild(websiteBuild);
+            persisted = true;
+        } catch (SQLException e) {
+            Simofa.getLogger().error("Failed to save build to database", e);
         }
 
-        List<WebsiteBuild> websiteBuildsForThisWebsite = websiteBuildList.get(websiteBuild.getWebsite().getId());
+        if (persisted) {
+            attachPersistenceListener(websiteBuild);
+        }
+
+        websiteBuildQueue.add(websiteBuild);
+
+        String websiteId = websiteBuild.getWebsite().getId();
+        if (!websiteBuildList.containsKey(websiteId)) {
+            websiteBuildList.put(websiteId, new ArrayList<>());
+        }
+
+        List<WebsiteBuild> websiteBuildsForThisWebsite = websiteBuildList.get(websiteId);
         websiteBuildsForThisWebsite.add(websiteBuild);
         if (websiteBuildsForThisWebsite.size() > 5) {
             websiteBuildsForThisWebsite.remove(0);
+        }
+
+        if (database.getBuildDatabase().flushPendingLogs()) {
+            try {
+                database.getBuildDatabase().pruneBuilds(websiteId, 5);
+            } catch (SQLException e) {
+                Simofa.getLogger().error("Failed to prune old builds from database", e);
+            }
+        } else {
+            Simofa.getLogger().warn("Skipping pruning old builds because pending build logs could not be saved");
         }
     }
 
@@ -131,7 +200,10 @@ public class BuildQueue {
         return websiteBuildQueue;
     }
 
-    public HashMap<String, List<WebsiteBuild>> getWebsiteBuildList() {
-        return websiteBuildList;
+    public synchronized HashMap<String, List<WebsiteBuild>> getWebsiteBuildList() {
+        HashMap<String, List<WebsiteBuild>> snapshot = new HashMap<>();
+        websiteBuildList.forEach((websiteId, builds) ->
+                snapshot.put(websiteId, new ArrayList<>(builds)));
+        return snapshot;
     }
 }

@@ -24,13 +24,13 @@ public class BuildQueueManager {
     private static S3Service s3Service;
     private static S3CleanupTask s3CleanupTask;
 
-    private BuildQueueManager(Config config) {
-        this.buildQueue = BuildQueue.getInstance(config);
+    private BuildQueueManager(Config config, Database database) {
+        this.buildQueue = BuildQueue.getInstance(config, database);
     }
 
     public static BuildQueueManager getInstance(Config config, Database database) {
         if (buildQueueManager == null) {
-            buildQueueManager = new BuildQueueManager(config);
+            buildQueueManager = new BuildQueueManager(config, database);
             BuildQueueManager.config = config;
             BuildQueueManager.database = database;
             BuildQueueManager.s3Service = new S3Service(config);
@@ -50,6 +50,10 @@ public class BuildQueueManager {
 
     protected static Database getDatabase() {
         return database;
+    }
+
+    public void loadBuilds() {
+        buildQueue.loadBuilds();
     }
 
     public void start() {
@@ -118,10 +122,14 @@ public class BuildQueueManager {
             cleanupTimer.cancel();
         }
 
-        Simofa.getLogger().info("Removing builds from queue");
+        Simofa.getLogger().info("Stopping builds");
 
-        buildQueue.getBuildQueue().forEach(w -> {
+        for (WebsiteBuild w : new ArrayList<>(buildQueue.getCurrentBuilds())) {
+            buildQueue.remove(w);
+        }
+
+        for (WebsiteBuild w : new ArrayList<>(buildQueue.getBuildQueue())) {
             buildQueue.remove(w.getWebsite());
-        });
+        }
     }
 }

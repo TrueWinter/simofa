@@ -104,7 +104,7 @@ Website builds will be cancelled after 20 minutes, and website deploys will be r
 
 While the build server can handle multiple concurrent builds, the deploy server can only deploy one website at a time.
 
-The 5 latest build logs for each website are kept in memory and do not persist across restarts.
+The 5 latest builds and their logs for each website are stored in the database and persist across restarts.
 
 ## Known Issues
 

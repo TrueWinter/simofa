@@ -13,6 +13,7 @@ import org.jetbrains.annotations.Nullable;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 @SuppressWarnings("unused")
@@ -33,6 +34,8 @@ public class WebsiteBuild {
     private long endTime;
     @JsonIgnore
     private final String cacheDir;
+    @JsonIgnore
+    private PersistenceListener persistenceListener;
 
     public static final Set<BuildStatus> END_STATUSES = new HashSet<>(){{
         add(BuildStatus.STOPPED);
@@ -40,19 +43,55 @@ public class WebsiteBuild {
         add(BuildStatus.DEPLOYED);
     }};
 
+    public interface PersistenceListener {
+        void onStatusChanged(WebsiteBuild build);
+        void onLogAdded(WebsiteBuild build, SimofaLog log);
+    }
+
     public WebsiteBuild(Website website, String commit, String cacheDir) {
-        this.id = Util.createv7UUID().toString();
-        this.website = website;
-        this.commit = commit;
-        this.status = BuildStatus.QUEUED;
-        this.logs = new ArrayList<>();
-        this.queuedAt = System.currentTimeMillis();
-        this.cacheDir = cacheDir;
+        this(Util.createv7UUID().toString(), website, commit, BuildStatus.QUEUED, new ArrayList<>(),
+                System.currentTimeMillis(), 0, 0, null, cacheDir);
 
         addLog(new SimofaLog(LogType.INFO, "Build queued"));
 
         SimofaPluginManager.getInstance().getPluginManager().fireEvent(new BuildQueuedEvent(this));
         WsRegistry.accept(WsRegistry.Instances.BUILD_QUEUE, website.getId(), null);
+    }
+
+    private WebsiteBuild(String id, Website website, String commit, BuildStatus status,
+                         ArrayList<SimofaLog> logs, long queuedAt, long startTime, long endTime,
+                         String containerId, String cacheDir) {
+        this.id = id;
+        this.website = website;
+        this.commit = commit;
+        this.status = status;
+        this.logs = logs;
+        this.queuedAt = queuedAt;
+        this.startTime = startTime;
+        this.endTime = endTime;
+        this.containerId = containerId;
+        this.cacheDir = cacheDir;
+    }
+
+    public static WebsiteBuild fromDatabase(String id, Website website, String commit, BuildStatus status,
+                                            long queuedAt, long startTime, long endTime,
+                                            List<SimofaLog> logs, String cacheDir) {
+        return new WebsiteBuild(id, website, commit, status,
+                logs == null ? new ArrayList<>() : new ArrayList<>(logs),
+                queuedAt, startTime, endTime, null, cacheDir);
+    }
+
+    public void restoreAsError(String message) {
+        if (END_STATUSES.contains(this.status)) return;
+
+        this.status = BuildStatus.ERROR;
+        this.endTime = System.currentTimeMillis();
+
+        addLog(new SimofaLog(LogType.ERROR, message));
+
+        if (persistenceListener != null) {
+            persistenceListener.onStatusChanged(this);
+        }
     }
 
     public String getId() {
@@ -84,6 +123,10 @@ public class WebsiteBuild {
 
         this.status = status;
 
+        if (persistenceListener != null) {
+            persistenceListener.onStatusChanged(this);
+        }
+
         addLog(new SimofaLog(LogType.INFO, "Build status changed to " + status.toString().toLowerCase()));
         SimofaPluginManager.getInstance().getPluginManager().fireEvent(new BuildStatusChangedEvent(this));
         WsRegistry.accept(WsRegistry.Instances.BUILD_QUEUE, website.getId(), null);
@@ -98,6 +141,10 @@ public class WebsiteBuild {
         this.containerId = containerId;
     }
 
+    public void setPersistenceListener(@Nullable PersistenceListener persistenceListener) {
+        this.persistenceListener = persistenceListener;
+    }
+
     public long getQueuedAt() {
         return queuedAt;
     }
@@ -108,6 +155,11 @@ public class WebsiteBuild {
 
     public void addLog(SimofaLog log) {
         logs.add(log);
+
+        if (persistenceListener != null) {
+            persistenceListener.onLogAdded(this, log);
+        }
+
         WsRegistry.accept(WsRegistry.Instances.WEBSITE_LOGS, this, log);
     }
 
