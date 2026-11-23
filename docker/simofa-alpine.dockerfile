@@ -1,4 +1,4 @@
-FROM alpine:3.18.2
+FROM alpine:3.24.4
 ENV NODE_PACKAGE_URL https://unofficial-builds.nodejs.org/download/release/v24.9.0/node-v24.9.0-linux-x64-musl.tar.gz
 
 # Required by Node
