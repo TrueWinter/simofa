@@ -58,6 +58,11 @@ public class Simofa {
         dockerManager = DockerManager.getInstance(config);
         logger.info("Connected to Docker");
 
+        logger.info("Initializing build queue manager");
+        buildQueueManager = BuildQueueManager.getInstance(config, database);
+        buildQueueManager.loadBuilds();
+        logger.info("Initialized build queue manager");
+
         logger.info("Starting web server");
         webServer = new WebServer(config, database);
         webServer.start();
@@ -89,15 +94,14 @@ public class Simofa {
             }
         }
 
-        logger.info("Initializing build queue manager");
-        buildQueueManager = BuildQueueManager.getInstance(config, database);
-        buildQueueManager.start();
-        logger.info("Initialized build queue manager");
-
         logger.info("Loading plugins");
         pluginManager = SimofaPluginManager.getInstance(new API(database, webServer));
         pluginManager.getPluginManager().loadPlugins(Util.getPluginJars());
         logger.info("Loaded plugins");
+
+        logger.info("Starting build queue manager");
+        buildQueueManager.start();
+        logger.info("Started build queue manager");
 
         Runtime.getRuntime().addShutdownHook(new Thread() {
             @Override
@@ -128,6 +132,10 @@ public class Simofa {
 
         if (pluginManager != null) {
             pluginManager.getPluginManager().handleShutdown();
+        }
+
+        if (buildQueueManager != null) {
+            buildQueueManager.stop();
         }
 
         if (webServer != null) {

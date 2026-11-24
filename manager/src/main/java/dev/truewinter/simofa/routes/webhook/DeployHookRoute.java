@@ -43,7 +43,9 @@ public class DeployHookRoute extends Route {
                 }
             }
 
-            Simofa.getBuildQueueManager().getBuildQueue().queue(w, commitMsg);
+            if (!Simofa.getBuildQueueManager().getBuildQueue().queue(w, commitMsg)) {
+                throw new InternalServerErrorResponse("Failed to queue build");
+            }
         }, () -> {
             throw new NotFoundResponse("Website not found");
         });

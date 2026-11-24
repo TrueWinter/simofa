@@ -19,6 +19,7 @@ public class Database {
     private DeployServerDatabase deployServerDatabase;
     private TemplatesDatabase templatesDatabase;
     private GitDatabase gitDatabase;
+    private BuildDatabase buildDatabase;
 
     public Database(Config config) {
         if (config.getDbUsername().isBlank() && config.getDbPassword().isBlank()) {
@@ -63,6 +64,7 @@ public class Database {
         this.deployServerDatabase = new DeployServerDatabase(ds);
         this.templatesDatabase = new TemplatesDatabase(ds);
         this.gitDatabase = new GitDatabase(ds);
+        this.buildDatabase = new BuildDatabase(ds, websiteDatabase);
 
         try (Connection connection = ds.getConnection()) {
             for (String statement : getInitSql()) {
@@ -91,6 +93,10 @@ public class Database {
     }
 
     public void close() {
+        if (buildDatabase != null) {
+            buildDatabase.close();
+        }
+
         ds.close();
     }
 
@@ -116,5 +122,9 @@ public class Database {
 
     public GitDatabase getGitDatabase() {
         return gitDatabase;
+    }
+
+    public BuildDatabase getBuildDatabase() {
+        return buildDatabase;
     }
 }

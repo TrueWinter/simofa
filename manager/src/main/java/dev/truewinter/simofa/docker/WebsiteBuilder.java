@@ -41,8 +41,16 @@ public class WebsiteBuilder extends Thread {
 
     @Override
     public void run() {
+        if (!build.beginBuild()) {
+            Simofa.getLogger().info(String.format(
+                    "Skipping build %s for website %s because it is no longer queued",
+                    build.getId(), build.getWebsite().getId()
+            ));
+            Simofa.getBuildQueueManager().getBuildQueue().removeRunningBuild(build);
+            return;
+        }
+
         Simofa.getLogger().info(String.format("Running build %s for website %s", build.getId(), build.getWebsite().getId()));
-        build.setStatus(BuildStatus.PREPARING);
 
         try {
             File tmpDir = Util.createTempDir(build.getId());
@@ -61,6 +69,15 @@ public class WebsiteBuilder extends Thread {
                             build.getWebsite().getId(), gitCredentials));
                 }
             }
+            if (!build.getStatus().equals(BuildStatus.PREPARING)) {
+                Simofa.getLogger().info(String.format(
+                        "Skipping build %s for website %s because it is no longer active",
+                        build.getId(), build.getWebsite().getId()
+                ));
+                Simofa.getBuildQueueManager().getBuildQueue().removeRunningBuild(build);
+                return;
+            }
+
             GitFetcher.fetch(build, gitCredential, tmpInDir);
 
             File tmpScriptDir = new File(tmpDir, "scripts");

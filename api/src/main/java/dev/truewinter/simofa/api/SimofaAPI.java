@@ -36,24 +36,27 @@ public interface SimofaAPI {
     /**
      * Triggers a build, using the cache if available
      * @param website The website to build
+     * @return true if the build was queued or intentionally skipped, false if it was rejected
      */
-    void triggerBuild(Website website);
+    boolean triggerBuild(Website website);
 
     /**
      * @see SimofaAPI#triggerBuild(Website)
      */
-    void triggerBuild(Website website, boolean useCache);
+    boolean triggerBuild(Website website, boolean useCache);
 
     /**
      * Triggers a build using a custom commit message, using the cache if available
      * @param website The website to build
+     * @param message The commit message
+     * @return true if the build was queued or intentionally skipped, false if it was rejected
      */
-    void triggerBuild(Website website, String message);
+    boolean triggerBuild(Website website, String message);
 
     /**
      * @see SimofaAPI#triggerBuild(Website, String)
      */
-    void triggerBuild(Website website, String message, boolean useCache);
+    boolean triggerBuild(Website website, String message, boolean useCache);
 
     /**
      * Returns a list of deployment servers

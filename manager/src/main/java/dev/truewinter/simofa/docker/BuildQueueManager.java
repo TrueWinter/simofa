@@ -13,6 +13,9 @@ import dev.truewinter.simofa.s3.S3Service;
 import java.util.ArrayList;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 public class BuildQueueManager {
     private static BuildQueueManager buildQueueManager;
@@ -21,16 +24,19 @@ public class BuildQueueManager {
     private static Database database;
     private Timer buildQueueTimer;
     private Timer cleanupTimer;
+    private ScheduledExecutorService historyRetryExecutor;
+    private long historyRetryDelayMs = 10_000;
+    private static final long MAX_HISTORY_RETRY_DELAY_MS = 5 * 60 * 1000;
     private static S3Service s3Service;
     private static S3CleanupTask s3CleanupTask;
 
-    private BuildQueueManager(Config config) {
-        this.buildQueue = BuildQueue.getInstance(config);
+    private BuildQueueManager(Config config, Database database) {
+        this.buildQueue = BuildQueue.getInstance(config, database);
     }
 
     public static BuildQueueManager getInstance(Config config, Database database) {
         if (buildQueueManager == null) {
-            buildQueueManager = new BuildQueueManager(config);
+            buildQueueManager = new BuildQueueManager(config, database);
             BuildQueueManager.config = config;
             BuildQueueManager.database = database;
             BuildQueueManager.s3Service = new S3Service(config);
@@ -52,17 +58,56 @@ public class BuildQueueManager {
         return database;
     }
 
+    public void loadBuilds() {
+        if (!buildQueue.loadBuilds()) {
+            startHistoryRetry();
+        }
+    }
+
+    private synchronized void startHistoryRetry() {
+        if (historyRetryExecutor != null) {
+            return;
+        }
+
+        historyRetryExecutor = Executors.newSingleThreadScheduledExecutor(r -> {
+            Thread thread = new Thread(r, "simofa-build-history-retry");
+            thread.setDaemon(true);
+            return thread;
+        });
+
+        historyRetryExecutor.schedule(this::retryHistory, historyRetryDelayMs, TimeUnit.MILLISECONDS);
+    }
+
+    private void retryHistory() {
+        if (buildQueue.loadBuilds()) {
+            synchronized (this) {
+                if (historyRetryExecutor != null) {
+                    historyRetryExecutor.shutdown();
+                    historyRetryExecutor = null;
+                }
+            }
+
+            return;
+        }
+
+        synchronized (this) {
+            historyRetryDelayMs = Math.min(historyRetryDelayMs * 2, MAX_HISTORY_RETRY_DELAY_MS);
+
+            if (historyRetryExecutor != null) {
+                historyRetryExecutor.schedule(this::retryHistory, historyRetryDelayMs, TimeUnit.MILLISECONDS);
+            }
+        }
+    }
+
     public void start() {
         if (buildQueueTimer == null) {
             buildQueueTimer = new Timer();
             buildQueueTimer.scheduleAtFixedRate(new TimerTask() {
                 @Override
                 public void run() {
-                    if (buildQueue.canRunMoreConcurrentBuilds()) {
-                        buildQueue.next().ifPresent(w -> {
-                            new WebsiteBuilder(w, s3Service).start();
-                        });
-                    }
+                    buildQueue.nextIfCapacityAvailable(config.getConcurrentBuilds()).ifPresent(w -> {
+                        new WebsiteBuilder(w, s3Service).start();
+                    });
 
                     long FIVE_MINUTES = 5 * 60 * 1000;
                     long TWENTY_MINUTES = 20 * 60 * 1000;
@@ -109,7 +154,7 @@ public class BuildQueueManager {
         }
     }
 
-    public void stop() {
+    public synchronized void stop() {
         if (buildQueueTimer != null) {
             buildQueueTimer.cancel();
         }
@@ -118,10 +163,15 @@ public class BuildQueueManager {
             cleanupTimer.cancel();
         }
 
-        Simofa.getLogger().info("Removing builds from queue");
+        if (historyRetryExecutor != null) {
+            historyRetryExecutor.shutdownNow();
+            historyRetryExecutor = null;
+        }
 
-        buildQueue.getBuildQueue().forEach(w -> {
-            buildQueue.remove(w.getWebsite());
-        });
+        Simofa.getLogger().info("Stopping builds");
+
+        for (WebsiteBuild w : buildQueue.beginShutdown()) {
+            buildQueue.remove(w);
+        }
     }
 }
