@@ -25,6 +25,7 @@ public class BuildQueue {
     private final List<WebsiteBuild> websiteBuildQueue = new ArrayList<>();
     // builds that are currently running
     private final List<WebsiteBuild> beingBuiltList = new ArrayList<>();
+    private boolean stopping = false;
 
     private BuildQueue(Config config, Database database) {
         this.config = config;
@@ -39,22 +40,38 @@ public class BuildQueue {
         return buildQueue;
     }
 
-    public synchronized void loadBuilds() {
-        websiteBuildList.clear();
-
+    public synchronized boolean loadBuilds() {
         try {
             for (WebsiteBuild build : database.getBuildDatabase().getRecentBuilds(5)) {
-                attachPersistenceListener(build);
-
-                if (!WebsiteBuild.END_STATUSES.contains(build.getStatus())) {
-                    build.restoreAsError("Build interrupted by server restart");
-                }
-
-                websiteBuildList.computeIfAbsent(build.getWebsite().getId(), k -> new ArrayList<>())
-                        .add(build);
+                mergeLoadedBuild(build);
             }
+
+            return true;
         } catch (SQLException e) {
             Simofa.getLogger().error("Failed to load builds from database", e);
+            return false;
+        }
+    }
+
+    private void mergeLoadedBuild(WebsiteBuild build) {
+        List<WebsiteBuild> builds = websiteBuildList.computeIfAbsent(
+                build.getWebsite().getId(), k -> new ArrayList<>());
+
+        if (builds.stream().anyMatch(existing -> existing.getId().equals(build.getId()))) {
+            return;
+        }
+
+        attachPersistenceListener(build);
+
+        if (!WebsiteBuild.END_STATUSES.contains(build.getStatus())) {
+            build.restoreAsError("Build interrupted by server restart");
+        }
+
+        builds.add(build);
+        builds.sort(Comparator.comparing(WebsiteBuild::getId));
+
+        while (builds.size() > 5) {
+            builds.remove(0);
         }
     }
 
@@ -62,50 +79,60 @@ public class BuildQueue {
         build.setPersistenceListener(new WebsiteBuild.PersistenceListener() {
             @Override
             public void onStatusChanged(WebsiteBuild build) {
-                updateBuild(build);
+                database.getBuildDatabase().queueBuildUpdate(build);
             }
 
             @Override
             public void onLogAdded(WebsiteBuild build, SimofaLog log) {
                 database.getBuildDatabase().queueLog(build.getId(), log);
             }
+
+            @Override
+            public void onBuildRestoredAsError(WebsiteBuild build, SimofaLog log) {
+                try {
+                    database.getBuildDatabase().restoreBuildAsError(build, log);
+                } catch (SQLException e) {
+                    Simofa.getLogger().error("Failed to save interrupted build to database", e);
+                }
+            }
         });
     }
 
-    private void updateBuild(WebsiteBuild build) {
-        try {
-            database.getBuildDatabase().updateBuild(build);
-        } catch (SQLException e) {
-            Simofa.getLogger().error("Failed to update build in database", e);
+    public synchronized Optional<WebsiteBuild> nextIfCapacityAvailable(int concurrentBuilds) {
+        if (stopping || beingBuiltList.size() >= concurrentBuilds || websiteBuildQueue.isEmpty()) {
+            return Optional.empty();
         }
+
+        WebsiteBuild websiteBuild = websiteBuildQueue.remove(0);
+        beingBuiltList.add(websiteBuild);
+        return Optional.of(websiteBuild);
     }
 
-    public boolean canRunMoreConcurrentBuilds() {
-        int concurrentBuilds = config.getConcurrentBuilds();
+    public synchronized List<WebsiteBuild> beginShutdown() {
+        stopping = true;
 
-        synchronized (this) {
-            return beingBuiltList.size() < concurrentBuilds;
-        }
+        List<WebsiteBuild> builds = new ArrayList<>(beingBuiltList);
+        builds.addAll(websiteBuildQueue);
+        beingBuiltList.clear();
+        websiteBuildQueue.clear();
+
+        return builds;
     }
 
     public synchronized void queue(Website website, String commit) {
-        if (commit.toLowerCase().contains("[no ci]")) return;
+        if (stopping || commit.toLowerCase().contains("[no ci]")) return;
 
-        remove(website);
         WebsiteBuild websiteBuild = new WebsiteBuild(website, commit, config.getCacheDir());
 
-        boolean persisted = false;
         try {
             database.getBuildDatabase().addBuild(websiteBuild);
-            persisted = true;
         } catch (SQLException e) {
-            Simofa.getLogger().error("Failed to save build to database", e);
+            Simofa.getLogger().error("Failed to save build to database, rejecting build", e);
+            return;
         }
 
-        if (persisted) {
-            attachPersistenceListener(websiteBuild);
-        }
-
+        remove(website);
+        attachPersistenceListener(websiteBuild);
         websiteBuildQueue.add(websiteBuild);
 
         String websiteId = websiteBuild.getWebsite().getId();
@@ -119,6 +146,8 @@ public class BuildQueue {
             websiteBuildsForThisWebsite.remove(0);
         }
 
+        websiteBuild.announceQueued();
+
         if (database.getBuildDatabase().flushPendingLogs()) {
             try {
                 database.getBuildDatabase().pruneBuilds(websiteId, 5);
@@ -128,17 +157,6 @@ public class BuildQueue {
         } else {
             Simofa.getLogger().warn("Skipping pruning old builds because pending build logs could not be saved");
         }
-    }
-
-    public synchronized Optional<WebsiteBuild> next() {
-        if (websiteBuildQueue.isEmpty()) {
-            return Optional.empty();
-        }
-
-        WebsiteBuild websiteBuild = websiteBuildQueue.get(0);
-        websiteBuildQueue.remove(0);
-        beingBuiltList.add(websiteBuild);
-        return Optional.of(websiteBuild);
     }
 
     public synchronized void remove(Website website) {

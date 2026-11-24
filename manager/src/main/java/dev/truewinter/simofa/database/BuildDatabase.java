@@ -11,17 +11,22 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.SQLTransientException;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Deque;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 public class BuildDatabase {
     private static final int MAX_LOG_BATCH_SIZE = 500;
@@ -31,22 +36,38 @@ public class BuildDatabase {
 
     private final HikariDataSource ds;
     private final WebsiteDatabase websiteDatabase;
+
     private final ExecutorService logWriterExecutor;
     private final Object logLock = new Object();
     private final Object flushLock = new Object();
     private final Deque<PendingLog> pendingLogs = new ArrayDeque<>();
     private final List<PendingLog> retryLogs = new ArrayList<>();
-    private volatile boolean running = true;
+    private volatile boolean logWriterRunning = true;
+
+    private final ExecutorService statusWriterExecutor;
+    private final Object statusLock = new Object();
+    private final Object statusFlushLock = new Object();
+    private final Map<String, PendingBuildUpdate> pendingBuildUpdates = new HashMap<>();
+    private volatile boolean statusWriterRunning = true;
 
     public BuildDatabase(HikariDataSource ds, WebsiteDatabase websiteDatabase) {
         this.ds = ds;
         this.websiteDatabase = websiteDatabase;
+
         this.logWriterExecutor = Executors.newSingleThreadExecutor(r -> {
             Thread thread = new Thread(r, "simofa-build-log-writer");
             thread.setDaemon(true);
             return thread;
         });
+
+        this.statusWriterExecutor = Executors.newSingleThreadExecutor(r -> {
+            Thread thread = new Thread(r, "simofa-build-status-writer");
+            thread.setDaemon(true);
+            return thread;
+        });
+
         this.logWriterExecutor.submit(this::runLogWriter);
+        this.statusWriterExecutor.submit(this::runStatusWriter);
     }
 
     public void addBuild(WebsiteBuild build) throws SQLException {
@@ -72,7 +93,7 @@ public class BuildDatabase {
                 }
 
                 for (SimofaLog log : new ArrayList<>(build.getLogs())) {
-                    addLog(connection, build.getId(), log);
+                    insertLog(connection, build.getId(), log);
                 }
 
                 connection.commit();
@@ -85,17 +106,15 @@ public class BuildDatabase {
         }
     }
 
-    public void updateBuild(WebsiteBuild build) throws SQLException {
-        try (Connection connection = ds.getConnection()) {
-            try (PreparedStatement statement = connection.prepareStatement(
-                    "UPDATE `builds` SET `status` = ?, `start_time` = ?, `end_time` = ? " +
-                            "WHERE `id` = ?;")) {
-                statement.setString(1, build.getStatus().toString());
-                statement.setLong(2, build.getStartTime());
-                statement.setLong(3, build.getEndTime());
-                statement.setString(4, build.getId());
-                statement.execute();
-            }
+    public void queueBuildUpdate(WebsiteBuild build) {
+        synchronized (statusLock) {
+            pendingBuildUpdates.put(build.getId(), new PendingBuildUpdate(
+                    build.getId(),
+                    build.getStatus(),
+                    build.getStartTime(),
+                    build.getEndTime()
+            ));
+            statusLock.notifyAll();
         }
     }
 
@@ -112,71 +131,113 @@ public class BuildDatabase {
      * @return true if all pending logs were saved, false if they will be retried later
      */
     public boolean flushPendingLogs() {
-        while (true) {
-            synchronized (logLock) {
-                if (pendingLogs.isEmpty() && retryLogs.isEmpty()) {
-                    return true;
+        synchronized (flushLock) {
+            while (true) {
+                synchronized (logLock) {
+                    if (pendingLogs.isEmpty() && retryLogs.isEmpty()) {
+                        return true;
+                    }
                 }
-            }
 
-            if (!attemptFlush()) {
-                return false;
+                if (!flushOneLogBatch()) {
+                    return false;
+                }
             }
         }
     }
 
     public void close() {
-        running = false;
+        long deadline = System.currentTimeMillis() + SHUTDOWN_TIMEOUT_MS;
+
+        logWriterRunning = false;
         synchronized (logLock) {
             logLock.notifyAll();
         }
         logWriterExecutor.shutdownNow();
 
-        try {
-            if (!logWriterExecutor.awaitTermination(SHUTDOWN_TIMEOUT_MS, TimeUnit.MILLISECONDS)) {
-                Simofa.getLogger().warn("Timed out waiting for build log writer to stop");
-            }
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
+        statusWriterRunning = false;
+        synchronized (statusLock) {
+            statusLock.notifyAll();
         }
+        statusWriterExecutor.shutdownNow();
 
-        long deadline = System.currentTimeMillis() + SHUTDOWN_TIMEOUT_MS;
-        while (System.currentTimeMillis() < deadline) {
-            synchronized (logLock) {
-                if (pendingLogs.isEmpty() && retryLogs.isEmpty()) {
-                    return;
+        awaitTermination(logWriterExecutor, deadline);
+        awaitTermination(statusWriterExecutor, deadline);
+
+        ExecutorService finalDrain = Executors.newSingleThreadExecutor(r -> {
+            Thread thread = new Thread(r, "simofa-build-persistence-drain");
+            thread.setDaemon(true);
+            return thread;
+        });
+
+        Future<Boolean> future = finalDrain.submit(() -> {
+            while (System.currentTimeMillis() < deadline) {
+                boolean logsFlushed = flushPendingLogsUntil(deadline);
+                boolean updatesFlushed = flushPendingBuildUpdatesUntil(deadline);
+
+                if (logsFlushed && updatesFlushed) {
+                    return true;
                 }
-            }
 
-            if (!attemptFlush()) {
+                if (System.currentTimeMillis() >= deadline) {
+                    return false;
+                }
+
                 try {
                     Thread.sleep(INITIAL_RETRY_DELAY_MS);
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
-                    break;
+                    return false;
                 }
             }
+
+            return false;
+        });
+
+        try {
+            long remaining = Math.max(1, deadline - System.currentTimeMillis());
+            future.get(remaining, TimeUnit.MILLISECONDS);
+        } catch (TimeoutException e) {
+            future.cancel(true);
+            Simofa.getLogger().warn("Timed out draining build persistence during shutdown");
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        } catch (ExecutionException e) {
+            Simofa.getLogger().warn("Failed to drain build persistence during shutdown", e.getCause());
+        } finally {
+            finalDrain.shutdownNow();
         }
 
-        synchronized (logLock) {
-            if (!pendingLogs.isEmpty() || !retryLogs.isEmpty()) {
-                Simofa.getLogger().warn("Some build logs could not be saved before shutdown");
-            }
+        if (!isLogQueueEmpty() || !isStatusQueueEmpty()) {
+            Simofa.getLogger().warn("Some build logs or status updates could not be saved before shutdown");
+        }
+    }
+
+    private void awaitTermination(ExecutorService executor, long deadline) {
+        long remaining = deadline - System.currentTimeMillis();
+        if (remaining <= 0) {
+            return;
+        }
+
+        try {
+            executor.awaitTermination(remaining, TimeUnit.MILLISECONDS);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
         }
     }
 
     private void runLogWriter() {
         long delay = INITIAL_RETRY_DELAY_MS;
 
-        while (running) {
+        while (logWriterRunning) {
             try {
                 synchronized (logLock) {
-                    while (running && pendingLogs.isEmpty() && retryLogs.isEmpty()) {
+                    while (logWriterRunning && pendingLogs.isEmpty() && retryLogs.isEmpty()) {
                         logLock.wait();
                     }
                 }
 
-                if (!running) {
+                if (!logWriterRunning) {
                     break;
                 }
 
@@ -186,7 +247,7 @@ public class BuildDatabase {
                 break;
             }
 
-            if (attemptFlush()) {
+            if (attemptFlushLogs()) {
                 delay = INITIAL_RETRY_DELAY_MS;
             } else {
                 delay = Math.min(delay * 2, MAX_RETRY_DELAY_MS);
@@ -194,49 +255,77 @@ public class BuildDatabase {
         }
     }
 
-    private boolean attemptFlush() {
+    private boolean attemptFlushLogs() {
         synchronized (flushLock) {
-            List<PendingLog> batch;
-            boolean retrying;
+            return flushOneLogBatch();
+        }
+    }
 
-            synchronized (logLock) {
-                if (!retryLogs.isEmpty()) {
-                    batch = new ArrayList<>(retryLogs);
-                    retrying = true;
-                } else {
-                    if (pendingLogs.isEmpty()) {
+    private boolean flushOneLogBatch() {
+        List<PendingLog> batch;
+        boolean retrying;
+
+        synchronized (logLock) {
+            if (!retryLogs.isEmpty()) {
+                batch = new ArrayList<>(retryLogs);
+                retrying = true;
+            } else {
+                if (pendingLogs.isEmpty()) {
+                    return true;
+                }
+
+                int count = Math.min(pendingLogs.size(), MAX_LOG_BATCH_SIZE);
+                batch = new ArrayList<>(count);
+                for (int i = 0; i < count; i++) {
+                    batch.add(pendingLogs.removeFirst());
+                }
+                retrying = false;
+            }
+        }
+
+        try {
+            insertLogs(batch);
+
+            if (retrying) {
+                synchronized (logLock) {
+                    retryLogs.clear();
+                }
+            }
+
+            return true;
+        } catch (Exception e) {
+            if (!retrying) {
+                synchronized (logLock) {
+                    retryLogs.addAll(batch);
+                }
+            }
+
+            Simofa.getLogger().error("Failed to save build logs to database, will retry", e);
+            return false;
+        }
+    }
+
+    private boolean flushPendingLogsUntil(long deadline) {
+        synchronized (flushLock) {
+            while (System.currentTimeMillis() < deadline) {
+                synchronized (logLock) {
+                    if (pendingLogs.isEmpty() && retryLogs.isEmpty()) {
                         return true;
                     }
+                }
 
-                    int count = Math.min(pendingLogs.size(), MAX_LOG_BATCH_SIZE);
-                    batch = new ArrayList<>(count);
-                    for (int i = 0; i < count; i++) {
-                        batch.add(pendingLogs.removeFirst());
-                    }
-                    retrying = false;
+                if (!flushOneLogBatch()) {
+                    return false;
                 }
             }
 
-            try {
-                insertLogs(batch);
+            return isLogQueueEmpty();
+        }
+    }
 
-                if (retrying) {
-                    synchronized (logLock) {
-                        retryLogs.clear();
-                    }
-                }
-
-                return true;
-            } catch (Exception e) {
-                if (!retrying) {
-                    synchronized (logLock) {
-                        retryLogs.addAll(batch);
-                    }
-                }
-
-                Simofa.getLogger().error("Failed to save build logs to database, will retry", e);
-                return false;
-            }
+    private boolean isLogQueueEmpty() {
+        synchronized (logLock) {
+            return pendingLogs.isEmpty() && retryLogs.isEmpty();
         }
     }
 
@@ -245,21 +334,28 @@ public class BuildDatabase {
             return;
         }
 
+        try {
+            insertLogsBatch(logs);
+        } catch (SQLException e) {
+            if (isTransient(e)) {
+                throw e;
+            }
+
+            Simofa.getLogger().warn("Batch build log insert failed, isolating permanently rejected rows", e);
+            insertLogsIndividually(logs);
+        }
+    }
+
+    private void insertLogsBatch(List<PendingLog> logs) throws SQLException {
         try (Connection connection = ds.getConnection()) {
             boolean autoCommit = connection.getAutoCommit();
 
             try {
                 connection.setAutoCommit(false);
 
-                try (PreparedStatement statement = connection.prepareStatement(
-                        "INSERT INTO `build_logs` (`build_id`, `type`, `message`, `uuid`, `timestamp`) " +
-                                "VALUES (?, ?, ?, ?, ?);")) {
+                try (PreparedStatement statement = connection.prepareStatement(insertLogSql())) {
                     for (PendingLog log : logs) {
-                        statement.setString(1, log.buildId());
-                        statement.setString(2, log.log().getType() == null ? "" : log.log().getType());
-                        statement.setString(3, log.log().getLog() == null ? "" : log.log().getLog());
-                        statement.setString(4, log.log().getUuid());
-                        statement.setLong(5, log.log().getTimestamp());
+                        setLogParameters(statement, log.buildId(), log.log());
                         statement.addBatch();
                     }
 
@@ -276,16 +372,221 @@ public class BuildDatabase {
         }
     }
 
-    private void addLog(Connection connection, String buildId, SimofaLog log) throws SQLException {
-        try (PreparedStatement statement = connection.prepareStatement(
-                "INSERT INTO `build_logs` (`build_id`, `type`, `message`, `uuid`, `timestamp`) " +
-                        "VALUES (?, ?, ?, ?, ?);")) {
-            statement.setString(1, buildId);
-            statement.setString(2, log.getType() == null ? "" : log.getType());
-            statement.setString(3, log.getLog() == null ? "" : log.getLog());
-            statement.setString(4, log.getUuid());
-            statement.setLong(5, log.getTimestamp());
-            statement.execute();
+    private void insertLogsIndividually(List<PendingLog> logs) throws SQLException {
+        try (Connection connection = ds.getConnection()) {
+            boolean autoCommit = connection.getAutoCommit();
+
+            try {
+                connection.setAutoCommit(true);
+
+                try (PreparedStatement statement = connection.prepareStatement(insertLogSql())) {
+                    for (PendingLog log : logs) {
+                        try {
+                            setLogParameters(statement, log.buildId(), log.log());
+                            statement.executeUpdate();
+                        } catch (SQLException e) {
+                            if (isTransient(e)) {
+                                throw e;
+                            }
+
+                            Simofa.getLogger().warn(String.format(
+                                    "Discarding build log %s for build %s",
+                                    log.log().getUuid(), log.buildId()
+                            ), e);
+                        }
+                    }
+                }
+            } finally {
+                connection.setAutoCommit(autoCommit);
+            }
+        }
+    }
+
+    private void insertLog(Connection connection, String buildId, SimofaLog log) throws SQLException {
+        try (PreparedStatement statement = connection.prepareStatement(insertLogSql())) {
+            setLogParameters(statement, buildId, log);
+            statement.executeUpdate();
+        }
+    }
+
+    private String insertLogSql() {
+        return "INSERT INTO `build_logs` (`build_id`, `type`, `message`, `uuid`, `timestamp`) " +
+                "VALUES (?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE `id` = `id`;";
+    }
+
+    private void setLogParameters(PreparedStatement statement, String buildId, SimofaLog log) throws SQLException {
+        statement.setString(1, buildId);
+        statement.setString(2, log.getType() == null ? "" : log.getType());
+        statement.setString(3, log.getLog() == null ? "" : log.getLog());
+        statement.setString(4, log.getUuid());
+        statement.setLong(5, log.getTimestamp());
+    }
+
+    private boolean isTransient(SQLException e) {
+        if (e instanceof SQLTransientException) {
+            return true;
+        }
+
+        String sqlState = e.getSQLState();
+        if (sqlState != null && (sqlState.startsWith("08") || sqlState.startsWith("40")
+                || sqlState.equals("HYT00") || sqlState.equals("HYT01"))) {
+            return true;
+        }
+
+        int errorCode = e.getErrorCode();
+        if (errorCode == 1205 || errorCode == 1213) {
+            return true;
+        }
+
+        return e.getNextException() != null && isTransient(e.getNextException());
+    }
+
+    private void runStatusWriter() {
+        long delay = INITIAL_RETRY_DELAY_MS;
+
+        while (statusWriterRunning) {
+            try {
+                synchronized (statusLock) {
+                    while (statusWriterRunning && pendingBuildUpdates.isEmpty()) {
+                        statusLock.wait();
+                    }
+                }
+
+                if (!statusWriterRunning) {
+                    break;
+                }
+
+                Thread.sleep(delay);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                break;
+            }
+
+            if (flushPendingStatusUpdatesOnce()) {
+                delay = INITIAL_RETRY_DELAY_MS;
+            } else {
+                delay = Math.min(delay * 2, MAX_RETRY_DELAY_MS);
+            }
+        }
+    }
+
+    private boolean flushPendingStatusUpdatesOnce() {
+        synchronized (statusFlushLock) {
+            return flushOneStatusBatch();
+        }
+    }
+
+    private boolean flushOneStatusBatch() {
+        Collection<PendingBuildUpdate> batch;
+
+        synchronized (statusLock) {
+            if (pendingBuildUpdates.isEmpty()) {
+                return true;
+            }
+
+            batch = new ArrayList<>(pendingBuildUpdates.values());
+            pendingBuildUpdates.clear();
+        }
+
+        try {
+            updateBuilds(batch);
+            return true;
+        } catch (Exception e) {
+            synchronized (statusLock) {
+                for (PendingBuildUpdate update : batch) {
+                    pendingBuildUpdates.putIfAbsent(update.buildId(), update);
+                }
+            }
+
+            Simofa.getLogger().error("Failed to save build statuses to database, will retry", e);
+            return false;
+        }
+    }
+
+    private boolean flushPendingBuildUpdatesUntil(long deadline) {
+        synchronized (statusFlushLock) {
+            while (System.currentTimeMillis() < deadline) {
+                synchronized (statusLock) {
+                    if (pendingBuildUpdates.isEmpty()) {
+                        return true;
+                    }
+                }
+
+                if (!flushOneStatusBatch()) {
+                    return false;
+                }
+            }
+
+            return isStatusQueueEmpty();
+        }
+    }
+
+    private boolean isStatusQueueEmpty() {
+        synchronized (statusLock) {
+            return pendingBuildUpdates.isEmpty();
+        }
+    }
+
+    private void updateBuilds(Collection<PendingBuildUpdate> updates) throws SQLException {
+        if (updates.isEmpty()) {
+            return;
+        }
+
+        try (Connection connection = ds.getConnection()) {
+            boolean autoCommit = connection.getAutoCommit();
+
+            try {
+                connection.setAutoCommit(false);
+
+                try (PreparedStatement statement = connection.prepareStatement(
+                        "UPDATE `builds` SET `status` = ?, `start_time` = ?, `end_time` = ? " +
+                                "WHERE `id` = ?;")) {
+                    for (PendingBuildUpdate update : updates) {
+                        statement.setString(1, update.status().toString());
+                        statement.setLong(2, update.startTime());
+                        statement.setLong(3, update.endTime());
+                        statement.setString(4, update.buildId());
+                        statement.addBatch();
+                    }
+
+                    statement.executeBatch();
+                }
+
+                connection.commit();
+            } catch (SQLException e) {
+                connection.rollback();
+                throw e;
+            } finally {
+                connection.setAutoCommit(autoCommit);
+            }
+        }
+    }
+
+    public void restoreBuildAsError(WebsiteBuild build, SimofaLog log) throws SQLException {
+        try (Connection connection = ds.getConnection()) {
+            boolean autoCommit = connection.getAutoCommit();
+
+            try {
+                connection.setAutoCommit(false);
+
+                try (PreparedStatement statement = connection.prepareStatement(
+                        "UPDATE `builds` SET `status` = ?, `start_time` = ?, `end_time` = ? " +
+                                "WHERE `id` = ?;")) {
+                    statement.setString(1, build.getStatus().toString());
+                    statement.setLong(2, build.getStartTime());
+                    statement.setLong(3, build.getEndTime());
+                    statement.setString(4, build.getId());
+                    statement.execute();
+                }
+
+                insertLog(connection, build.getId(), log);
+                connection.commit();
+            } catch (SQLException e) {
+                connection.rollback();
+                throw e;
+            } finally {
+                connection.setAutoCommit(autoCommit);
+            }
         }
     }
 
@@ -552,6 +853,8 @@ public class BuildDatabase {
     }
 
     private record PendingLog(String buildId, SimofaLog log) {}
+
+    private record PendingBuildUpdate(String buildId, BuildStatus status, long startTime, long endTime) {}
 
     private record BuildRow(String id, Website website, String commit, BuildStatus status,
                             long queuedAt, long startTime, long endTime) {}

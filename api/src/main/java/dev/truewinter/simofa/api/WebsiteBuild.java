@@ -46,6 +46,7 @@ public class WebsiteBuild {
     public interface PersistenceListener {
         void onStatusChanged(WebsiteBuild build);
         void onLogAdded(WebsiteBuild build, SimofaLog log);
+        void onBuildRestoredAsError(WebsiteBuild build, SimofaLog log);
     }
 
     public WebsiteBuild(Website website, String commit, String cacheDir) {
@@ -53,7 +54,9 @@ public class WebsiteBuild {
                 System.currentTimeMillis(), 0, 0, null, cacheDir);
 
         addLog(new SimofaLog(LogType.INFO, "Build queued"));
+    }
 
+    public void announceQueued() {
         SimofaPluginManager.getInstance().getPluginManager().fireEvent(new BuildQueuedEvent(this));
         WsRegistry.accept(WsRegistry.Instances.BUILD_QUEUE, website.getId(), null);
     }
@@ -87,10 +90,11 @@ public class WebsiteBuild {
         this.status = BuildStatus.ERROR;
         this.endTime = System.currentTimeMillis();
 
-        addLog(new SimofaLog(LogType.ERROR, message));
+        SimofaLog log = new SimofaLog(LogType.ERROR, message);
+        addLogInternal(log);
 
         if (persistenceListener != null) {
-            persistenceListener.onStatusChanged(this);
+            persistenceListener.onBuildRestoredAsError(this, log);
         }
     }
 
@@ -154,12 +158,15 @@ public class WebsiteBuild {
     }
 
     public void addLog(SimofaLog log) {
-        logs.add(log);
+        addLogInternal(log);
 
         if (persistenceListener != null) {
             persistenceListener.onLogAdded(this, log);
         }
+    }
 
+    private void addLogInternal(SimofaLog log) {
+        logs.add(log);
         WsRegistry.accept(WsRegistry.Instances.WEBSITE_LOGS, this, log);
     }
 
