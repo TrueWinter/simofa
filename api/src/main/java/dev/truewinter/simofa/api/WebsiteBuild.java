@@ -21,7 +21,7 @@ public class WebsiteBuild {
     private final String id;
     private final Website website;
     private final String commit;
-    private BuildStatus status;
+    private volatile BuildStatus status;
     @JsonIgnore
     private final ArrayList<SimofaLog> logs;
     @JsonIgnore
@@ -85,10 +85,12 @@ public class WebsiteBuild {
     }
 
     public void restoreAsError(String message) {
-        if (END_STATUSES.contains(this.status)) return;
+        synchronized (this) {
+            if (END_STATUSES.contains(this.status)) return;
 
-        this.status = BuildStatus.ERROR;
-        this.endTime = System.currentTimeMillis();
+            this.status = BuildStatus.ERROR;
+            this.endTime = System.currentTimeMillis();
+        }
 
         SimofaLog log = new SimofaLog(LogType.ERROR, message);
         addLogInternal(log);
@@ -114,8 +116,29 @@ public class WebsiteBuild {
         return status;
     }
 
+    public boolean beginBuild() {
+        if (!transitionStatus(BuildStatus.PREPARING, true)) {
+            return false;
+        }
+
+        publishStatusChanged(BuildStatus.PREPARING);
+        return true;
+    }
+
     public void setStatus(BuildStatus status) {
-        if (this.status.equals(BuildStatus.STOPPED)) return;
+        if (!transitionStatus(status, false)) {
+            return;
+        }
+
+        publishStatusChanged(status);
+    }
+
+    private synchronized boolean transitionStatus(BuildStatus status, boolean onlyIfQueued) {
+        if (this.status.equals(BuildStatus.STOPPED)) return false;
+
+        if (onlyIfQueued && this.status != BuildStatus.QUEUED) {
+            return false;
+        }
 
         if (status.equals(BuildStatus.BUILDING)) {
             startTime = System.currentTimeMillis();
@@ -126,7 +149,10 @@ public class WebsiteBuild {
         }
 
         this.status = status;
+        return true;
+    }
 
+    private void publishStatusChanged(BuildStatus status) {
         if (persistenceListener != null) {
             persistenceListener.onStatusChanged(this);
         }

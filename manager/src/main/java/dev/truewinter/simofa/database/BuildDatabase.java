@@ -30,6 +30,7 @@ import java.util.concurrent.TimeoutException;
 
 public class BuildDatabase {
     private static final int MAX_LOG_BATCH_SIZE = 500;
+    private static final int MAX_SYSTEMIC_LOG_RETRY_ATTEMPTS = 5;
     private static final long INITIAL_RETRY_DELAY_MS = 250;
     private static final long MAX_RETRY_DELAY_MS = 30_000;
     private static final long SHUTDOWN_TIMEOUT_MS = 5_000;
@@ -42,12 +43,14 @@ public class BuildDatabase {
     private final Object flushLock = new Object();
     private final Deque<PendingLog> pendingLogs = new ArrayDeque<>();
     private final List<PendingLog> retryLogs = new ArrayList<>();
+    private int systemicLogRetryAttempts = 0;
     private volatile boolean logWriterRunning = true;
 
     private final ExecutorService statusWriterExecutor;
     private final Object statusLock = new Object();
     private final Object statusFlushLock = new Object();
     private final Map<String, PendingBuildUpdate> pendingBuildUpdates = new HashMap<>();
+    private final Map<String, PendingBuildRecovery> pendingBuildRecoveries = new HashMap<>();
     private volatile boolean statusWriterRunning = true;
 
     public BuildDatabase(HikariDataSource ds, WebsiteDatabase websiteDatabase) {
@@ -101,7 +104,11 @@ public class BuildDatabase {
                 connection.rollback();
                 throw e;
             } finally {
-                connection.setAutoCommit(autoCommit);
+                try {
+                    connection.setAutoCommit(autoCommit);
+                } catch (SQLException e) {
+                    Simofa.getLogger().warn("Failed to restore auto-commit state after saving build", e);
+                }
             }
         }
     }
@@ -118,31 +125,23 @@ public class BuildDatabase {
         }
     }
 
+    public void queueBuildRecovery(WebsiteBuild build, SimofaLog log) {
+        synchronized (statusLock) {
+            pendingBuildRecoveries.put(build.getId(), new PendingBuildRecovery(
+                    build.getId(),
+                    build.getStatus(),
+                    build.getStartTime(),
+                    build.getEndTime(),
+                    log
+            ));
+            statusLock.notifyAll();
+        }
+    }
+
     public void queueLog(String buildId, SimofaLog log) {
         synchronized (logLock) {
             pendingLogs.addLast(new PendingLog(buildId, log));
             logLock.notifyAll();
-        }
-    }
-
-    /**
-     * Attempts to save all queued logs immediately.
-     *
-     * @return true if all pending logs were saved, false if they will be retried later
-     */
-    public boolean flushPendingLogs() {
-        synchronized (flushLock) {
-            while (true) {
-                synchronized (logLock) {
-                    if (pendingLogs.isEmpty() && retryLogs.isEmpty()) {
-                        return true;
-                    }
-                }
-
-                if (!flushOneLogBatch()) {
-                    return false;
-                }
-            }
         }
     }
 
@@ -161,8 +160,8 @@ public class BuildDatabase {
         }
         statusWriterExecutor.shutdownNow();
 
-        awaitTermination(logWriterExecutor, deadline);
-        awaitTermination(statusWriterExecutor, deadline);
+        boolean logWriterStopped = awaitTermination(logWriterExecutor, deadline);
+        boolean statusWriterStopped = awaitTermination(statusWriterExecutor, deadline);
 
         ExecutorService finalDrain = Executors.newSingleThreadExecutor(r -> {
             Thread thread = new Thread(r, "simofa-build-persistence-drain");
@@ -194,9 +193,11 @@ public class BuildDatabase {
             return false;
         });
 
+        boolean drained = false;
+
         try {
             long remaining = Math.max(1, deadline - System.currentTimeMillis());
-            future.get(remaining, TimeUnit.MILLISECONDS);
+            drained = Boolean.TRUE.equals(future.get(remaining, TimeUnit.MILLISECONDS));
         } catch (TimeoutException e) {
             future.cancel(true);
             Simofa.getLogger().warn("Timed out draining build persistence during shutdown");
@@ -208,21 +209,23 @@ public class BuildDatabase {
             finalDrain.shutdownNow();
         }
 
-        if (!isLogQueueEmpty() || !isStatusQueueEmpty()) {
-            Simofa.getLogger().warn("Some build logs or status updates could not be saved before shutdown");
+        if (!logWriterStopped || !statusWriterStopped || !drained
+                || !isLogQueueEmpty() || !isStatusQueueEmpty()) {
+            Simofa.getLogger().warn("Shutdown completed without confirming all build logs and status updates were saved");
         }
     }
 
-    private void awaitTermination(ExecutorService executor, long deadline) {
+    private boolean awaitTermination(ExecutorService executor, long deadline) {
         long remaining = deadline - System.currentTimeMillis();
         if (remaining <= 0) {
-            return;
+            return false;
         }
 
         try {
-            executor.awaitTermination(remaining, TimeUnit.MILLISECONDS);
+            return executor.awaitTermination(remaining, TimeUnit.MILLISECONDS);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
+            return false;
         }
     }
 
@@ -286,21 +289,56 @@ public class BuildDatabase {
         try {
             insertLogs(batch);
 
-            if (retrying) {
-                synchronized (logLock) {
+            synchronized (logLock) {
+                systemicLogRetryAttempts = 0;
+
+                if (retrying) {
                     retryLogs.clear();
                 }
             }
 
             return true;
         } catch (Exception e) {
-            if (!retrying) {
+            boolean dropBatch = false;
+
+            if (e instanceof SQLException sqlException) {
+                if (!isKnownTransient(sqlException)) {
+                    synchronized (logLock) {
+                        systemicLogRetryAttempts++;
+
+                        if (systemicLogRetryAttempts >= MAX_SYSTEMIC_LOG_RETRY_ATTEMPTS) {
+                            systemicLogRetryAttempts = 0;
+                            dropBatch = true;
+                        }
+                    }
+                } else {
+                    synchronized (logLock) {
+                        systemicLogRetryAttempts = 0;
+                    }
+                }
+            } else {
                 synchronized (logLock) {
+                    systemicLogRetryAttempts = 0;
+                }
+            }
+
+            synchronized (logLock) {
+                if (dropBatch) {
+                    retryLogs.clear();
+                } else if (!retrying) {
                     retryLogs.addAll(batch);
                 }
             }
 
-            Simofa.getLogger().error("Failed to save build logs to database, will retry", e);
+            if (dropBatch) {
+                Simofa.getLogger().error(String.format(
+                        "Dropping %d build log entries after %d consecutive systemic persistence failures",
+                        batch.size(), MAX_SYSTEMIC_LOG_RETRY_ATTEMPTS
+                ), e);
+            } else {
+                Simofa.getLogger().error("Failed to save build logs to database, will retry", e);
+            }
+
             return false;
         }
     }
@@ -337,7 +375,7 @@ public class BuildDatabase {
         try {
             insertLogsBatch(logs);
         } catch (SQLException e) {
-            if (isTransient(e)) {
+            if (!isPermanentRowFailure(e)) {
                 throw e;
             }
 
@@ -367,7 +405,11 @@ public class BuildDatabase {
                 connection.rollback();
                 throw e;
             } finally {
-                connection.setAutoCommit(autoCommit);
+                try {
+                    connection.setAutoCommit(autoCommit);
+                } catch (SQLException e) {
+                    Simofa.getLogger().warn("Failed to restore auto-commit state", e);
+                }
             }
         }
     }
@@ -385,7 +427,7 @@ public class BuildDatabase {
                             setLogParameters(statement, log.buildId(), log.log());
                             statement.executeUpdate();
                         } catch (SQLException e) {
-                            if (isTransient(e)) {
+                            if (!isPermanentRowFailure(e)) {
                                 throw e;
                             }
 
@@ -397,7 +439,11 @@ public class BuildDatabase {
                     }
                 }
             } finally {
-                connection.setAutoCommit(autoCommit);
+                try {
+                    connection.setAutoCommit(autoCommit);
+                } catch (SQLException e) {
+                    Simofa.getLogger().warn("Failed to restore auto-commit state", e);
+                }
             }
         }
     }
@@ -422,7 +468,7 @@ public class BuildDatabase {
         statement.setLong(5, log.getTimestamp());
     }
 
-    private boolean isTransient(SQLException e) {
+    private boolean isKnownTransient(SQLException e) {
         if (e instanceof SQLTransientException) {
             return true;
         }
@@ -434,11 +480,25 @@ public class BuildDatabase {
         }
 
         int errorCode = e.getErrorCode();
-        if (errorCode == 1205 || errorCode == 1213) {
+        return errorCode == 1205 || errorCode == 1213 || errorCode == 1290;
+    }
+
+    private boolean isPermanentRowFailure(SQLException e) {
+        String sqlState = e.getSQLState();
+        if (sqlState == null) {
+            return false;
+        }
+
+        if (sqlState.startsWith("22")) {
             return true;
         }
 
-        return e.getNextException() != null && isTransient(e.getNextException());
+        if ("23000".equals(sqlState)) {
+            int errorCode = e.getErrorCode();
+            return errorCode == 1048 || errorCode == 1062 || errorCode == 1452;
+        }
+
+        return false;
     }
 
     private void runStatusWriter() {
@@ -447,7 +507,8 @@ public class BuildDatabase {
         while (statusWriterRunning) {
             try {
                 synchronized (statusLock) {
-                    while (statusWriterRunning && pendingBuildUpdates.isEmpty()) {
+                    while (statusWriterRunning
+                            && pendingBuildUpdates.isEmpty() && pendingBuildRecoveries.isEmpty()) {
                         statusLock.wait();
                     }
                 }
@@ -462,7 +523,10 @@ public class BuildDatabase {
                 break;
             }
 
-            if (flushPendingStatusUpdatesOnce()) {
+            boolean updatesFlushed = flushPendingStatusUpdatesOnce();
+            boolean recoveriesFlushed = flushPendingRecoveriesOnce();
+
+            if (updatesFlushed && recoveriesFlushed) {
                 delay = INITIAL_RETRY_DELAY_MS;
             } else {
                 delay = Math.min(delay * 2, MAX_RETRY_DELAY_MS);
@@ -503,16 +567,55 @@ public class BuildDatabase {
         }
     }
 
+    private boolean flushPendingRecoveriesOnce() {
+        synchronized (statusFlushLock) {
+            return flushOneRecoveryBatch();
+        }
+    }
+
+    private boolean flushOneRecoveryBatch() {
+        Collection<PendingBuildRecovery> batch;
+
+        synchronized (statusLock) {
+            if (pendingBuildRecoveries.isEmpty()) {
+                return true;
+            }
+
+            batch = new ArrayList<>(pendingBuildRecoveries.values());
+            pendingBuildRecoveries.clear();
+        }
+
+        try {
+            for (PendingBuildRecovery recovery : batch) {
+                persistBuildRecovery(recovery);
+            }
+
+            return true;
+        } catch (Exception e) {
+            synchronized (statusLock) {
+                for (PendingBuildRecovery recovery : batch) {
+                    pendingBuildRecoveries.putIfAbsent(recovery.buildId(), recovery);
+                }
+            }
+
+            Simofa.getLogger().error("Failed to save interrupted builds to database, will retry", e);
+            return false;
+        }
+    }
+
     private boolean flushPendingBuildUpdatesUntil(long deadline) {
         synchronized (statusFlushLock) {
             while (System.currentTimeMillis() < deadline) {
                 synchronized (statusLock) {
-                    if (pendingBuildUpdates.isEmpty()) {
+                    if (pendingBuildUpdates.isEmpty() && pendingBuildRecoveries.isEmpty()) {
                         return true;
                     }
                 }
 
-                if (!flushOneStatusBatch()) {
+                boolean updatesFlushed = flushOneStatusBatch();
+                boolean recoveriesFlushed = flushOneRecoveryBatch();
+
+                if (!updatesFlushed || !recoveriesFlushed) {
                     return false;
                 }
             }
@@ -523,7 +626,7 @@ public class BuildDatabase {
 
     private boolean isStatusQueueEmpty() {
         synchronized (statusLock) {
-            return pendingBuildUpdates.isEmpty();
+            return pendingBuildUpdates.isEmpty() && pendingBuildRecoveries.isEmpty();
         }
     }
 
@@ -557,12 +660,16 @@ public class BuildDatabase {
                 connection.rollback();
                 throw e;
             } finally {
-                connection.setAutoCommit(autoCommit);
+                try {
+                    connection.setAutoCommit(autoCommit);
+                } catch (SQLException e) {
+                    Simofa.getLogger().warn("Failed to restore auto-commit state", e);
+                }
             }
         }
     }
 
-    public void restoreBuildAsError(WebsiteBuild build, SimofaLog log) throws SQLException {
+    private void persistBuildRecovery(PendingBuildRecovery recovery) throws SQLException {
         try (Connection connection = ds.getConnection()) {
             boolean autoCommit = connection.getAutoCommit();
 
@@ -572,20 +679,24 @@ public class BuildDatabase {
                 try (PreparedStatement statement = connection.prepareStatement(
                         "UPDATE `builds` SET `status` = ?, `start_time` = ?, `end_time` = ? " +
                                 "WHERE `id` = ?;")) {
-                    statement.setString(1, build.getStatus().toString());
-                    statement.setLong(2, build.getStartTime());
-                    statement.setLong(3, build.getEndTime());
-                    statement.setString(4, build.getId());
+                    statement.setString(1, recovery.status().toString());
+                    statement.setLong(2, recovery.startTime());
+                    statement.setLong(3, recovery.endTime());
+                    statement.setString(4, recovery.buildId());
                     statement.execute();
                 }
 
-                insertLog(connection, build.getId(), log);
+                insertLog(connection, recovery.buildId(), recovery.log());
                 connection.commit();
             } catch (SQLException e) {
                 connection.rollback();
                 throw e;
             } finally {
-                connection.setAutoCommit(autoCommit);
+                try {
+                    connection.setAutoCommit(autoCommit);
+                } catch (SQLException e) {
+                    Simofa.getLogger().warn("Failed to restore auto-commit state", e);
+                }
             }
         }
     }
@@ -855,6 +966,9 @@ public class BuildDatabase {
     private record PendingLog(String buildId, SimofaLog log) {}
 
     private record PendingBuildUpdate(String buildId, BuildStatus status, long startTime, long endTime) {}
+
+    private record PendingBuildRecovery(String buildId, BuildStatus status, long startTime, long endTime,
+                                        SimofaLog log) {}
 
     private record BuildRow(String id, Website website, String commit, BuildStatus status,
                             long queuedAt, long startTime, long endTime) {}

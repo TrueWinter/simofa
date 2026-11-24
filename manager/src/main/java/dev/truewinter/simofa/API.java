@@ -42,8 +42,8 @@ public class API implements SimofaAPI {
     }
 
     @Override
-    public void triggerBuild(Website website) {
-        triggerBuild(website, "<manual build>");
+    public boolean triggerBuild(Website website) {
+        return triggerBuild(website, "<manual build>");
     }
 
     private String getCommitMessage(String message, boolean useCache) {
@@ -55,18 +55,18 @@ public class API implements SimofaAPI {
     }
 
     @Override
-    public void triggerBuild(Website website, boolean useCache) {
-        triggerBuild(website, getCommitMessage("<manual build>" , useCache));
+    public boolean triggerBuild(Website website, boolean useCache) {
+        return triggerBuild(website, getCommitMessage("<manual build>" , useCache));
     }
 
     @Override
-    public void triggerBuild(Website website, String message) {
-        Simofa.getBuildQueueManager().getBuildQueue().queue(website, message);
+    public boolean triggerBuild(Website website, String message) {
+        return Simofa.getBuildQueueManager().getBuildQueue().queue(website, message);
     }
 
     @Override
-    public void triggerBuild(Website website, String message, boolean useCache) {
-        triggerBuild(website, getCommitMessage(message, useCache));
+    public boolean triggerBuild(Website website, String message, boolean useCache) {
+        return triggerBuild(website, getCommitMessage(message, useCache));
     }
 
     @Override

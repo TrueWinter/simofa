@@ -3,6 +3,7 @@ package dev.truewinter.simofa.docker;
 import dev.truewinter.simofa.Simofa;
 import dev.truewinter.simofa.api.Website;
 import dev.truewinter.simofa.api.WebsiteBuild;
+import dev.truewinter.simofa.api.internal.WsRegistry;
 import dev.truewinter.simofa.common.BuildStatus;
 import dev.truewinter.simofa.common.LogType;
 import dev.truewinter.simofa.common.SimofaLog;
@@ -42,8 +43,16 @@ public class BuildQueue {
 
     public synchronized boolean loadBuilds() {
         try {
+            Set<String> affectedWebsites = new HashSet<>();
+
             for (WebsiteBuild build : database.getBuildDatabase().getRecentBuilds(5)) {
-                mergeLoadedBuild(build);
+                if (mergeLoadedBuild(build)) {
+                    affectedWebsites.add(build.getWebsite().getId());
+                }
+            }
+
+            for (String websiteId : affectedWebsites) {
+                WsRegistry.accept(WsRegistry.Instances.BUILD_QUEUE, websiteId, null);
             }
 
             return true;
@@ -53,12 +62,12 @@ public class BuildQueue {
         }
     }
 
-    private void mergeLoadedBuild(WebsiteBuild build) {
+    private boolean mergeLoadedBuild(WebsiteBuild build) {
         List<WebsiteBuild> builds = websiteBuildList.computeIfAbsent(
                 build.getWebsite().getId(), k -> new ArrayList<>());
 
         if (builds.stream().anyMatch(existing -> existing.getId().equals(build.getId()))) {
-            return;
+            return false;
         }
 
         attachPersistenceListener(build);
@@ -73,6 +82,8 @@ public class BuildQueue {
         while (builds.size() > 5) {
             builds.remove(0);
         }
+
+        return true;
     }
 
     private void attachPersistenceListener(WebsiteBuild build) {
@@ -89,11 +100,7 @@ public class BuildQueue {
 
             @Override
             public void onBuildRestoredAsError(WebsiteBuild build, SimofaLog log) {
-                try {
-                    database.getBuildDatabase().restoreBuildAsError(build, log);
-                } catch (SQLException e) {
-                    Simofa.getLogger().error("Failed to save interrupted build to database", e);
-                }
+                database.getBuildDatabase().queueBuildRecovery(build, log);
             }
         });
     }
@@ -108,6 +115,10 @@ public class BuildQueue {
         return Optional.of(websiteBuild);
     }
 
+    public synchronized void removeRunningBuild(WebsiteBuild build) {
+        beingBuiltList.removeIf(existing -> existing.getId().equals(build.getId()));
+    }
+
     public synchronized List<WebsiteBuild> beginShutdown() {
         stopping = true;
 
@@ -119,43 +130,55 @@ public class BuildQueue {
         return builds;
     }
 
-    public synchronized void queue(Website website, String commit) {
-        if (stopping || commit.toLowerCase().contains("[no ci]")) return;
+    public boolean queue(Website website, String commit) {
+        WebsiteBuild websiteBuild;
+        String websiteId;
 
-        WebsiteBuild websiteBuild = new WebsiteBuild(website, commit, config.getCacheDir());
-
-        try {
-            database.getBuildDatabase().addBuild(websiteBuild);
-        } catch (SQLException e) {
-            Simofa.getLogger().error("Failed to save build to database, rejecting build", e);
-            return;
-        }
-
-        remove(website);
-        attachPersistenceListener(websiteBuild);
-        websiteBuildQueue.add(websiteBuild);
-
-        String websiteId = websiteBuild.getWebsite().getId();
-        if (!websiteBuildList.containsKey(websiteId)) {
-            websiteBuildList.put(websiteId, new ArrayList<>());
-        }
-
-        List<WebsiteBuild> websiteBuildsForThisWebsite = websiteBuildList.get(websiteId);
-        websiteBuildsForThisWebsite.add(websiteBuild);
-        if (websiteBuildsForThisWebsite.size() > 5) {
-            websiteBuildsForThisWebsite.remove(0);
-        }
-
-        websiteBuild.announceQueued();
-
-        if (database.getBuildDatabase().flushPendingLogs()) {
-            try {
-                database.getBuildDatabase().pruneBuilds(websiteId, 5);
-            } catch (SQLException e) {
-                Simofa.getLogger().error("Failed to prune old builds from database", e);
+        synchronized (this) {
+            if (commit.toLowerCase().contains("[no ci]")) {
+                return true;
             }
-        } else {
-            Simofa.getLogger().warn("Skipping pruning old builds because pending build logs could not be saved");
+
+            if (stopping) {
+                return false;
+            }
+
+            websiteBuild = new WebsiteBuild(website, commit, config.getCacheDir());
+
+            try {
+                database.getBuildDatabase().addBuild(websiteBuild);
+            } catch (SQLException e) {
+                Simofa.getLogger().error("Failed to save build to database, rejecting build", e);
+                return false;
+            }
+
+            remove(website);
+            attachPersistenceListener(websiteBuild);
+            websiteBuildQueue.add(websiteBuild);
+
+            websiteId = websiteBuild.getWebsite().getId();
+            if (!websiteBuildList.containsKey(websiteId)) {
+                websiteBuildList.put(websiteId, new ArrayList<>());
+            }
+
+            List<WebsiteBuild> websiteBuildsForThisWebsite = websiteBuildList.get(websiteId);
+            websiteBuildsForThisWebsite.add(websiteBuild);
+            if (websiteBuildsForThisWebsite.size() > 5) {
+                websiteBuildsForThisWebsite.remove(0);
+            }
+
+            websiteBuild.announceQueued();
+        }
+
+        pruneBuilds(websiteId);
+        return true;
+    }
+
+    private void pruneBuilds(String websiteId) {
+        try {
+            database.getBuildDatabase().pruneBuilds(websiteId, 5);
+        } catch (SQLException e) {
+            Simofa.getLogger().error("Failed to prune old builds from database", e);
         }
     }
 

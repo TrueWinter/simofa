@@ -86,7 +86,9 @@ public class GithubAppWebhookRoute extends Route {
                 commit = (String) commits.get(0).get("message");
             }
 
-            Simofa.getBuildQueueManager().getBuildQueue().queue(w, commit);
+            if (!Simofa.getBuildQueueManager().getBuildQueue().queue(w, commit)) {
+                throw new InternalServerErrorResponse("Failed to queue build");
+            }
         });
     }
 
@@ -104,7 +106,9 @@ public class GithubAppWebhookRoute extends Route {
 
         website.ifPresent(w -> {
             String tag = ref.replace("refs/heads/", "");
-            Simofa.getBuildQueueManager().getBuildQueue().queue(w, tag);
+            if (!Simofa.getBuildQueueManager().getBuildQueue().queue(w, tag)) {
+                throw new InternalServerErrorResponse("Failed to queue build");
+            }
         });
     }
 
@@ -125,7 +129,9 @@ public class GithubAppWebhookRoute extends Route {
         website.ifPresent(w -> {
             @SuppressWarnings("unchecked")
             String title = (String) ((HashMap<String, Object>) data.get("release")).get("name");
-            Simofa.getBuildQueueManager().getBuildQueue().queue(w, title);
+            if (!Simofa.getBuildQueueManager().getBuildQueue().queue(w, title)) {
+                throw new InternalServerErrorResponse("Failed to queue build");
+            }
         });
     }
 
