@@ -13,11 +13,21 @@ import dev.truewinter.simofa.database.Database;
 
 import java.sql.SQLException;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.ReentrantLock;
 
 public class BuildQueue {
+    private static final long ADMISSION_SHUTDOWN_WAIT_SECONDS = 5;
+    private static final Set<BuildStatus> STOPPABLE_STATUSES = Set.of(
+            BuildStatus.QUEUED,
+            BuildStatus.PREPARING,
+            BuildStatus.BUILDING
+    );
+
     private static BuildQueue buildQueue;
     private final Config config;
     private final Database database;
+    private final ReentrantLock admissionLock = new ReentrantLock();
     // all builds
     private final HashMap<String, List<WebsiteBuild>> websiteBuildList = new HashMap<>();
     // builds that are queued
@@ -119,28 +129,53 @@ public class BuildQueue {
         beingBuiltList.removeIf(existing -> existing.getId().equals(build.getId()));
     }
 
-    public synchronized List<WebsiteBuild> beginShutdown() {
-        stopping = true;
+    public List<WebsiteBuild> beginShutdown() {
+        List<WebsiteBuild> builds;
 
-        List<WebsiteBuild> builds = new ArrayList<>(beingBuiltList);
-        builds.addAll(websiteBuildQueue);
-        beingBuiltList.clear();
-        websiteBuildQueue.clear();
+        synchronized (this) {
+            stopping = true;
+
+            builds = new ArrayList<>(beingBuiltList);
+            builds.addAll(websiteBuildQueue);
+
+            for (WebsiteBuild build : builds) {
+                if (STOPPABLE_STATUSES.contains(build.getStatus())) {
+                    build.setStatus(BuildStatus.STOPPED);
+                }
+            }
+
+            beingBuiltList.clear();
+            websiteBuildQueue.clear();
+        }
+
+        try {
+            if (admissionLock.tryLock(ADMISSION_SHUTDOWN_WAIT_SECONDS, TimeUnit.SECONDS)) {
+                admissionLock.unlock();
+            } else {
+                Simofa.getLogger().warn("Timed out waiting for in-flight build admissions during shutdown");
+            }
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
 
         return builds;
     }
 
     public boolean queue(Website website, String commit) {
+        if (commit.toLowerCase().contains("[no ci]")) {
+            return true;
+        }
+
         WebsiteBuild websiteBuild;
         String websiteId;
 
-        synchronized (this) {
-            if (commit.toLowerCase().contains("[no ci]")) {
-                return true;
-            }
+        admissionLock.lock();
 
-            if (stopping) {
-                return false;
+        try {
+            synchronized (this) {
+                if (stopping) {
+                    return false;
+                }
             }
 
             websiteBuild = new WebsiteBuild(website, commit, config.getCacheDir());
@@ -152,22 +187,48 @@ public class BuildQueue {
                 return false;
             }
 
-            remove(website);
-            attachPersistenceListener(websiteBuild);
-            websiteBuildQueue.add(websiteBuild);
-
             websiteId = websiteBuild.getWebsite().getId();
-            if (!websiteBuildList.containsKey(websiteId)) {
-                websiteBuildList.put(websiteId, new ArrayList<>());
+            boolean admitted = false;
+
+            synchronized (this) {
+                if (!stopping) {
+                    try {
+                        remove(website);
+                        admitted = true;
+                    } catch (RuntimeException e) {
+                        Simofa.getLogger().error("Failed to stop existing builds for website, rejecting build", e);
+                    }
+
+                    if (admitted) {
+                        attachPersistenceListener(websiteBuild);
+                        websiteBuildQueue.add(websiteBuild);
+
+                        if (!websiteBuildList.containsKey(websiteId)) {
+                            websiteBuildList.put(websiteId, new ArrayList<>());
+                        }
+
+                        List<WebsiteBuild> websiteBuildsForThisWebsite = websiteBuildList.get(websiteId);
+                        websiteBuildsForThisWebsite.add(websiteBuild);
+                        if (websiteBuildsForThisWebsite.size() > 5) {
+                            websiteBuildsForThisWebsite.remove(0);
+                        }
+
+                        websiteBuild.announceQueued();
+                    }
+                }
             }
 
-            List<WebsiteBuild> websiteBuildsForThisWebsite = websiteBuildList.get(websiteId);
-            websiteBuildsForThisWebsite.add(websiteBuild);
-            if (websiteBuildsForThisWebsite.size() > 5) {
-                websiteBuildsForThisWebsite.remove(0);
-            }
+            if (!admitted) {
+                try {
+                    database.getBuildDatabase().deleteBuild(websiteBuild.getId());
+                } catch (SQLException e) {
+                    Simofa.getLogger().error("Failed to remove rejected build from database", e);
+                }
 
-            websiteBuild.announceQueued();
+                return false;
+            }
+        } finally {
+            admissionLock.unlock();
         }
 
         pruneBuilds(websiteId);
@@ -216,20 +277,13 @@ public class BuildQueue {
     }
 
     public synchronized void remove(WebsiteBuild w) {
-        if (!w.getStatus().equals(BuildStatus.STOPPED)) {
-            Set<BuildStatus> statusSet = new HashSet<>(){{
-                add(BuildStatus.QUEUED);
-                add(BuildStatus.PREPARING);
-                add(BuildStatus.BUILDING);
-            }};
-            if (statusSet.contains(w.getStatus())) {
-                w.setStatus(BuildStatus.STOPPED);
-            }
+        if (STOPPABLE_STATUSES.contains(w.getStatus())) {
+            w.setStatus(BuildStatus.STOPPED);
+        }
 
-            if (!Util.isBlank(w.getContainerId())) {
-                Simofa.getLogger().info(String.format("Deleting container %s for build %s", w.getContainerId(), w.getId()));
-                Simofa.getDockerManager().deleteContainer(w.getContainerId());
-            }
+        if (!Util.isBlank(w.getContainerId())) {
+            Simofa.getLogger().info(String.format("Deleting container %s for build %s", w.getContainerId(), w.getId()));
+            Simofa.getDockerManager().deleteContainer(w.getContainerId());
         }
     }
 

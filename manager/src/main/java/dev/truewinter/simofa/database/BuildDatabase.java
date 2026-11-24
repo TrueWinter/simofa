@@ -677,6 +677,18 @@ public class BuildDatabase {
                 connection.setAutoCommit(false);
 
                 try (PreparedStatement statement = connection.prepareStatement(
+                        "SELECT `id` FROM `builds` WHERE `id` = ? FOR UPDATE;")) {
+                    statement.setString(1, recovery.buildId());
+
+                    try (ResultSet rs = statement.executeQuery()) {
+                        if (!rs.next()) {
+                            connection.commit();
+                            return;
+                        }
+                    }
+                }
+
+                try (PreparedStatement statement = connection.prepareStatement(
                         "UPDATE `builds` SET `status` = ?, `start_time` = ?, `end_time` = ? " +
                                 "WHERE `id` = ?;")) {
                     statement.setString(1, recovery.status().toString());
