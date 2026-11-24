@@ -51,7 +51,17 @@ public class BuildQueue {
         return buildQueue;
     }
 
-    public synchronized boolean loadBuilds() {
+    public boolean loadBuilds() {
+        admissionLock.lock();
+
+        try {
+            return loadBuildsLocked();
+        } finally {
+            admissionLock.unlock();
+        }
+    }
+
+    private synchronized boolean loadBuildsLocked() {
         try {
             Set<String> affectedWebsites = new HashSet<>();
 
